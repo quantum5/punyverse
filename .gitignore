@@ -34,3 +34,12 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+.idea
+*.obj
+*.html
+*.exp
+*.lib
+punyverse/assets/textures/*_medium.*
+punyverse/assets/textures/*_small.*
+temp
