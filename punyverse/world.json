@@ -17,6 +17,9 @@
           "texture": ["moon.jpg", "moon_medium.jpg", "moon_small.jpg", [0.53, 0.53, 0.53, 1]],
           "radius": 25,
           "distance": 200,
+          "orbit_speed": 1,
+          "eccentricity": 0.0549,
+          "inclination": 5.145,
           "pitch": -90,
           "yaw": 6.68
         },
