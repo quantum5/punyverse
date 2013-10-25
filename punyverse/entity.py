@@ -1,5 +1,7 @@
 from punyverse import framedata
 from math import radians, sin, cos
+from punyverse.orbit import KeplerOrbit
+
 
 class Entity(object):
     def __init__(self, id, location, rotation=(0, 0, 0), direction=(0, 0, 0), background=False):
@@ -48,9 +50,17 @@ class Satellite(Planet):
     def __init__(self, *args, **kwargs):
         self.parent = kwargs.pop('parent')
         self.orbit_speed = kwargs.pop('orbit_speed', 1)
-        self.inclination = kwargs.pop('inclination', 0)
+
+        # Semi-major axis and eccentricity defines orbit
         self.distance = kwargs.pop('distance', 100)
+        self.eccentricity = kwargs.pop('eccentricity', 0)
+
+        # Inclination and longitude of ascending node defines orbital plane
+        self.inclination = kwargs.pop('inclination', 0)
+
         self.theta = 0
+        # OpenGL's z-axis is reversed
+        self.orbit = KeplerOrbit(self.distance, self.eccentricity, -self.inclination)
         super(Satellite, self).__init__(*args, **kwargs)
 
     def update(self):
@@ -63,10 +73,8 @@ class Satellite(Planet):
             self.rotation = pitch, yaw, roll
 
             self.parent.update()
-            x, y, z = self.location
             px, py, pz = self.parent.location
             self.theta += self.orbit_speed
-            x = cos(radians(self.theta)) * self.distance + px
-            z = sin(radians(self.theta)) * self.distance + pz
-            self.location = (x, y, z)
+            x, z, y = self.orbit.orbit(self.theta)
+            self.location = (x + px, y + py, z + pz)
 
