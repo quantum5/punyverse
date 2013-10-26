@@ -149,11 +149,15 @@ def check_size(width, height):
 
 
 def load_texture(file):
-    if file in cache:
-        return cache[file]
-    print "Loading image %s..." % file,
+    if os.path.isabs(file):
+        path = file
+        file = os.path.basename(path)
+    else:
+        path = os.path.join(os.path.dirname(__file__), "assets", "textures", file)
 
-    path = os.path.join(os.path.dirname(__file__), "assets", "textures", file)
+    if path in cache:
+        return cache[path]
+    print "Loading image %s..." % file,
 
     try:
         file = open(path, 'rb')
@@ -214,6 +218,6 @@ def load_texture(file):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter)
     gluBuild2DMipmaps(GL_TEXTURE_2D, len(raw.format), width, height, mode, GL_UNSIGNED_BYTE, texture)
 
-    cache[file] = id
+    cache[path] = id
 
     return id
