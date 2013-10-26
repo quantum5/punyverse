@@ -61,7 +61,7 @@ def load_world(file):
         root = json.load(f, object_pairs_hook=OrderedDict)
 
         world = World()
-        e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': AU})
+        e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': root.get('au', 2000)})
 
         if 'start' in root:
             info = root['start']
