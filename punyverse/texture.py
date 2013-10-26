@@ -188,14 +188,13 @@ def load_texture(file):
         print
 
         mode = GL_RGBA if 'A' in raw.format else GL_RGB
-        mode2 = mode
         # Flip from BGR to RGB
         # I hate you too, Pyglet...
         # REGULAR EXPRESSIONS ARE NOT MEANT TO PARSE BINARY DATA!!!
         #texture = raw.get_data('RGBA', width * 4) if safe else raw.data[::-1] if 'BGR' in raw.format else raw.data
         if raw.format in ('BGR', 'BGRA'):
             if bgra:
-                mode2 = {GL_RGBA: GL_BGRA, GL_RGB: GL_BGR}[mode]
+                mode = {GL_RGBA: GL_BGRA, GL_RGB: GL_BGR}[mode]
                 texture = raw.data
             else:
                 texture = bgr_to_rgb(raw.data, width, height, 'A' in raw.format)
@@ -213,7 +212,7 @@ def load_texture(file):
     filter = GL_NEAREST if badcard else GL_LINEAR
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter)
-    gluBuild2DMipmaps(GL_TEXTURE_2D, len(raw.format), width, height, mode2, GL_UNSIGNED_BYTE, texture)
+    gluBuild2DMipmaps(GL_TEXTURE_2D, len(raw.format), width, height, mode, GL_UNSIGNED_BYTE, texture)
 
     cache[file] = id
 
