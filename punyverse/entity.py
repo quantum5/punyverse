@@ -1,6 +1,7 @@
 from punyverse import framedata
-from math import radians, sin, cos
 from punyverse.orbit import KeplerOrbit
+
+from pyglet.gl import *
 
 
 class Entity(object):
@@ -60,10 +61,45 @@ class Satellite(Planet):
         longitude = kwargs.pop('longitude', 0)
         argument = kwargs.pop('argument', 0)
 
+        # Orbit calculation
+        self.orbit_id = None
+        self.orbit_cache = None
+
         self.theta = 0
         # OpenGL's z-axis is reversed
         self.orbit = KeplerOrbit(distance, eccentricity, inclination, longitude, argument)
         super(Satellite, self).__init__(*args, **kwargs)
+
+    def get_orbit(self):
+        # Cache key is the three orbital plane parameters and eccentricity
+        cache = (self.orbit.eccentricity, self.orbit.longitude, self.orbit.inclination, self.orbit.argument)
+        if self.orbit_cache == cache:
+            return self.orbit_id
+
+        print 'Orbit cache miss'
+        if self.orbit_id is not None:
+            glDeleteLists(self.orbit_id, 1)
+
+        id = glGenLists(1)
+        glNewList(id, GL_COMPILE)
+        glDisable(GL_LIGHTING)
+        glDisable(GL_TEXTURE_2D)
+        glPushAttrib(GL_LINE_BIT | GL_CURRENT_BIT)
+        glColor3f(0, 1, 0)
+        glLineWidth(3)
+        glBegin(GL_LINE_LOOP)
+        for theta in xrange(360):
+            x, z, y = self.orbit.orbit(theta)
+            glVertex3f(x, y, z)
+        glEnd()
+        glPopAttrib()
+        glEnable(GL_TEXTURE_2D)
+        glEnable(GL_LIGHTING)
+        glEndList()
+
+        self.orbit_id = id
+        self.orbit_cache = cache
+        return id
 
     def update(self):
         super(Planet, self).update()

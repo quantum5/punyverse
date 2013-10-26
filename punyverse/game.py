@@ -265,6 +265,12 @@ class Applet(pyglet.window.Window):
                 glDisable(GL_ALPHA_TEST)
                 glPopMatrix()
 
+            if self.debug and hasattr(entity, 'get_orbit') and hasattr(entity, 'parent'):
+                glPushMatrix()
+                glTranslatef(*entity.parent.location)
+                glCallList(entity.get_orbit())
+                glPopMatrix()
+
         glColor4f(1, 1, 1, 1)
         glDisable(GL_TEXTURE_2D)
 
