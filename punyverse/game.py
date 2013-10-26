@@ -159,9 +159,9 @@ class Applet(pyglet.window.Window):
             elif symbol == key.NUM_DIVIDE:
                 self.speed -= 10
             elif symbol == key.PAGEUP:
-                self.speed += 1000
+                self.speed += 100
             elif symbol == key.PAGEDOWN:
-                self.speed -= 1000
+                self.speed -= 100
             elif symbol == key.I:
                 self.info = not self.info
             elif symbol == key.D:

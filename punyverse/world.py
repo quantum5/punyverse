@@ -109,7 +109,8 @@ def load_world(file):
                 x -= distance
                 type = partial(Satellite, parent=parent, orbit_speed=info.get('orbit_speed', 1),
                                distance=distance, eccentricity=info.get('eccentricity', 0),
-                               inclination=info.get('inclination', 0))
+                               inclination=info.get('inclination', 0), longitude=info.get('longitude', 0),
+                               argument=info.get('argument', 0))
 
             atmosphere_id = 0
             cloudmap_id = 0
