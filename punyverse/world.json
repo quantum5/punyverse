@@ -1,5 +1,9 @@
 {
+  "au": "greatly shrunk so planets can actually be seen",
   "au": 10000,
+  "tick": 4320,
+  "length": "kilometre per world units for satellite distance, note that this is approx 10x smaller than AU",
+  "length": 637,
   "planets": {
     "earth": {
       "texture": ["earth.jpg", "earth_medium.jpg", "earth_small.jpg", [0, 0.28, 1, 1]],
@@ -8,6 +12,7 @@
       "pitch": -90,
       "yaw": 23.4,
       "roll": -90,
+      "mass": 5.97219e+24,
       "atmosphere": {
         "cloud_texture": "cloudmap.png",
         "diffuse_texture": "atmosphere_earth.png",
@@ -17,8 +22,7 @@
         "moon": {
           "texture": ["moon.jpg", "moon_medium.jpg", "moon_small.jpg", [0.53, 0.53, 0.53, 1]],
           "radius": 27.25,
-          "distance": 603.357,
-          "orbit_speed": 1,
+          "distance": 384399,
           "eccentricity": 0.0549,
           "inclination": 5.145,
           "pitch": -90,
@@ -27,7 +31,7 @@
         "iss": {
           "model": "satellites/iss.obj",
           "inclination": 51.65,
-          "distance": 110,
+          "distance": 68000,
           "scale": 5
         }
       }
@@ -37,7 +41,14 @@
       "radius": 53.3,
       "z": "1.524 * AU",
       "pitch": -90,
-      "yaw": 25.19
+      "yaw": 25.19,
+      "mass": 6.4185e+23,
+      "satellites": {
+        "phobos": {
+          "distance": 93770,
+          "model": "satellites/phobos.obj"
+        }
+      }
     },
     "jupiter": {
       "texture": ["jupiter.jpg", "jupiter_medium.jpg", "jupiter_small.jpg", [0.65, 0.36, 0.19, 1]],

@@ -338,6 +338,10 @@ cpdef int model_list(WavefrontObject model, float sx=1, float sy=1, float sz=1, 
                 point(f, model, tex_id, sx, sy, sz, 0)
         glEnd()
 
+        if tex_id:
+            glBindTexture(GL_TEXTURE_2D, 0)
+            glDisable(GL_TEXTURE_2D)
+
     glPopAttrib()
     glPopMatrix()
 
