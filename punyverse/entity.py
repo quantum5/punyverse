@@ -52,15 +52,17 @@ class Satellite(Planet):
         self.orbit_speed = kwargs.pop('orbit_speed', 1)
 
         # Semi-major axis and eccentricity defines orbit
-        self.distance = kwargs.pop('distance', 100)
-        self.eccentricity = kwargs.pop('eccentricity', 0)
+        distance = kwargs.pop('distance', 100)
+        eccentricity = kwargs.pop('eccentricity', 0)
 
-        # Inclination and longitude of ascending node defines orbital plane
-        self.inclination = kwargs.pop('inclination', 0)
+        # Inclination, longitude of ascending node, and argument of periapsis defines orbital plane
+        inclination = kwargs.pop('inclination', 0)
+        longitude = kwargs.pop('longitude', 0)
+        argument = kwargs.pop('argument', 0)
 
         self.theta = 0
         # OpenGL's z-axis is reversed
-        self.orbit = KeplerOrbit(self.distance, self.eccentricity, -self.inclination)
+        self.orbit = KeplerOrbit(distance, eccentricity, inclination, longitude, argument)
         super(Satellite, self).__init__(*args, **kwargs)
 
     def update(self):
