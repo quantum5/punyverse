@@ -106,9 +106,10 @@ def load_world(file):
                 type = Planet
             else:
                 x, y, z = parent.location
-                distance = e(info.get('distance', 100))  # Distance here means semi-major axis
+                distance = info.get('distance', 100)  # Semi-major axis when actually displayed in virtual space
+                sma = info.get('sma', distance)       # Semi-major axis used to calculate orbital speed
                 if hasattr(parent, 'mass') and parent.mass is not None:
-                    speed = 360 / (2 * pi * sqrt((distance * 1000) ** 3 / (G * parent.mass)) / tick)
+                    speed = 360 / (2 * pi * sqrt((sma * 1000) ** 3 / (G * parent.mass)) / tick)
                 else:
                     speed = info.get('orbit_speed', 1)
                 type = Satellite

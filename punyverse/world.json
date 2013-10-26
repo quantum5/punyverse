@@ -2,8 +2,8 @@
   "au": "greatly shrunk so planets can actually be seen",
   "au": 10000,
   "tick": 4320,
-  "length": "kilometre per world units for satellite distance, note that this is approx 10x smaller than AU",
-  "length": 637,
+  "length": "kilometre per world units for satellite distance",
+  "length": 63.7,
   "planets": {
     "earth": {
       "texture": ["earth.jpg", "earth_medium.jpg", "earth_small.jpg", [0, 0.28, 1, 1]],
@@ -22,7 +22,8 @@
         "moon": {
           "texture": ["moon.jpg", "moon_medium.jpg", "moon_small.jpg", [0.53, 0.53, 0.53, 1]],
           "radius": 27.25,
-          "distance": 384399,
+          "distance": 38439,
+          "sma": 384399,
           "eccentricity": 0.0549,
           "inclination": 5.145,
           "pitch": -90,
@@ -31,7 +32,7 @@
         "iss": {
           "model": "satellites/iss.obj",
           "inclination": 51.65,
-          "distance": 68000,
+          "distance": 6800,
           "scale": 5
         }
       }
@@ -45,7 +46,9 @@
       "mass": 6.4185e+23,
       "satellites": {
         "phobos": {
-          "distance": 93770,
+          "distance": 9377,
+          "inclination": 26.04,
+          "eccentricity": 0.0151,
           "model": "satellites/phobos.obj"
         }
       }
