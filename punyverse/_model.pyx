@@ -303,7 +303,7 @@ cpdef int model_list(WavefrontObject model, float sx=1, float sy=1, float sz=1, 
     cdef int tex_id
 
     for g in model.groups:
-        tex_id = 0
+        tex_id = load_texture(os.path.join(model.root, g.material.texture)) if (g.material and g.material.texture) else 0
 
         if tex_id:
             glEnable(GL_TEXTURE_2D)
