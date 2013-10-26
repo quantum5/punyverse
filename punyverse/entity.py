@@ -35,6 +35,7 @@ class Planet(Entity):
         self.atmosphere = kwargs.pop('atmosphere', 0)
         self.cloudmap = kwargs.pop('cloudmap', 0)
         self.last_tick = 0
+        self.mass = kwargs.pop('mass', None)
         super(Planet, self).__init__(*args, **kwargs)
 
     def update(self):

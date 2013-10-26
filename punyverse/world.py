@@ -1,10 +1,6 @@
-from bisect import bisect_left
 from collections import OrderedDict
-from operator import itemgetter
 from functools import partial
-import hashlib
 import os.path
-import random
 
 try:
     import json
@@ -23,7 +19,9 @@ from punyverse.glgeom import *
 from punyverse.entity import *
 from punyverse.texture import *
 
-AU = 2000
+from math import pi, sqrt
+
+G = 6.67384e-11  # Gravitation Constant
 
 
 def get_best_texture(info, optional=False):
@@ -62,6 +60,8 @@ def load_world(file):
 
         world = World()
         e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': root.get('au', 2000)})
+        tick = root.get('tick', 4320)  # How many second is a tick?
+        length = root.get('length', 4320)  # Satellite distance is in km, divide by this gets in world units
 
         if 'start' in root:
             info = root['start']
@@ -95,22 +95,30 @@ def load_world(file):
                 else:
                     object_id = compile(sphere, radius, int(radius / 2), int(radius / 2), texture, lighting=lighting)
             elif 'model' in info:
-                scale = info.get('scale', 10)
+                scale = info.get('scale', 1)
                 object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
                                        info.get('sz', scale), (0, 0, 0))
             else:
                 print 'Nothing to load for %s.' % name
 
+            params = {}
             if parent is None:
                 type = Planet
             else:
                 x, y, z = parent.location
-                distance = e(info.get('distance', 100))
-                x -= distance
-                type = partial(Satellite, parent=parent, orbit_speed=info.get('orbit_speed', 1),
-                               distance=distance, eccentricity=info.get('eccentricity', 0),
-                               inclination=info.get('inclination', 0), longitude=info.get('longitude', 0),
-                               argument=info.get('argument', 0))
+                distance = e(info.get('distance', 100))  # Distance here means semi-major axis
+                if hasattr(parent, 'mass') and parent.mass is not None:
+                    speed = 360 / (2 * pi * sqrt((distance * 1000) ** 3 / (G * parent.mass)) / tick)
+                else:
+                    speed = info.get('orbit_speed', 1)
+                type = Satellite
+                params.update(parent=parent, orbit_speed=speed,
+                              distance=distance / length, eccentricity=info.get('eccentricity', 0),
+                              inclination=info.get('inclination', 0), longitude=info.get('longitude', 0),
+                              argument=info.get('argument', 0))
+
+            if 'mass' in info:
+                params['mass'] = info['mass']
 
             atmosphere_id = 0
             cloudmap_id = 0
@@ -128,7 +136,7 @@ def load_world(file):
                     atmosphere_id = compile(disk, radius, radius + size, 30, atm_texture)
 
             object = type(object_id, (x, y, z), (pitch, yaw, roll), delta=delta,
-                          atmosphere=atmosphere_id, cloudmap=cloudmap_id, background=background)
+                          atmosphere=atmosphere_id, cloudmap=cloudmap_id, background=background, **params)
             world.tracker.append(object)
 
             if 'ring' in info:
