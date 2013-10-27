@@ -83,7 +83,7 @@ def load_world(file):
             pitch = e(info.get('pitch', 0))
             yaw = e(info.get('yaw', 0))
             roll = e(info.get('roll', 0))
-            delta = e(info.get('delta', 5))
+            rotation = e(info.get('rotation', 86400))
             radius = e(info.get('radius', length)) / length
             background = info.get('background', False)
 
@@ -111,7 +111,10 @@ def load_world(file):
                 distance = e(info.get('distance', 100))  # Semi-major axis when actually displayed in virtual space
                 sma = e(info.get('sma', distance))       # Semi-major axis used to calculate orbital speed
                 if hasattr(parent, 'mass') and parent.mass is not None:
-                    speed = 360 / (2 * pi * sqrt((sma * 1000) ** 3 / (G * parent.mass)) / tick)
+                    period = 2 * pi * sqrt((sma * 1000) ** 3 / (G * parent.mass))
+                    speed = 360 / (period / tick)
+                    if not rotation:  # Rotation = 0 assumes tidal lock
+                        rotation = period
                 else:
                     speed = info.get('orbit_speed', 1)
                 type = Satellite
@@ -139,7 +142,7 @@ def load_world(file):
                 if not cheap:
                     atmosphere_id = compile(disk, radius, radius + size, 30, atm_texture)
 
-            object = type(object_id, (x, y, z), (pitch, yaw, roll), delta=delta,
+            object = type(object_id, (x, y, z), (pitch, yaw, roll), rotation_angle=360 / (rotation / (tick + .0)),
                           atmosphere=atmosphere_id, cloudmap=cloudmap_id, background=background, **params)
             world.tracker.append(object)
 

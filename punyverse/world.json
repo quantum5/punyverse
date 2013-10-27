@@ -22,6 +22,7 @@
       "yaw": 23.4,
       "roll": -90,
       "mass": 5.97219e+24,
+      "rotation": 86400,
       "atmosphere": {
         "cloud_texture": "cloudmap.png",
         "diffuse_texture": "atmosphere_earth.png",
@@ -35,8 +36,10 @@
           "sma": 384399,
           "eccentricity": 0.0549,
           "inclination": 5.145,
+          "rotation": 0,
           "pitch": -90,
-          "yaw": 6.68
+          "yaw": 6.68,
+          "roll": -90
         },
         "iss": {
           "model": "satellites/iss.obj",
@@ -53,6 +56,7 @@
       "pitch": -90,
       "yaw": 25.19,
       "mass": 6.4185e+23,
+      "rotation": 88643,
       "satellites": {
         "phobos": {
           "distance": 9377,
@@ -70,12 +74,14 @@
       "pitch": -90,
       "yaw": 3.13,
       "comment": "satellites here are 3/10 the virtual distance than physical, and five times the size",
+      "rotation": 35730,
       "satellites": {
         "io": {
           "texture": ["moons/io.jpg", "moons/io_small.jpg", [0.62, 0.56, 0.35, 1]],
           "radius": "1821.3 * 5",
           "distance": 126510,
           "sma": 421700,
+          "rotation": 0,
           "pitch": -90,
           "inclination": 2.21,
           "eccentricity": 0.0041
@@ -86,6 +92,7 @@
           "distance": 201270,
           "sma": 670900,
           "pitch": -90,
+          "rotation": 0,
           "inclination": 2.71,
           "eccentricity": 0.009
         },
@@ -95,6 +102,7 @@
           "distance": 321120,
           "sma": 1070400,
           "pitch": -90,
+          "rotation": 0,
           "inclination": 2.51,
           "eccentricity": 0.0013
         },
@@ -104,6 +112,7 @@
           "distance": 564810,
           "sma": 1882700,
           "pitch": -90,
+          "rotation": 0,
           "inclination": 0.192,
           "eccentricity": 0.0074
         }
@@ -116,6 +125,7 @@
       "z": "9.58 * AU",
       "pitch": -90,
       "yaw": 26.73,
+      "rotation": 38052,
       "ring": {
         "texture": "ring_saturn.png",
         "distance": 1169,
@@ -129,6 +139,7 @@
       "z": "19.23 * AU",
       "pitch": -90,
       "yaw": 97.77,
+      "rotation": -62064,
       "ring": {
         "texture": "ring_uranus.png",
         "pitch": 0,
@@ -143,6 +154,7 @@
       "radius": 24764,
       "mass": 1.0243e+26,
       "z": "30.5 * AU",
+      "rotation": 57996,
       "pitch": -90,
       "yaw": 28.32
     },

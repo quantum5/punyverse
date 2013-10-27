@@ -10,17 +10,11 @@ class Camera(object):
         self.yaw = yaw
         self.roll = roll
 
-    def move(self, dx, dy, dz):
-        pitch = self.pitch
-        yaw = self.yaw
-        if pitch > 90 or pitch < -90:
-            pitch = -pitch
-            dx = -dx
-            dy = -dy
-            dz = -dz
-        self.z += dx * cos(radians(yaw - 90)) + dz * cos(radians(yaw))
-        self.x -= dx * sin(radians(yaw - 90)) + dz * sin(radians(yaw))
-        self.y += dy * sin(radians(pitch - 90)) + dz * sin(radians(pitch))
+    def move(self, speed):
+        dx, dy, dz = self.direction()
+        self.x += dx * speed
+        self.y += dy * speed
+        self.z += dz * speed
 
     def mouse_move(self, dx, dy):
         if self.pitch > 90 or self.pitch < -90:
