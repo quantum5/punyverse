@@ -53,7 +53,7 @@ class Applet(pyglet.window.Window):
                 cam.roll += 4
             if key.S in self.keys:
                 cam.roll -= 4
-            cam.move(0, 0, -self.speed * 128 * 0.003)
+            cam.move(self.speed)
 
         framedata.tick += self.tick
         for entity in self.world.tracker:

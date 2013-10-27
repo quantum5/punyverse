@@ -31,12 +31,13 @@ class Asteroid(Entity):
 
 class Body(Entity):
     def __init__(self, *args, **kwargs):
-        self.delta = kwargs.pop('delta', 5)
+        self.rotation_angle = kwargs.pop('rotation_angle', 5)
         self.atmosphere = kwargs.pop('atmosphere', 0)
         self.cloudmap = kwargs.pop('cloudmap', 0)
         self.last_tick = 0
         self.mass = kwargs.pop('mass', None)
         super(Body, self).__init__(*args, **kwargs)
+        self.initial_roll = self.rotation[2]
 
     def update(self):
         super(Body, self).update()
@@ -44,7 +45,7 @@ class Body(Entity):
         if self.last_tick != framedata.tick:
             self.last_tick = framedata.tick
             pitch, yaw, roll = self.rotation
-            roll += self.delta / 100.0
+            roll = (self.initial_roll + framedata.tick * self.rotation_angle) % 360
             self.rotation = pitch, yaw, roll
 
 
@@ -102,12 +103,12 @@ class Satellite(Body):
         return id
 
     def update(self):
-        super(Body, self).update()
+        super(Body, self).update()  # Notice how the parent class is skipped
 
         if self.last_tick != framedata.tick:
             self.last_tick = framedata.tick
             pitch, yaw, roll = self.rotation
-            roll += self.delta / 100.0
+            roll = (self.initial_roll + framedata.tick * self.rotation_angle) % 360
             self.rotation = pitch, yaw, roll
 
             self.parent.update()
