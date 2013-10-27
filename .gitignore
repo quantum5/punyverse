@@ -42,4 +42,6 @@ nosetests.xml
 *.lib
 punyverse/assets/textures/*_medium.*
 punyverse/assets/textures/*_small.*
+punyverse/assets/textures/*/*_medium.*
+punyverse/assets/textures/*/*_small.*
 temp

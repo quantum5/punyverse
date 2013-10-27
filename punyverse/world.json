@@ -68,7 +68,46 @@
       "mass": 1.8986e+27,
       "z": "5.2 * AU",
       "pitch": -90,
-      "yaw": 3.13
+      "yaw": 3.13,
+      "comment": "satellites here are 3/10 the virtual distance than physical, and five times the size",
+      "satellites": {
+        "io": {
+          "texture": ["moons/io.jpg", "moons/io_small.jpg", [0.62, 0.56, 0.35, 1]],
+          "radius": "1821.3 * 5",
+          "distance": 126510,
+          "sma": 421700,
+          "pitch": -90,
+          "inclination": 2.21,
+          "eccentricity": 0.0041
+        },
+        "europa": {
+          "texture": ["moons/europa.jpg", "moons/europa_small.jpg", [0.77, 0.74, 0.65, 1]],
+          "radius": "1560.8 * 5",
+          "distance": 201270,
+          "sma": 670900,
+          "pitch": -90,
+          "inclination": 2.71,
+          "eccentricity": 0.009
+        },
+        "ganymede": {
+          "texture": ["moons/ganymede.jpg", "moons/ganymede_small.jpg", [0.52, 0.47, 0.46, 1]],
+          "radius": "2634.1 * 5",
+          "distance": 321120,
+          "sma": 1070400,
+          "pitch": -90,
+          "inclination": 2.51,
+          "eccentricity": 0.0013
+        },
+        "callisto": {
+          "texture": ["moons/callisto.jpg", "moons/callisto_small.jpg", [0.49, 0.43, 0.34, 1]],
+          "radius": "2410.3 * 5",
+          "distance": 564810,
+          "sma": 1882700,
+          "pitch": -90,
+          "inclination": 0.192,
+          "eccentricity": 0.0074
+        }
+      }
     },
     "saturn": {
       "texture": ["saturn.jpg", "saturn_medium.jpg", "saturn_small.jpg", [0.9, 0.8, 0.64, 1]],

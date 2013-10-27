@@ -10,6 +10,9 @@ call :convert jupiter.jpg jupiter_medium.jpg 2048x1024
 call :convert jupiter.jpg jupiter_small.jpg 1024x512
 call :convert saturn.jpg saturn_medium.jpg 2048x1024
 call :convert saturn.jpg saturn_small.jpg 1024x512
+call :convert moons\io.jpg moons\io_small.jpg 1024x512
+call :convert moons\europa.jpg moons\europa_small.jpg 1024x512
+call :convert moons\ganymede.jpg moons\ganymede_small.jpg 1024x512
 goto :eof
 
 :convert
