@@ -55,7 +55,7 @@ class Applet(pyglet.window.Window):
                 cam.roll -= 4
             cam.move(0, 0, -self.speed * 128 * 0.003)
 
-        framedata.tick += 1
+        framedata.tick += self.tick
         for entity in self.world.tracker:
             entity.update()
 
@@ -68,6 +68,15 @@ class Applet(pyglet.window.Window):
         self.keys = set()
         self.info = True
         self.debug = False
+        self.orbit = True
+
+        self.tick = 1
+        # On standard world: 10x is one day per second, 100x is 10 days, 300x is a month
+        # 900x is a quarter, 1825 is a half year, 3650 is a year, 36500 is a decade, 365000 is a century
+        self.ticks = [1, 2, 4, 8, 10, 15, 25, 36, 50, 100, 300, 900, 1825, 3650,
+                      7300, 18250, 36500, 73000, 182500, 365000]
+        self.__time_per_second_cache = None
+        self.__time_per_second_value = None
 
         self.label = pyglet.text.Label('', font_name='Consolas', font_size=12, x=10, y=self.height - 20,
                                        color=(255,) * 4, multiline=True, width=600)
@@ -162,10 +171,24 @@ class Applet(pyglet.window.Window):
                 self.speed += 100
             elif symbol == key.PAGEDOWN:
                 self.speed -= 100
+            elif symbol == key.HOME:
+                self.speed += 1000
+            elif symbol == key.END:
+                self.speed -= 1000
             elif symbol == key.I:
                 self.info = not self.info
             elif symbol == key.D:
                 self.debug = not self.debug
+            elif symbol == key.O:
+                self.orbit = not self.orbit
+            elif symbol == key.INSERT:
+                index = self.ticks.index(self.tick) + 1
+                if index < len(self.ticks):
+                    self.tick = self.ticks[index]
+            elif symbol == key.DELETE:
+                index = self.ticks.index(self.tick) - 1
+                if index >= 0:
+                    self.tick = self.ticks[index]
             elif symbol == key.Q:
                 c = self.cam
                 dx, dy, dz = c.direction()
@@ -191,6 +214,21 @@ class Applet(pyglet.window.Window):
         # A field of view of 45
         gluPerspective(45.0, width / float(height), 0.1, 50000000.0)
         glMatrixMode(GL_MODELVIEW)
+
+    def get_time_per_second(self):
+        if self.__time_per_second_cache == self.tick:
+            return self.__time_per_second_value
+        time = self.world.tick * self.tick * TICKS_PER_SECOND + .0
+        unit = 'seconds'
+        for size, name in ((60, 'minutes'), (60, 'hours'), (24, 'days'), (365, 'years')):
+            if time < size:
+                break
+            time /= size
+            unit = name
+        result = '%s %s' % (time, unit)
+        self.__time_per_second_cache = self.tick
+        self.__time_per_second_value = result
+        return result
 
     def on_draw(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -265,7 +303,7 @@ class Applet(pyglet.window.Window):
                 glDisable(GL_ALPHA_TEST)
                 glPopMatrix()
 
-            if self.debug and hasattr(entity, 'get_orbit') and hasattr(entity, 'parent'):
+            if self.orbit and hasattr(entity, 'get_orbit') and hasattr(entity, 'parent'):
                 glPushMatrix()
                 glTranslatef(*entity.parent.location)
                 glCallList(entity.get_orbit())
@@ -279,9 +317,10 @@ class Applet(pyglet.window.Window):
         if self.info:
             ortho(width, height)
 
-            self.label.text = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s\n'
-                               'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)') % (
-                self.fps, c.x, c.y, c.z, self.speed, c.pitch, c.yaw, c.roll)
+            self.label.text = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/second\n'
+                               'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)' %
+                               (self.fps, c.x, c.y, c.z, self.speed, self.get_time_per_second(),
+                                c.pitch, c.yaw, c.roll))
             self.label.draw()
 
             glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT)
