@@ -91,10 +91,11 @@ def load_world(file):
                 cheap, skip, texture = get_best_texture(info['texture'], optional=info.get('optional', False))
                 if skip:
                     return
+                division = min(int(radius / 2), 100)
                 if cheap:
-                    object_id = compile(colourball, radius, int(radius / 2), int(radius / 2), texture)
+                    object_id = compile(colourball, radius, division, division, texture)
                 else:
-                    object_id = compile(sphere, radius, int(radius / 2), int(radius / 2), texture, lighting=lighting)
+                    object_id = compile(sphere, radius, division, division, texture, lighting=lighting)
             elif 'model' in info:
                 scale = info.get('scale', 1)
                 object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
@@ -131,7 +132,8 @@ def load_world(file):
                 cloud_texture = atmosphere_data.get('cloud_texture', None)
                 cheap, _, cloud_texture = get_best_texture(cloud_texture)
                 if not cheap:
-                    cloudmap_id = compile(sphere, radius + 2, int(radius / 2), int(radius / 2), cloud_texture,
+                    division = min(int(radius / 2), 100)
+                    cloudmap_id = compile(sphere, radius + 2, division, division, cloud_texture,
                                           lighting=False)
                 cheap, _, atm_texture = get_best_texture(atm_texture)
                 if not cheap:
