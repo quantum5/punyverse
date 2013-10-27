@@ -77,7 +77,6 @@ class Satellite(Planet):
         if self.orbit_cache == cache:
             return self.orbit_id
 
-        print 'Orbit cache miss'
         if self.orbit_id is not None:
             glDeleteLists(self.orbit_id, 1)
 

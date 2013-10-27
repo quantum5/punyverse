@@ -83,7 +83,7 @@ def load_world(file):
             yaw = e(info.get('yaw', 0))
             roll = e(info.get('roll', 0))
             delta = e(info.get('delta', 5))
-            radius = e(info.get('radius', None))
+            radius = e(info.get('radius', length)) / length
             background = info.get('background', False)
 
             if 'texture' in info:

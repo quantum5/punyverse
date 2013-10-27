@@ -1,13 +1,22 @@
 {
-  "au": "greatly shrunk so planets can actually be seen",
+  "comments": {
+    "au": "greatly shrunk so planets can actually be seen",
+    "tick": "real world second per game tick",
+    "length": "kilometre per world units for satellite distance and planetary radius",
+    "radius": "note that radius is equatorial, flattening will be implemented later",
+    "distance": "virtual distance to look better, in km",
+    "sma": "semi-major axis used with mass of parent to calculate orbit, in km",
+    "mass": "mass in kg",
+    "texture": "a group of texture to use, tried in that order. a list means a colour",
+    "model": "used to load a wavefront object instead of a textured sphere"
+  },
   "au": 10000,
-  "tick": 4320,
-  "length": "kilometre per world units for satellite distance",
+  "tick": 432,
   "length": 63.7,
   "planets": {
     "earth": {
       "texture": ["earth.jpg", "earth_medium.jpg", "earth_small.jpg", [0, 0.28, 1, 1]],
-      "radius": 100,
+      "radius": 6378.1,
       "z": "AU",
       "pitch": -90,
       "yaw": 23.4,
@@ -21,7 +30,7 @@
       "satellites": {
         "moon": {
           "texture": ["moon.jpg", "moon_medium.jpg", "moon_small.jpg", [0.53, 0.53, 0.53, 1]],
-          "radius": 27.25,
+          "radius": 1738.14,
           "distance": 38439,
           "sma": 384399,
           "eccentricity": 0.0549,
@@ -39,7 +48,7 @@
     },
     "mars": {
       "texture": ["mars.jpg", "mars_small.jpg", "mars_medium.jpg", [0.85, 0.47, 0.2, 1]],
-      "radius": 53.3,
+      "radius": 3396.2,
       "z": "1.524 * AU",
       "pitch": -90,
       "yaw": 25.19,
@@ -55,14 +64,16 @@
     },
     "jupiter": {
       "texture": ["jupiter.jpg", "jupiter_medium.jpg", "jupiter_small.jpg", [0.65, 0.36, 0.19, 1]],
-      "radius": 1120,
+      "radius": 71492,
+      "mass": 1.8986e+27,
       "z": "5.2 * AU",
       "pitch": -90,
       "yaw": 3.13
     },
     "saturn": {
       "texture": ["saturn.jpg", "saturn_medium.jpg", "saturn_small.jpg", [0.9, 0.8, 0.64, 1]],
-      "radius": 945,
+      "radius": 60268,
+      "mass": 5.6846e+26,
       "z": "9.58 * AU",
       "pitch": -90,
       "yaw": 26.73,
@@ -74,7 +85,8 @@
     },
     "uranus": {
       "texture": ["uranus.jpg", [0, 0.53, 0.84, 1]],
-      "radius": 400,
+      "radius": 25559,
+      "mass": 8.6810e+25,
       "z": "19.23 * AU",
       "pitch": -90,
       "yaw": 97.77,
@@ -89,7 +101,8 @@
     },
     "neptune": {
       "texture": ["neptune.jpg", [0.31, 0.49, 0.59, 1]],
-      "radius": 388,
+      "radius": 24764,
+      "mass": 1.0243e+26,
       "z": "30.5 * AU",
       "pitch": -90,
       "yaw": 28.32
