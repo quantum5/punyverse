@@ -79,7 +79,7 @@ cdef class WavefrontObject(object):
     cdef Group current_group
     def __init__(self, unicode path):
         self.path = path
-        self.root = os.path.dirname(path)
+        self.root = os.path.abspath(os.path.dirname(path))
         self.vertices = []
         self.normals = []
         self.textures = []
