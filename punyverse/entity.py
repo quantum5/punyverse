@@ -29,17 +29,17 @@ class Asteroid(Entity):
         self.rotation = rx + 1, ry + 1, rz + 1
 
 
-class Planet(Entity):
+class Body(Entity):
     def __init__(self, *args, **kwargs):
         self.delta = kwargs.pop('delta', 5)
         self.atmosphere = kwargs.pop('atmosphere', 0)
         self.cloudmap = kwargs.pop('cloudmap', 0)
         self.last_tick = 0
         self.mass = kwargs.pop('mass', None)
-        super(Planet, self).__init__(*args, **kwargs)
+        super(Body, self).__init__(*args, **kwargs)
 
     def update(self):
-        super(Planet, self).update()
+        super(Body, self).update()
 
         if self.last_tick != framedata.tick:
             self.last_tick = framedata.tick
@@ -48,7 +48,7 @@ class Planet(Entity):
             self.rotation = pitch, yaw, roll
 
 
-class Satellite(Planet):
+class Satellite(Body):
     def __init__(self, *args, **kwargs):
         self.parent = kwargs.pop('parent')
         self.orbit_speed = kwargs.pop('orbit_speed', 1)
@@ -85,8 +85,8 @@ class Satellite(Planet):
         glDisable(GL_LIGHTING)
         glDisable(GL_TEXTURE_2D)
         glPushAttrib(GL_LINE_BIT | GL_CURRENT_BIT)
-        glColor3f(0, 1, 0)
-        glLineWidth(3)
+        glColor3f(1, 1, 1)
+        glLineWidth(1)
         glBegin(GL_LINE_LOOP)
         for theta in xrange(360):
             x, z, y = self.orbit.orbit(theta)
@@ -102,7 +102,7 @@ class Satellite(Planet):
         return id
 
     def update(self):
-        super(Planet, self).update()
+        super(Body, self).update()
 
         if self.last_tick != framedata.tick:
             self.last_tick = framedata.tick
@@ -112,7 +112,7 @@ class Satellite(Planet):
 
             self.parent.update()
             px, py, pz = self.parent.location
-            self.theta += self.orbit_speed
+            self.theta = framedata.tick * self.orbit_speed % 360
             x, z, y = self.orbit.orbit(self.theta)
             self.location = (x + px, y + py, z + pz)
 

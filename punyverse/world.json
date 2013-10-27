@@ -13,7 +13,7 @@
   "au": 10000,
   "tick": 432,
   "length": 63.7,
-  "planets": {
+  "bodies": {
     "earth": {
       "texture": ["earth.jpg", "earth_medium.jpg", "earth_small.jpg", [0, 0.28, 1, 1]],
       "radius": 6378.1,

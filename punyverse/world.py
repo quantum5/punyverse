@@ -62,6 +62,7 @@ def load_world(file):
         e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': root.get('au', 2000)})
         tick = root.get('tick', 4320)  # How many second is a tick?
         length = root.get('length', 4320)  # Satellite distance is in km, divide by this gets in world units
+        world.tick = tick
 
         if 'start' in root:
             info = root['start']
@@ -103,11 +104,11 @@ def load_world(file):
 
             params = {}
             if parent is None:
-                type = Planet
+                type = Body
             else:
                 x, y, z = parent.location
-                distance = info.get('distance', 100)  # Semi-major axis when actually displayed in virtual space
-                sma = info.get('sma', distance)       # Semi-major axis used to calculate orbital speed
+                distance = e(info.get('distance', 100))  # Semi-major axis when actually displayed in virtual space
+                sma = e(info.get('sma', distance))       # Semi-major axis used to calculate orbital speed
                 if hasattr(parent, 'mass') and parent.mass is not None:
                     speed = 360 / (2 * pi * sqrt((sma * 1000) ** 3 / (G * parent.mass)) / tick)
                 else:
@@ -159,7 +160,7 @@ def load_world(file):
                 print "Loading %s, satellite of %s." % (satellite, name)
                 body(satellite, info, object)
 
-        for planet, info in root['planets'].iteritems():
+        for planet, info in root['bodies'].iteritems():
             print "Loading %s." % planet
             body(planet, info)
 
@@ -174,3 +175,4 @@ class World(object):
         self.x = None
         self.y = None
         self.z = None
+        self.tick = 1
