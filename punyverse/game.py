@@ -22,7 +22,6 @@ except ImportError:
     sys.exit()
 
 from punyverse.glgeom import *
-from punyverse import framedata
 
 from math import *
 import time
@@ -56,7 +55,7 @@ class Applet(pyglet.window.Window):
             cam.move(self.speed)
 
         if self.running:
-            framedata.tick += self.tick
+            self.world.tick += self.tick
             for entity in self.world.tracker:
                 entity.update()
 
@@ -72,11 +71,20 @@ class Applet(pyglet.window.Window):
         self.orbit = True
         self.running = True
 
-        self.tick = 1
+        self.tick = self.world.tick_length
         # On standard world: 10x is one day per second, 100x is 10 days, 300x is a month
         # 900x is a quarter, 1825 is a half year, 3650 is a year, 36500 is a decade, 365000 is a century
-        self.ticks = [1, 2, 4, 8, 10, 15, 25, 36, 50, 100, 300, 900, 1825, 3650,
-                      7300, 18250, 36500, 73000, 182500, 365000]
+        # and yes the individual hours and seconds look ugly
+        self.ticks = [20, 40, 60,                             # Second range
+                      120, 300, 600, 1200, 1800, 2700, 3600,  # Minute range
+                      7200, 14400, 21600, 43200, 86400,       # Hour range
+                      172800, 432000, 604800,                 # 2, 5, 7 days
+                      1209600, 2592000,                       # 2 week, 1 month
+                      5270400, 7884000, 15768000, 31536000,   # 2, 3, 6, 12 months
+                      63072000, 157680000, 315360000,         # 2, 5, 10 years
+                      630720000, 1576800000, 3153600000,      # 20, 50, 100 years
+                      ]
+        self.ticks = [i / 20 for i in self.ticks]
         self.__time_per_second_cache = None
         self.__time_per_second_value = None
 
@@ -222,14 +230,14 @@ class Applet(pyglet.window.Window):
     def get_time_per_second(self):
         if self.__time_per_second_cache == self.tick:
             return self.__time_per_second_value
-        time = self.world.tick * self.tick * TICKS_PER_SECOND + .0
+        time = self.tick * TICKS_PER_SECOND + .0
         unit = 'seconds'
         for size, name in ((60, 'minutes'), (60, 'hours'), (24, 'days'), (365, 'years')):
             if time < size:
                 break
             time /= size
             unit = name
-        result = '%s %s' % (time, unit)
+        result = '%s %s' % (round(time, 1), unit)
         self.__time_per_second_cache = self.tick
         self.__time_per_second_value = result
         return result
@@ -321,10 +329,10 @@ class Applet(pyglet.window.Window):
         if self.info:
             ortho(width, height)
 
-            self.label.text = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/second\n'
-                               'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)' %
+            self.label.text = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n'
+                               'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)\nTick: %d' %
                                (self.fps, c.x, c.y, c.z, self.speed, self.get_time_per_second(),
-                                c.pitch, c.yaw, c.roll))
+                                c.pitch, c.yaw, c.roll, self.world.tick))
             self.label.draw()
 
             glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT)

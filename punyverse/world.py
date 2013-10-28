@@ -62,7 +62,7 @@ def load_world(file):
         e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': root.get('au', 2000)})
         tick = root.get('tick', 4320)  # How many second is a tick?
         length = root.get('length', 4320)  # Satellite distance is in km, divide by this gets in world units
-        world.tick = tick
+        world.tick_length = tick
 
         if 'start' in root:
             info = root['start']
@@ -103,7 +103,7 @@ def load_world(file):
             else:
                 print 'Nothing to load for %s.' % name
 
-            params = {}
+            params = {'world': world}
             if parent is None:
                 type = Body
             else:
@@ -112,7 +112,7 @@ def load_world(file):
                 sma = e(info.get('sma', distance))       # Semi-major axis used to calculate orbital speed
                 if hasattr(parent, 'mass') and parent.mass is not None:
                     period = 2 * pi * sqrt((sma * 1000) ** 3 / (G * parent.mass))
-                    speed = 360 / (period / tick)
+                    speed = 360 / (period + .0)
                     if not rotation:  # Rotation = 0 assumes tidal lock
                         rotation = period
                 else:
@@ -142,7 +142,7 @@ def load_world(file):
                 if not cheap:
                     atmosphere_id = compile(disk, radius, radius + size, 30, atm_texture)
 
-            object = type(object_id, (x, y, z), (pitch, yaw, roll), rotation_angle=360 / (rotation / (tick + .0)),
+            object = type(object_id, (x, y, z), (pitch, yaw, roll), rotation_angle=360 / (rotation + .0),
                           atmosphere=atmosphere_id, cloudmap=cloudmap_id, background=background, **params)
             world.tracker.append(object)
 
@@ -159,7 +159,7 @@ def load_world(file):
                 if not cheap:
                     world.tracker.append(
                         type(compile(disk, distance, distance + size, 30, texture), (x, y, z),
-                             (pitch, yaw, roll)))
+                             (pitch, yaw, roll), **params))
 
             for satellite, info in info.get('satellites', {}).iteritems():
                 print "Loading %s, satellite of %s." % (satellite, name)
@@ -180,4 +180,5 @@ class World(object):
         self.x = None
         self.y = None
         self.z = None
-        self.tick = 1
+        self.tick_length = 1
+        self.tick = 0

@@ -11,7 +11,7 @@
     "model": "used to load a wavefront object instead of a textured sphere"
   },
   "au": 10000,
-  "tick": 432,
+  "tick": 180,
   "length": 63.7,
   "bodies": {
     "earth": {
