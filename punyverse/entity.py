@@ -1,4 +1,3 @@
-from punyverse import framedata
 from punyverse.orbit import KeplerOrbit
 
 from pyglet.gl import *
@@ -36,16 +35,17 @@ class Body(Entity):
         self.cloudmap = kwargs.pop('cloudmap', 0)
         self.last_tick = 0
         self.mass = kwargs.pop('mass', None)
+        self.world = kwargs.pop('world')
         super(Body, self).__init__(*args, **kwargs)
         self.initial_roll = self.rotation[2]
 
     def update(self):
         super(Body, self).update()
 
-        if self.last_tick != framedata.tick:
-            self.last_tick = framedata.tick
+        if self.last_tick != self.world.tick:
+            self.last_tick = self.world.tick
             pitch, yaw, roll = self.rotation
-            roll = (self.initial_roll + framedata.tick * self.rotation_angle) % 360
+            roll = (self.initial_roll + self.world.tick * self.rotation_angle) % 360
             self.rotation = pitch, yaw, roll
 
 
@@ -105,15 +105,15 @@ class Satellite(Body):
     def update(self):
         super(Body, self).update()  # Notice how the parent class is skipped
 
-        if self.last_tick != framedata.tick:
-            self.last_tick = framedata.tick
+        if self.last_tick != self.world.tick:
+            self.last_tick = self.world.tick
             pitch, yaw, roll = self.rotation
-            roll = (self.initial_roll + framedata.tick * self.rotation_angle) % 360
+            roll = (self.initial_roll + self.world.tick * self.rotation_angle) % 360
             self.rotation = pitch, yaw, roll
 
             self.parent.update()
             px, py, pz = self.parent.location
-            self.theta = framedata.tick * self.orbit_speed % 360
+            self.theta = self.world.tick * self.orbit_speed % 360
             x, z, y = self.orbit.orbit(self.theta)
             self.location = (x + px, y + py, z + pz)
 
