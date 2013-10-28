@@ -130,6 +130,78 @@
         "texture": "ring_saturn.png",
         "distance": 1169,
         "size": 2247
+      },
+      "satellites": {
+        "titan": {
+          "texture": ["moons/titan.jpg", "moons/titan_small.jpg", [0.52, 0.39, 0.23, 1]],
+          "radius": "2576 * 10",
+          "distance": "1221870 / 3 + 200000",
+          "sma": 1221870,
+          "pitch": -90,
+          "rotation": 0,
+          "inclination": 27.07854,
+          "eccentricity": 0.0288
+        },
+        "rhea": {
+          "texture": ["moons/rhea.jpg", "moons/rhea_small.jpg", [0.62, 0.60, 0.59, 1]],
+          "radius": "763.8 * 10",
+          "distance": "527108 / 3 + 200000",
+          "sma": 527108,
+          "pitch": -90,
+          "rotation": 0,
+          "inclination": 27.075,
+          "eccentricity": 0.0012583
+        },
+        "iapetus": {
+          "texture": ["moons/iapetus.jpg", "moons/iapetus_small.jpg", [0.62, 0.60, 0.59, 1]],
+          "radius": "734.5 * 10",
+          "distance": "3560820 / 3 + 200000",
+          "sma": 3560820,
+          "pitch": -90,
+          "rotation": 0,
+          "inclination": 17.28,
+          "eccentricity": 0.0286125
+        },
+        "dione": {
+          "texture": ["moons/dione.jpg", "moons/dione_small.jpg", [0.46, 0.46, 0.46, 1]],
+          "radius": "561.4 * 10",
+          "distance": "377396 / 3 + 200000",
+          "sma": 377396,
+          "pitch": -90,
+          "rotation": 0,
+          "inclination": 26.711,
+          "eccentricity": 0.0022
+        },
+        "tethys": {
+          "texture": ["moons/tethys.jpg", "moons/tethys_small.jpg", [0.68, 0.68, 0.66, 1]],
+          "radius": "531.1 * 10",
+          "distance": "294619 / 3 + 200000",
+          "sma": 294619,
+          "pitch": -90,
+          "rotation": 0,
+          "inclination": 25.61,
+          "eccentricity": 0.0001
+        },
+        "enceladus": {
+          "texture": ["moons/enceladus.jpg", "moons/enceladus_small.jpg", [0.74, 0.74, 0.74, 1]],
+          "radius": "252.1 * 10",
+          "distance": "237948 / 3 + 200000",
+          "sma": 237948,
+          "pitch": -90,
+          "rotation": 0,
+          "inclination": 26.711,
+          "eccentricity": 0.0047
+        },
+        "mimas": {
+          "texture": ["moons/mimas.jpg", "moons/mimas_small.jpg", [0.47, 0.47, 0.47, 1]],
+          "radius": "198.2 * 10",
+          "distance": "181902 / 3 + 200000",
+          "sma": 181902,
+          "pitch": -90,
+          "rotation": 0,
+          "inclination": 28.304,
+          "eccentricity": 0.0196
+        }
       }
     },
     "uranus": {
