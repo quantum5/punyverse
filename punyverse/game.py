@@ -55,9 +55,10 @@ class Applet(pyglet.window.Window):
                 cam.roll -= 4
             cam.move(self.speed)
 
-        framedata.tick += self.tick
-        for entity in self.world.tracker:
-            entity.update()
+        if self.running:
+            framedata.tick += self.tick
+            for entity in self.world.tracker:
+                entity.update()
 
     def __init__(self, *args, **kwargs):
         super(Applet, self).__init__(*args, **kwargs)
@@ -69,6 +70,7 @@ class Applet(pyglet.window.Window):
         self.info = True
         self.debug = False
         self.orbit = True
+        self.running = True
 
         self.tick = 1
         # On standard world: 10x is one day per second, 100x is 10 days, 300x is a month
@@ -181,6 +183,8 @@ class Applet(pyglet.window.Window):
                 self.debug = not self.debug
             elif symbol == key.O:
                 self.orbit = not self.orbit
+            elif symbol == key.ENTER:
+                self.running = not self.running
             elif symbol == key.INSERT:
                 index = self.ticks.index(self.tick) + 1
                 if index < len(self.ticks):
@@ -189,10 +193,10 @@ class Applet(pyglet.window.Window):
                 index = self.ticks.index(self.tick) - 1
                 if index >= 0:
                     self.tick = self.ticks[index]
-            elif symbol == key.Q:
+            elif symbol == key.SPACE:
                 c = self.cam
                 dx, dy, dz = c.direction()
-                speed = max(1, abs(self.speed) * 0.6)
+                speed = self.speed * 1.1 + 5
                 dx *= speed
                 dy *= speed
                 dz *= speed
