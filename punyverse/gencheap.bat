@@ -13,6 +13,14 @@ call :convert saturn.jpg saturn_small.jpg 1024x512
 call :convert moons\io.jpg moons\io_small.jpg 1024x512
 call :convert moons\europa.jpg moons\europa_small.jpg 1024x512
 call :convert moons\ganymede.jpg moons\ganymede_small.jpg 1024x512
+call :convert moons\callisto.jpg moons\callisto_small.jpg 1024x512
+call :convert moons\titan.jpg moons\titan_small.jpg 1024x512
+call :convert moons\rhea.jpg moons\rhea_small.jpg 1024x512
+call :convert moons\iapetus.jpg moons\iapetus_small.jpg 1024x512
+call :convert moons\dione.jpg moons\dione_small.jpg 1024x512
+call :convert moons\tethys.jpg moons\tethys_small.jpg 1024x512
+call :convert moons\enceladus.jpg moons\enceladus_small.jpg 1024x512
+call :convert moons\mimas.jpg moons\mimas_small.jpg 1024x512
 goto :eof
 
 :convert
