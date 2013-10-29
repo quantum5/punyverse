@@ -36,6 +36,10 @@ class Body(Entity):
         self.last_tick = 0
         self.mass = kwargs.pop('mass', None)
         self.world = kwargs.pop('world')
+        orbit_distance = kwargs.pop('orbit_distance', 40000) + .0
+        self.orbit_show = orbit_distance * 1.25
+        self.orbit_blend = orbit_distance / 4
+        self.orbit_opaque = orbit_distance
         super(Body, self).__init__(*args, **kwargs)
         self.initial_roll = self.rotation[2]
 
@@ -83,19 +87,11 @@ class Satellite(Body):
 
         id = glGenLists(1)
         glNewList(id, GL_COMPILE)
-        glDisable(GL_LIGHTING)
-        glDisable(GL_TEXTURE_2D)
-        glPushAttrib(GL_LINE_BIT | GL_CURRENT_BIT)
-        glColor3f(1, 1, 1)
-        glLineWidth(1)
         glBegin(GL_LINE_LOOP)
         for theta in xrange(360):
             x, z, y = self.orbit.orbit(theta)
             glVertex3f(x, y, z)
         glEnd()
-        glPopAttrib()
-        glEnable(GL_TEXTURE_2D)
-        glEnable(GL_LIGHTING)
         glEndList()
 
         self.orbit_id = id

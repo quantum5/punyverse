@@ -75,15 +75,15 @@ class Applet(pyglet.window.Window):
         # On standard world: 10x is one day per second, 100x is 10 days, 300x is a month
         # 900x is a quarter, 1825 is a half year, 3650 is a year, 36500 is a decade, 365000 is a century
         # and yes the individual hours and seconds look ugly
-        self.ticks = [20, 40, 60,                             # Second range
-                      120, 300, 600, 1200, 1800, 2700, 3600,  # Minute range
-                      7200, 14400, 21600, 43200, 86400,       # Hour range
-                      172800, 432000, 604800,                 # 2, 5, 7 days
-                      1209600, 2592000,                       # 2 week, 1 month
-                      5270400, 7884000, 15768000, 31536000,   # 2, 3, 6, 12 months
-                      63072000, 157680000, 315360000,         # 2, 5, 10 years
-                      630720000, 1576800000, 3153600000,      # 20, 50, 100 years
-                      ]
+        self.ticks = [20, 40, 60, # Second range
+                      120, 300, 600, 1200, 1800, 2700, 3600, # Minute range
+                      7200, 14400, 21600, 43200, 86400, # Hour range
+                      172800, 432000, 604800, # 2, 5, 7 days
+                      1209600, 2592000, # 2 week, 1 month
+                      5270400, 7884000, 15768000, 31536000, # 2, 3, 6, 12 months
+                      63072000, 157680000, 315360000, # 2, 5, 10 years
+                      630720000, 1576800000, 3153600000, # 20, 50, 100 years
+        ]
         self.ticks = [i / 20 for i in self.ticks]
         self.__time_per_second_cache = None
         self.__time_per_second_value = None
@@ -256,8 +256,9 @@ class Applet(pyglet.window.Window):
         glEnable(GL_LIGHTING)
         glEnable(GL_BLEND)
         world = self.world
+        get_distance = entity_distance(x, y, z)
         if x != world.x or y != world.y or z != world.z:
-            world.tracker.sort(key=entity_distance(x, y, z), reverse=True)
+            world.tracker.sort(key=get_distance, reverse=True)
             world.tracker.sort(key=attrgetter('background'), reverse=True)
             world.x, world.y, world.z = x, y, z
 
@@ -316,10 +317,20 @@ class Applet(pyglet.window.Window):
                 glPopMatrix()
 
             if self.orbit and hasattr(entity, 'get_orbit') and hasattr(entity, 'parent'):
-                glPushMatrix()
-                glTranslatef(*entity.parent.location)
-                glCallList(entity.get_orbit())
-                glPopMatrix()
+                parent = entity.parent
+                distance = get_distance(parent)
+                if distance < parent.orbit_show:
+                    glPushMatrix()
+                    glTranslatef(*entity.parent.location)
+                    glDisable(GL_LIGHTING)
+                    glPushAttrib(GL_LINE_BIT | GL_CURRENT_BIT)
+                    glColor4f(1, 1, 1, 1 if distance < parent.orbit_opaque else
+                              (1 - (distance - parent.orbit_opaque) / parent.orbit_blend))
+                    glLineWidth(1)
+                    glCallList(entity.get_orbit())
+                    glPopAttrib()
+                    glEnable(GL_LIGHTING)
+                    glPopMatrix()
 
         glColor4f(1, 1, 1, 1)
         glDisable(GL_TEXTURE_2D)
