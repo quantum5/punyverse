@@ -18,7 +18,6 @@ except ImportError:
     else:
         magick = True
 
-
     def bgr_to_rgb(source, width, height, alpha=False, bottom_up=True):
         length = len(source)
         depth = length / (width * height)

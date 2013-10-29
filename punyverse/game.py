@@ -1,36 +1,29 @@
 #!/usr/bin/python
 from operator import attrgetter
-import sys
-
-from camera import Camera
-from widgets import *
-
-try:
-    from _model import *
-except ImportError:
-    from model import *
-from world import *
-import texture
-
-try:
-    from pyglet.gl import *
-    from pyglet.gl.glu import *
-    from pyglet.window import key, mouse
-    import pyglet
-except ImportError:
-    print "Pyglet not installed correctly, or at all."
-    sys.exit()
-
-from punyverse.glgeom import *
-
-from math import *
+from math import hypot, sqrt, atan2, degrees
+from time import clock
 import time
 import random
-from time import clock
 
-INITIAL_SPEED = 0       # The initial speed of the player
-TICKS_PER_SECOND = 20   # How many times to update game per second
-MOUSE_SENSITIVITY = 0.3 # Mouse sensitivity, 0..1, none...hyperspeed
+from punyverse.camera import Camera
+from punyverse.world import load_world
+from punyverse.glgeom import *
+from punyverse.entity import Asteroid
+from punyverse import texture
+
+try:
+    from punyverse._model import model_list, load_model
+except ImportError:
+    from punyverse.model import model_list, load_model
+
+from pyglet.gl import *
+from pyglet.window import key
+import pyglet
+
+
+INITIAL_SPEED = 0        # The initial speed of the player
+TICKS_PER_SECOND = 20    # How many times to update game per second
+MOUSE_SENSITIVITY = 0.3  # Mouse sensitivity, 0..1, none...hyperspeed
 
 MAX_DELTA = 5
 SEED = int(time.time())

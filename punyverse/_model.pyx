@@ -3,7 +3,7 @@ from libc.stdlib cimport malloc, free, atof
 from libc.stdio cimport fopen, fclose, fgets, FILE
 cimport cython
 
-from texture import load_texture
+from punyverse.texture import load_texture
 include "_cyopengl.pxi"
 from uuid import uuid4
 import os

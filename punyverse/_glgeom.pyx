@@ -13,9 +13,9 @@ cdef extern from "Python.h":
 
 @cython.cdivision(True)
 cpdef torus(float major_radius, float minor_radius, int n_major, int n_minor, tuple material, int shininess=125):
-    '''
+    """
         Torus function from the OpenGL red book.
-    '''
+    """
     glPushAttrib(GL_CURRENT_BIT)
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [material[0], material[1], material[2], material[3]])
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1, 1, 1, 1])

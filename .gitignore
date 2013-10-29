@@ -45,3 +45,9 @@ punyverse/assets/textures/*_small.*
 punyverse/assets/textures/*/*_medium.*
 punyverse/assets/textures/*/*_small.*
 temp
+
+# There is a py2exe package that can execute punyverse directly
+library.zip
+*.exe
+*.log
+*.dll

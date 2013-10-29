@@ -1,8 +1,9 @@
 from math import *
 from pyglet.gl import *
-from pyglet.gl.glu import *
 
 TWOPI = pi * 2
+
+__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'torus']
 
 
 def compile(pointer, *args, **kwargs):
@@ -76,9 +77,9 @@ def disk(rinner, router, segs, tex):
 
 
 def sphere(r, lats, longs, tex, lighting=True, fv4=GLfloat * 4):
-    '''
+    """
         Sphere function from the OpenGL red book.
-    '''
+    """
     sphere = gluNewQuadric()
     gluQuadricDrawStyle(sphere, GLU_FILL)
     gluQuadricTexture(sphere, True)
@@ -105,9 +106,9 @@ def sphere(r, lats, longs, tex, lighting=True, fv4=GLfloat * 4):
 
 
 def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
-    '''
+    """
         Sphere function from the OpenGL red book.
-    '''
+    """
     sphere = gluNewQuadric()
 
     glDisable(GL_BLEND)
@@ -125,9 +126,9 @@ try:
     from _glgeom import torus
 except ImportError:
     def torus(major_radius, minor_radius, n_major, n_minor, material, shininess=125, fv4=GLfloat * 4):
-        '''
+        """
             Torus function from the OpenGL red book.
-        '''
+        """
         glPushAttrib(GL_CURRENT_BIT)
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(*material))
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 1))
