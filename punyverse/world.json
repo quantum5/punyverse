@@ -28,6 +28,7 @@
         "diffuse_texture": "atmosphere_earth.png",
         "diffuse_size": 30
       },
+      "orbit_distance": "AU",
       "satellites": {
         "moon": {
           "texture": ["moon.jpg", "moon_medium.jpg", "moon_small.jpg", [0.53, 0.53, 0.53, 1]],
@@ -57,6 +58,7 @@
       "yaw": 25.19,
       "mass": 6.4185e+23,
       "rotation": 88643,
+      "orbit_distance": "AU",
       "satellites": {
         "phobos": {
           "distance": 9377,
@@ -75,6 +77,7 @@
       "yaw": 3.13,
       "comment": "satellites here are 3/10 the virtual distance than physical, and five times the size",
       "rotation": 35730,
+      "orbit_distance": "3 * AU",
       "satellites": {
         "io": {
           "texture": ["moons/io.jpg", "moons/io_small.jpg", [0.62, 0.56, 0.35, 1]],
@@ -131,6 +134,7 @@
         "distance": 1169,
         "size": 2247
       },
+      "orbit_distance": "4 * AU",
       "satellites": {
         "titan": {
           "texture": ["moons/titan.jpg", "moons/titan_small.jpg", [0.52, 0.39, 0.23, 1]],
@@ -212,6 +216,7 @@
       "pitch": -90,
       "yaw": 97.77,
       "rotation": -62064,
+      "orbit_distance": "6 * AU",
       "ring": {
         "texture": "ring_uranus.png",
         "pitch": 0,
@@ -226,6 +231,7 @@
       "radius": 24764,
       "mass": 1.0243e+26,
       "z": "30.5 * AU",
+      "orbit_distance": "6 * AU",
       "rotation": 57996,
       "pitch": -90,
       "yaw": 28.32

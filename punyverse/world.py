@@ -59,7 +59,8 @@ def load_world(file):
         root = json.load(f, object_pairs_hook=OrderedDict)
 
         world = World()
-        e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': root.get('au', 2000)})
+        au = root.get('au', 2000)
+        e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': au})
         tick = root.get('tick', 4320)  # How many second is a tick?
         length = root.get('length', 4320)  # Satellite distance is in km, divide by this gets in world units
         world.tick_length = tick
@@ -86,6 +87,7 @@ def load_world(file):
             rotation = e(info.get('rotation', 86400))
             radius = e(info.get('radius', length)) / length
             background = info.get('background', False)
+            orbit_distance = e(info.get('orbit_distance', au))
 
             if 'texture' in info:
                 cheap, skip, texture = get_best_texture(info['texture'], optional=info.get('optional', False))
@@ -103,7 +105,7 @@ def load_world(file):
             else:
                 print 'Nothing to load for %s.' % name
 
-            params = {'world': world}
+            params = {'world': world, 'orbit_distance': orbit_distance}
             if parent is None:
                 type = Body
             else:
