@@ -63,7 +63,7 @@ def model_list(model, sx=1, sy=1, sz=1, rotation=(0, 0, 0)):
             if f.norms:
                 glNormal3f(*normals[f.norms[n]])
             if tex_id:
-                glTexCoord2f(*textures[f.texs[n]])
+                glTexCoord2f(*textures[f.texs[n]][:2])
 
             x, y, z = vertices[f.verts[n]]
             glVertex3f(x * sx, y * sy, z * sz)

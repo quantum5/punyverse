@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from functools import partial
 import os.path
 
 try:
@@ -8,12 +7,12 @@ except ImportError:
     try:
         import simplejson as json
     except ImportError:
-        print "No compatible JSON decoder found. Translation: you're fucked."
+        raise SystemExit('No JSON module found')
 
 try:
-    from _model import model_list, load_model
+    from punyverse._model import model_list, load_model
 except ImportError:
-    from model import model_list, load_model
+    from punyverse.model import model_list, load_model
 
 from punyverse.glgeom import *
 from punyverse.entity import *
@@ -104,6 +103,7 @@ def load_world(file):
                                        info.get('sz', scale), (0, 0, 0))
             else:
                 print 'Nothing to load for %s.' % name
+                return
 
             params = {'world': world, 'orbit_distance': orbit_distance}
             if parent is None:
