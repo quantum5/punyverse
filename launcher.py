@@ -25,7 +25,7 @@ for res in resources:
             data.append((dir, [join(parent, file)]))
 
 setup(
-    console=[{'dest_base': 'punyverse_debug', 'script': 'bootloader.py'}],
+    console=[{'dest_base': 'punyverse_debug', 'script': 'bootloader.py'}, 'small_images.py'],
     windows=[{'dest_base': 'punyverse', 'script': 'bootloader.py'}],
     data_files=data,
     options={'py2exe': {
@@ -34,7 +34,7 @@ setup(
                     '_ssl', 'unittest', 'doctest', 'PIL', 'email', 'distutils',
                     'pyglet.window.carbon', 'pyglet.window.xlib',
                     'pyglet.media.drivers.alsa',
-                    'win32wnet', 'netbios'
+                    'win32wnet', 'netbios', 'pgmagick'
                 ],
                 'dll_excludes': ['MPR.dll', 'w9xpopen.exe'],
               }
