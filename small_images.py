@@ -48,6 +48,9 @@ except ImportError:
         return image.size
     
     def scale(image, width, height):
+        original_width, original_height = image.size
+        if width * 3 < original_width and height * 3 < original_height:
+            image = image.resize((width * 2, height * 2))
         return image.resize((width, height), Image.ANTIALIAS)
     
     def save(image, file):
