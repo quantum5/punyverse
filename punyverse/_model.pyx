@@ -257,8 +257,16 @@ cdef class WavefrontObject(object):
         free(buf)
         fclose(cfile)
 
+import sys
+if hasattr(sys, 'frozen'):
+    model_base = os.path.dirname(sys.executable)
+else:
+    model_base = os.path.join(os.path.dirname(__file__), 'assets', 'models')
+del sys
+
 def load_model(path):
-    path = os.path.join(os.path.dirname(__file__), 'assets', 'models', path)
+    if not os.path.isabs(path):
+        path = os.path.join(model_base, path)
     if not isinstance(path, unicode):
         path = path.decode('mbcs')
     return WavefrontObject(path)
