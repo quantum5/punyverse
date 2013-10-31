@@ -87,12 +87,12 @@ def load_world(file):
             radius = e(info.get('radius', length)) / length
             background = info.get('background', False)
             orbit_distance = e(info.get('orbit_distance', au))
+            division = info.get('division', max(min(int(radius / 8), 60), 10))
 
             if 'texture' in info:
                 cheap, skip, texture = get_best_texture(info['texture'], optional=info.get('optional', False))
                 if skip:
                     return
-                division = min(int(radius / 2), 100)
                 if cheap:
                     object_id = compile(colourball, radius, division, division, texture)
                 else:
@@ -137,7 +137,6 @@ def load_world(file):
                 cloud_texture = atmosphere_data.get('cloud_texture', None)
                 cheap, _, cloud_texture = get_best_texture(cloud_texture)
                 if not cheap:
-                    division = min(int(radius / 2), 100)
                     cloudmap_id = compile(sphere, radius + 2, division, division, cloud_texture,
                                           lighting=False)
                 cheap, _, atm_texture = get_best_texture(atm_texture)
