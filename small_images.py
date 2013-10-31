@@ -75,9 +75,10 @@ def shrink(file):
         print 'saved to:', os.path.basename(name)
         save(image, name)
     else:
-        print
+        print 'alrady there'
 
 textures = [
+    'mercury.jpg',
     'earth.jpg',
     'moon.jpg',
     'mars.jpg',
@@ -98,9 +99,9 @@ textures = [
 
 def frozen():
     import imp
-    return (hasattr(sys, "frozen") or # new py2exe
-            hasattr(sys, "importers") # old py2exe
-            or imp.is_frozen("__main__")) # tools/freeze
+    return (hasattr(sys, 'frozen') or # new py2exe
+            hasattr(sys, 'importers') # old py2exe
+            or imp.is_frozen('__main__')) # tools/freeze
 
 def get_main_dir():
     if frozen():
