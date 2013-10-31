@@ -257,14 +257,16 @@ cdef class WavefrontObject(object):
         free(buf)
         fclose(cfile)
 
-import sys
-if hasattr(sys, 'frozen'):
-    model_base = os.path.dirname(sys.executable)
-else:
-    model_base = os.path.join(os.path.dirname(__file__), 'assets', 'models')
-del sys
+model_base = None
 
 def load_model(path):
+    global model_base
+    if model_base is None:
+        import sys
+        if hasattr(sys, 'frozen'):
+            model_base = os.path.dirname(sys.executable)
+        else:
+            model_base = os.path.join(os.path.dirname(__file__), 'assets', 'models')
     if not os.path.isabs(path):
         path = os.path.join(model_base, path)
     if not isinstance(path, unicode):
