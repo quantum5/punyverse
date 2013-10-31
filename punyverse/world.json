@@ -23,6 +23,7 @@
       "roll": -90,
       "mass": 5.97219e+24,
       "rotation": 86400,
+      "division": 70,
       "atmosphere": {
         "cloud_texture": "cloudmap.png",
         "diffuse_texture": "atmosphere_earth.png",
@@ -35,6 +36,7 @@
           "radius": 1738.14,
           "distance": 38439,
           "sma": 384399,
+          "division": 30,
           "eccentricity": 0.0549,
           "inclination": 5.145,
           "rotation": 0,
@@ -59,6 +61,7 @@
       "mass": 6.4185e+23,
       "rotation": 88643,
       "orbit_distance": "AU",
+      "division": 30,
       "satellites": {
         "phobos": {
           "distance": 9377,
@@ -240,7 +243,8 @@
       "texture": "sky.jpg",
       "optional": true,
       "lighting": false,
-      "radius": 190000,
+      "radius": 305000000,
+      "division": 30,
       "pitch": 90,
       "yaw": 30,
       "roll": 180,
