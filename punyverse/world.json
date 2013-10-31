@@ -22,6 +22,24 @@
       "mass": 1.9891e+30,
       "rotation": 2164320
     },
+    "mercury": {
+      "texture": ["mercury.jpg", "mercury_small.jpg", [0.44, 0.43, 0.43]],
+      "radius": 2439.7,
+      "z": "0.466697 * AU",
+      "pitch": -90,
+      "yaw": 0.35,
+      "division": 30,
+      "rotation": 5067014
+    },
+    "venus": {
+      "texture": ["venus.jpg", [0.655, 0.38, 0.1]],
+      "radius": 6051.8,
+      "z": "0.723327 * AU",
+      "pitch": -90,
+      "yaw": 177.36,
+      "division": 30,
+      "rotation": -20996798
+    },
     "earth": {
       "texture": ["earth.jpg", "earth_medium.jpg", "earth_small.jpg", [0, 0.28, 1, 1]],
       "radius": 6378.1,

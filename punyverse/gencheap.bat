@@ -1,5 +1,6 @@
 @echo off
 cd %~dp0assets\textures
+call :convert mercury.jpg mercury_small.jpg 1024x512
 call :convert earth.jpg earth_medium.jpg 2048x1024
 call :convert earth.jpg earth_small.jpg 1024x512
 call :convert moon.jpg moon_medium.jpg 2048x1024
