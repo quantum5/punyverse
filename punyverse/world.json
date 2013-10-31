@@ -14,6 +14,14 @@
   "tick": 180,
   "length": 63.7,
   "bodies": {
+    "sun": {
+      "texture": ["sun.jpg", [0.99, 0.97, 0.66]],
+      "radius": 80000,
+      "pitch": -90,
+      "yaw": 7.25,
+      "mass": 1.9891e+30,
+      "rotation": 2164320
+    },
     "earth": {
       "texture": ["earth.jpg", "earth_medium.jpg", "earth_small.jpg", [0, 0.28, 1, 1]],
       "radius": 6378.1,
