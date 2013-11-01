@@ -197,7 +197,7 @@ class Applet(pyglet.window.Window):
             elif symbol == key.SPACE:
                 c = self.cam
                 dx, dy, dz = c.direction()
-                speed = self.speed * 1.1 + 5
+                speed = abs(self.speed) * 1.1 + 5
                 dx *= speed
                 dy *= speed
                 dz *= speed

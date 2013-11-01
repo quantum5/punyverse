@@ -143,7 +143,8 @@ def load_world(file):
                 if not cheap:
                     atmosphere_id = compile(disk, radius, radius + size, 30, atm_texture)
 
-            object = type(object_id, (x, y, z), (pitch, yaw, roll), rotation_angle=360 / (rotation + .0),
+            theta = 360 / (rotation + .0) if rotation else 0
+            object = type(object_id, (x, y, z), (pitch, yaw, roll), rotation_angle=theta,
                           atmosphere=atmosphere_id, cloudmap=cloudmap_id, background=background, **params)
             world.tracker.append(object)
 

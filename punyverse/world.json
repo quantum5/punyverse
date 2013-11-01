@@ -242,8 +242,7 @@
       "radius": 25559,
       "mass": 8.6810e+25,
       "z": "19.23 * AU",
-      "pitch": -90,
-      "yaw": 97.77,
+      "pitch": 7.77,
       "rotation": -62064,
       "orbit_distance": "6 * AU",
       "ring": {
@@ -267,6 +266,7 @@
     },
     "sky": {
       "texture": "sky.jpg",
+      "rotation": 0,
       "optional": true,
       "lighting": false,
       "radius": 305000000,
