@@ -278,6 +278,16 @@
       "background": true
     }
   },
+  "belts": {
+    "main": {
+      "model": "asteroids/mainbelt.obj",
+      "radius": "2.362 * AU",
+      "cross": 1000,
+      "scale": 30,
+      "count": "TEXTURE",
+      "rotation": 114536500
+    }
+  },
   "start": {
     "z": "AU - 400",
     "yaw": 180

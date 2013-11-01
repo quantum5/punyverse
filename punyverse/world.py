@@ -17,6 +17,7 @@ except ImportError:
 from punyverse.glgeom import *
 from punyverse.entity import *
 from punyverse.texture import *
+from punyverse import texture
 
 from math import pi, sqrt
 
@@ -59,7 +60,7 @@ def load_world(file):
 
         world = World()
         au = root.get('au', 2000)
-        e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': au})
+        e = lambda x: eval(str(x), {'__builtins__': None}, {'AU': au, 'TEXTURE': texture.max_texture})
         tick = root.get('tick', 4320)  # How many second is a tick?
         length = root.get('length', 4320)  # Satellite distance is in km, divide by this gets in world units
         world.tick_length = tick
@@ -170,6 +171,28 @@ def load_world(file):
         for planet, info in root['bodies'].iteritems():
             print "Loading %s." % planet
             body(planet, info)
+
+        for name, info in root['belts'].iteritems():
+            print 'Loading %s.' % name
+            x = e(info.get('x', 0))
+            y = e(info.get('y', 0))
+            z = e(info.get('z', 0))
+            radius = e(info.get('radius', 0))
+            cross = e(info.get('cross', 0))
+            count = int(e(info.get('count', 0)))
+            scale = info.get('scale', 1)
+            longitude = info.get('longitude', 0)
+            inclination = info.get('inclination', 0)
+            argument = info.get('argument', 0)
+            rotation = info.get('period', 31536000)
+            theta = 360 / (rotation + .0) if rotation else 0
+
+            object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
+                                   info.get('sz', scale), (0, 0, 0))
+
+            world.tracker.append(Belt(compile(belt, radius, cross, object_id, count),
+                                      (x, y, z), (inclination, longitude, argument),
+                                      rotation_angle=theta, world=world))
 
         return world
 
