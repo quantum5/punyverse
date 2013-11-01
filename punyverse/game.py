@@ -17,7 +17,8 @@ except ImportError:
     from punyverse.model import model_list, load_model
 
 from pyglet.gl import *
-from pyglet.window import key
+from pyglet.window import key, mouse
+
 import pyglet
 
 
@@ -45,7 +46,8 @@ class Applet(pyglet.window.Window):
                 cam.roll += 4
             if key.S in self.keys:
                 cam.roll -= 4
-            cam.move(self.speed)
+            if self.moving:
+                cam.move(self.speed)
 
         if self.running:
             self.world.tick += self.tick
@@ -63,6 +65,7 @@ class Applet(pyglet.window.Window):
         self.debug = False
         self.orbit = True
         self.running = True
+        self.moving = True
 
         self.tick = self.world.tick_length
         # On standard world: 10x is one day per second, 100x is 10 days, 300x is a month
@@ -146,9 +149,24 @@ class Applet(pyglet.window.Window):
         super(Applet, self).set_exclusive_mouse(exclusive) # Pass to parent
         self.exclusive = exclusive # Toggle flag
 
+    def launch_meteor(self):
+        c = self.cam
+        dx, dy, dz = c.direction()
+        speed = abs(self.speed) * 1.1 + 5
+        dx *= speed
+        dy *= speed
+        dz *= speed
+        self.world.tracker.append(
+            Asteroid(random.choice(self.asteroid_ids), (c.x, c.y - 3, c.z + 5), direction=(dx, dy, dz)))
+
     def on_mouse_press(self, x, y, button, modifiers):
         if not self.exclusive:
             self.set_exclusive_mouse(True)
+        else:
+            if button == mouse.LEFT:
+                self.launch_meteor()
+            elif button == mouse.RIGHT:
+                self.moving = not self.moving
 
     def on_mouse_motion(self, x, y, dx, dy):
         if self.exclusive: # Only handle camera movement if mouse is grabbed
@@ -195,14 +213,7 @@ class Applet(pyglet.window.Window):
                 if index >= 0:
                     self.tick = self.ticks[index]
             elif symbol == key.SPACE:
-                c = self.cam
-                dx, dy, dz = c.direction()
-                speed = abs(self.speed) * 1.1 + 5
-                dx *= speed
-                dy *= speed
-                dz *= speed
-                self.world.tracker.append(
-                    Asteroid(random.choice(self.asteroid_ids), (c.x, c.y - 3, c.z + 5), direction=(dx, dy, dz)))
+                self.launch_meteor()
             else:
                 self.keys.add(symbol)
 
@@ -219,6 +230,9 @@ class Applet(pyglet.window.Window):
         # A field of view of 45
         gluPerspective(45.0, width / float(height), 0.1, 50000000.0)
         glMatrixMode(GL_MODELVIEW)
+
+    def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
+        self.speed += scroll_y * 50 + scroll_x * 500
 
     def get_time_per_second(self):
         if self.__time_per_second_cache == self.tick:
