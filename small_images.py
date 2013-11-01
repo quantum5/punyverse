@@ -109,11 +109,20 @@ def get_main_dir():
     return os.path.dirname(__file__)
 
 def main():
-    texture = os.path.join(get_main_dir(), 'punyverse', 'assets', 'textures')
-    for file in textures:
+    punyverse = os.path.join(get_main_dir(), 'punyverse')
+    try:
+        with open(os.path.join(punyverse, 'assets', 'textures.txt')) as f:
+            files = [i.strip() for i in f if not i.startswith('#') and i.strip()]
+    except IOError:
+        files = textures
+    texture = os.path.join(punyverse, 'assets', 'textures')
+    for file in files:
         print 'Resizing %s:' % file,
         file = os.path.join(texture, file.replace('/', os.sep))
-        shrink(file)
+        if os.path.exists(file):
+            shrink(file)
+        else:
+            print 'exists not'
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,20 @@
+# This file contains all the textures that is bigger than the minimum OpenGL texture size
+# and hence may need to be resized depending on the machine
+
+mercury.jpg
+earth.jpg
+moon.jpg
+mars.jpg
+jupiter.jpg
+saturn.jpg
+moons/io.jpg
+moons/europa.jpg
+moons/ganymede.jpg
+moons/callisto.jpg
+moons/titan.jpg
+moons/rhea.jpg
+moons/iapetus.jpg
+moons/dione.jpg
+moons/tethys.jpg
+moons/enceladus.jpg
+moons/mimas.jpg
