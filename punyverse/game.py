@@ -56,9 +56,12 @@ class Applet(pyglet.window.Window):
 
     def __init__(self, *args, **kwargs):
         super(Applet, self).__init__(*args, **kwargs)
+        texture.init()
+
         l = clock()
         self.fps = 0
         self.world = load_world("world.json")
+        print 'Initializing game...'
         self.speed = INITIAL_SPEED
         self.keys = set()
         self.info = True
@@ -99,7 +102,6 @@ class Applet(pyglet.window.Window):
         glClearColor(0, 0, 0, 1)
         glClearDepth(1.0)
 
-        texture.init()
         if not texture.badcard:
             glEnable(GL_BLEND)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -130,16 +132,19 @@ class Applet(pyglet.window.Window):
         glLightfv(GL_LIGHT1, GL_DIFFUSE, fv4(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
 
+        print 'Loading asteroids...'
         self.asteroid_ids = [model_list(load_model(r"asteroids\01.obj"), 5, 5, 5, (0, 0, 0)),
                              model_list(load_model(r"asteroids\02.obj"), 5, 5, 5, (0, 0, 0)),
                              model_list(load_model(r"asteroids\03.obj"), 5, 5, 5, (0, 0, 0)),
                              model_list(load_model(r"asteroids\04.obj"), 5, 5, 5, (0, 0, 0)),
-                             model_list(load_model(r"asteroids\05.obj"), 5, 5, 5, (0, 0, 0))]
+                             model_list(load_model(r"asteroids\05.obj"), 5, 5, 5, (0, 0, 0)),
+                             ]
 
         c = self.cam
         c.x, c.y, c.z = self.world.start
         c.pitch, c.yaw, c.roll = self.world.direction
 
+        print 'Updating entities...'
         for entity in self.world.tracker:
             entity.update()
 

@@ -1,9 +1,10 @@
 from math import *
 from pyglet.gl import *
+from random import random, uniform
 
 TWOPI = pi * 2
 
-__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'torus']
+__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'torus', 'belt']
 
 
 def compile(pointer, *args, **kwargs):
@@ -120,6 +121,25 @@ def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
 
     glEnable(GL_BLEND)
     gluDeleteQuadric(sphere)
+
+
+def belt(radius, cross, object, count):
+    for i in xrange(count):
+        theta = TWOPI * random()
+        x, y, z = cos(theta) * radius, 0, sin(theta) * radius
+        # Pretend to move horizontally around the x-axis by delta
+        # then I multiply it by a rotation matrix about angle theta
+        # the z-axis need not to be multiplied by the matrix, as it's 0
+        # Do note the rotation is counter clockwise
+        delta = cross * uniform(-1, 1)
+        x += cos(theta) * delta
+        z += sin(theta) * delta
+        y += cross * uniform(-1, 1)
+
+        glPushMatrix()
+        glTranslatef(x, y, z)
+        glCallList(object)
+        glPopMatrix()
 
 
 try:

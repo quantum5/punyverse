@@ -28,6 +28,18 @@ class Asteroid(Entity):
         self.rotation = rx + 1, ry + 1, rz + 1
 
 
+class Belt(Entity):
+    def __init__(self, *args, **kwargs):
+        self.rotation_angle = kwargs.pop('rotation_angle', 5)
+        self.world = kwargs.pop('world')
+        super(Belt, self).__init__(*args, **kwargs)
+
+    def update(self):
+        super(Belt, self).update()
+        pitch, yaw, roll = self.rotation
+        self.rotation = pitch, self.world.tick * self.rotation_angle % 360, roll
+
+
 class Body(Entity):
     def __init__(self, *args, **kwargs):
         self.rotation_angle = kwargs.pop('rotation_angle', 5)
