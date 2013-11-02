@@ -151,7 +151,8 @@ def load_world(file):
                         corona_ratio = atmosphere_data.get('corona_ratio', 0.5)
                         corona_id = compile(flare, radius, radius + corona_size, corona_division,
                                             corona_ratio, corona)
-                elif atm_texture is not None:
+
+                if atm_texture is not None:
                     cheap, _, atm_texture = get_best_texture(atm_texture)
                     if not cheap:
                         atmosphere_id = compile(disk, radius, radius + atm_size, 30, atm_texture)
