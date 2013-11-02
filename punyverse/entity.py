@@ -45,6 +45,7 @@ class Body(Entity):
         self.rotation_angle = kwargs.pop('rotation_angle', 5)
         self.atmosphere = kwargs.pop('atmosphere', 0)
         self.cloudmap = kwargs.pop('cloudmap', 0)
+        self.corona = kwargs.pop('corona', 0)
         self.last_tick = 0
         self.mass = kwargs.pop('mass', None)
         self.world = kwargs.pop('world')

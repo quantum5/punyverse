@@ -314,7 +314,9 @@ class Applet(pyglet.window.Window):
             glPopAttrib()
             glPopMatrix()
 
-            if self.atmosphere and hasattr(entity, 'atmosphere') and entity.atmosphere:
+            has_corona = hasattr(entity, 'corona') and entity.corona
+            has_atmosphere = hasattr(entity, 'atmosphere') and entity.atmosphere
+            if self.atmosphere and (has_corona or has_atmosphere):
                 glPushMatrix()
                 x0, y0, z0 = entity.location
                 dx, dy, dz = x - x0, y - y0, z - z0
@@ -326,7 +328,10 @@ class Applet(pyglet.window.Window):
                 glTranslatef(x0, y0, z0)
                 glRotatef(pitch, 1, 0, 0)
                 glRotatef(yaw, 0, 1, 0)
-                glCallList(entity.atmosphere)
+                if has_corona:
+                    glCallList(entity.corona)
+                if has_atmosphere:
+                    glCallList(entity.atmosphere)
                 glPopMatrix()
 
             if self.cloud and hasattr(entity, "cloudmap") and entity.cloudmap:
