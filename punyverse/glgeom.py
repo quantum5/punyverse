@@ -86,14 +86,14 @@ def flare(rinner, router, res, prob, tex):
     last_y = 0
     last_theta = 0
     factor = TWOPI / res
-    rdelta = (router - rinner) * 5
+    rdelta = (router - rinner)
     glBegin(GL_QUADS)
     for i in xrange(res + 1):
         theta = last_theta + factor
         x = cos(theta)
         y = sin(theta)
         if random() > prob:
-            distance = router + rdelta * random()
+            distance = rinner + rdelta * random()
             avg_theta = (last_theta + theta) / 2
             x0, y0 = rinner * last_x, rinner * last_y
             x1, y1 = rinner * x, rinner * y
