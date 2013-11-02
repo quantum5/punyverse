@@ -70,6 +70,8 @@ class Applet(pyglet.window.Window):
         self.running = True
         self.moving = True
         self.info_precise = False
+        self.atmosphere = True
+        self.cloud = not texture.badcard
 
         self.tick = self.world.tick_length
         self.ticks = [20, 40, 60,                             # Second range
@@ -123,6 +125,8 @@ class Applet(pyglet.window.Window):
             key.D: attribute_toggler(self, 'debug'),
             key.O: attribute_toggler(self, 'orbit'),
             key.P: attribute_toggler(self, 'info_precise'),
+            key.C: attribute_toggler(self, 'cloud'),
+            key.X: attribute_toggler(self, 'atmosphere'),
             key.ENTER: attribute_toggler(self, self.running),
             key.INSERT: increment_tick,
             key.DELETE: decrement_tick,
@@ -310,7 +314,7 @@ class Applet(pyglet.window.Window):
             glPopAttrib()
             glPopMatrix()
 
-            if hasattr(entity, 'atmosphere') and entity.atmosphere:
+            if self.atmosphere and hasattr(entity, 'atmosphere') and entity.atmosphere:
                 glPushMatrix()
                 x0, y0, z0 = entity.location
                 dx, dy, dz = x - x0, y - y0, z - z0
@@ -325,7 +329,7 @@ class Applet(pyglet.window.Window):
                 glCallList(entity.atmosphere)
                 glPopMatrix()
 
-            if not texture.badcard and hasattr(entity, "cloudmap") and entity.cloudmap:
+            if self.cloud and hasattr(entity, "cloudmap") and entity.cloudmap:
                 glPushMatrix()
                 glEnable(GL_ALPHA_TEST)
                 glTranslatef(*entity.location)
