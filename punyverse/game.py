@@ -69,6 +69,7 @@ class Applet(pyglet.window.Window):
         self.orbit = True
         self.running = True
         self.moving = True
+        self.info_precise = False
 
         self.tick = self.world.tick_length
         # On standard world: 10x is one day per second, 100x is 10 days, 300x is a month
@@ -207,6 +208,8 @@ class Applet(pyglet.window.Window):
                 self.debug = not self.debug
             elif symbol == key.O:
                 self.orbit = not self.orbit
+            elif symbol == key.P:
+                self.info_precise = not self.info_precise
             elif symbol == key.ENTER:
                 self.running = not self.running
             elif symbol == key.INSERT:
@@ -316,7 +319,7 @@ class Applet(pyglet.window.Window):
                 glCallList(entity.atmosphere)
                 glPopMatrix()
 
-            if hasattr(entity, "cloudmap") and entity.cloudmap:
+            if not texture.badcard and hasattr(entity, "cloudmap") and entity.cloudmap:
                 glPushMatrix()
                 glEnable(GL_ALPHA_TEST)
                 glTranslatef(*entity.location)
@@ -352,10 +355,15 @@ class Applet(pyglet.window.Window):
         if self.info:
             ortho(width, height)
 
-            self.label.text = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n'
-                               'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)\nTick: %d' %
-                               (self.fps, c.x, c.y, c.z, self.speed, self.get_time_per_second(),
-                                c.pitch, c.yaw, c.roll, self.world.tick))
+            if self.info_precise:
+                info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n'
+                        'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)\nTick: %d' %
+                        (self.fps, c.x, c.y, c.z, self.speed, self.get_time_per_second(),
+                         c.pitch, c.yaw, c.roll, self.world.tick))
+            else:
+                info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n' %
+                        (self.fps, c.x, c.y, c.z, self.speed, self.get_time_per_second()))
+            self.label.text = info
             self.label.draw()
 
             glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT)
