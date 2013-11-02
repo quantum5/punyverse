@@ -72,21 +72,69 @@ class Applet(pyglet.window.Window):
         self.info_precise = False
 
         self.tick = self.world.tick_length
-        # On standard world: 10x is one day per second, 100x is 10 days, 300x is a month
-        # 900x is a quarter, 1825 is a half year, 3650 is a year, 36500 is a decade, 365000 is a century
-        # and yes the individual hours and seconds look ugly
-        self.ticks = [20, 40, 60, # Second range
-                      120, 300, 600, 1200, 1800, 2700, 3600, # Minute range
-                      7200, 14400, 21600, 43200, 86400, # Hour range
-                      172800, 432000, 604800, # 2, 5, 7 days
-                      1209600, 2592000, # 2 week, 1 month
-                      5270400, 7884000, 15768000, 31536000, # 2, 3, 6, 12 months
-                      63072000, 157680000, 315360000, # 2, 5, 10 years
-                      630720000, 1576800000, 3153600000, # 20, 50, 100 years
+        self.ticks = [20, 40, 60,                             # Second range
+                      120, 300, 600, 1200, 1800, 2700, 3600,  # Minute range
+                      7200, 14400, 21600, 43200, 86400,       # Hour range
+                      172800, 432000, 604800,                 # 2, 5, 7 days
+                      1209600, 2592000,                       # 2 week, 1 month
+                      5270400, 7884000, 15768000, 31536000,   # 2, 3, 6, 12 months
+                      63072000, 157680000, 315360000,         # 2, 5, 10 years
+                      630720000, 1576800000, 3153600000,      # 20, 50, 100 years
         ]
         self.ticks = [i / 20 for i in self.ticks]
         self.__time_per_second_cache = None
         self.__time_per_second_value = None
+
+        def speed_incrementer(object, increment):
+            def incrementer():
+                object.speed += increment
+
+            return incrementer
+
+        def attribute_toggler(object, attribute):
+            getter = attrgetter(attribute)
+
+            def toggler():
+                setattr(object, attribute, not getter(object))
+
+            return toggler
+
+        def increment_tick():
+            index = self.ticks.index(self.tick) + 1
+            if index < len(self.ticks):
+                self.tick = self.ticks[index]
+
+        def decrement_tick():
+            index = self.ticks.index(self.tick) - 1
+            if index >= 0:
+                self.tick = self.ticks[index]
+
+        self.key_handler = {
+            key.ESCAPE: pyglet.app.exit,
+            key.NUM_ADD: speed_incrementer(self, 1),
+            key.NUM_SUBTRACT: speed_incrementer(self, -1),
+            key.NUM_MULTIPLY: speed_incrementer(self, 10),
+            key.NUM_DIVIDE: speed_incrementer(self, -10),
+            key.PAGEUP: speed_incrementer(self, 100),
+            key.PAGEDOWN: speed_incrementer(self, -100),
+            key.HOME: speed_incrementer(self, 1000),
+            key.END: speed_incrementer(self, -1000),
+            key.I: attribute_toggler(self, 'info'),
+            key.D: attribute_toggler(self, 'debug'),
+            key.O: attribute_toggler(self, 'orbit'),
+            key.P: attribute_toggler(self, 'info_precise'),
+            key.ENTER: attribute_toggler(self, self.running),
+            key.INSERT: increment_tick,
+            key.DELETE: decrement_tick,
+            key.SPACE: self.launch_meteor,
+            key.E: lambda: self.set_exclusive_mouse(False),
+            key.F: lambda: self.set_fullscreen(not self.fullscreen),
+        }
+
+        self.mouse_press_handler = {
+            mouse.LEFT: self.launch_meteor,
+            mouse.RIGHT: attribute_toggler(self, 'moving'),
+        }
 
         self.label = pyglet.text.Label('', font_name='Consolas', font_size=12, x=10, y=self.height - 20,
                                        color=(255,) * 4, multiline=True, width=600)
@@ -139,7 +187,7 @@ class Applet(pyglet.window.Window):
                              model_list(load_model(r"asteroids\03.obj"), 5, 5, 5, (0, 0, 0)),
                              model_list(load_model(r"asteroids\04.obj"), 5, 5, 5, (0, 0, 0)),
                              model_list(load_model(r"asteroids\05.obj"), 5, 5, 5, (0, 0, 0)),
-                             ]
+        ]
 
         c = self.cam
         c.x, c.y, c.z = self.world.start
@@ -152,8 +200,8 @@ class Applet(pyglet.window.Window):
         print "Loaded in %s seconds." % (clock() - l)
 
     def set_exclusive_mouse(self, exclusive):
-        super(Applet, self).set_exclusive_mouse(exclusive) # Pass to parent
-        self.exclusive = exclusive # Toggle flag
+        super(Applet, self).set_exclusive_mouse(exclusive)
+        self.exclusive = exclusive
 
     def launch_meteor(self):
         c = self.cam
@@ -162,66 +210,24 @@ class Applet(pyglet.window.Window):
         dx *= speed
         dy *= speed
         dz *= speed
-        self.world.tracker.append(
-            Asteroid(random.choice(self.asteroid_ids), (c.x, c.y - 3, c.z + 5), direction=(dx, dy, dz)))
+        self.world.tracker.append(Asteroid(random.choice(self.asteroid_ids), (c.x, c.y - 3, c.z + 5),
+                                           direction=(dx, dy, dz)))
 
     def on_mouse_press(self, x, y, button, modifiers):
         if not self.exclusive:
             self.set_exclusive_mouse(True)
         else:
-            if button == mouse.LEFT:
-                self.launch_meteor()
-            elif button == mouse.RIGHT:
-                self.moving = not self.moving
+            if button in self.mouse_press_handler:
+                self.mouse_press_handler[button]()
 
     def on_mouse_motion(self, x, y, dx, dy):
-        if self.exclusive: # Only handle camera movement if mouse is grabbed
+        if self.exclusive:  # Only handle camera movement if mouse is grabbed
             self.cam.mouse_move(dx * MOUSE_SENSITIVITY, dy * MOUSE_SENSITIVITY)
 
     def on_key_press(self, symbol, modifiers):
-        if self.exclusive: # Only handle keyboard input if mouse is grabbed
-            if symbol == key.ESCAPE:
-                pyglet.app.exit()
-            elif symbol == key.E:
-                self.set_exclusive_mouse(False) # Escape mouse
-            elif symbol == key.F:
-                self.set_fullscreen(not self.fullscreen)
-            elif symbol == key.NUM_ADD:
-                self.speed += 1
-            elif symbol == key.NUM_SUBTRACT:
-                self.speed -= 1
-            elif symbol == key.NUM_MULTIPLY:
-                self.speed += 10
-            elif symbol == key.NUM_DIVIDE:
-                self.speed -= 10
-            elif symbol == key.PAGEUP:
-                self.speed += 100
-            elif symbol == key.PAGEDOWN:
-                self.speed -= 100
-            elif symbol == key.HOME:
-                self.speed += 1000
-            elif symbol == key.END:
-                self.speed -= 1000
-            elif symbol == key.I:
-                self.info = not self.info
-            elif symbol == key.D:
-                self.debug = not self.debug
-            elif symbol == key.O:
-                self.orbit = not self.orbit
-            elif symbol == key.P:
-                self.info_precise = not self.info_precise
-            elif symbol == key.ENTER:
-                self.running = not self.running
-            elif symbol == key.INSERT:
-                index = self.ticks.index(self.tick) + 1
-                if index < len(self.ticks):
-                    self.tick = self.ticks[index]
-            elif symbol == key.DELETE:
-                index = self.ticks.index(self.tick) - 1
-                if index >= 0:
-                    self.tick = self.ticks[index]
-            elif symbol == key.SPACE:
-                self.launch_meteor()
+        if self.exclusive:  # Only handle keyboard input if mouse is grabbed
+            if symbol in self.key_handler:
+                self.key_handler[symbol]()
             else:
                 self.keys.add(symbol)
 
