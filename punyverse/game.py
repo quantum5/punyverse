@@ -328,10 +328,12 @@ class Applet(pyglet.window.Window):
                 glTranslatef(x0, y0, z0)
                 glRotatef(pitch, 1, 0, 0)
                 glRotatef(yaw, 0, 1, 0)
-                if has_corona:
-                    glCallList(entity.corona)
                 if has_atmosphere:
                     glCallList(entity.atmosphere)
+                if has_corona:
+                    x, y, z = c.direction()
+                    glTranslatef(-x, -y, -z)
+                    glCallList(entity.corona)
                 glPopMatrix()
 
             if self.cloud and hasattr(entity, "cloudmap") and entity.cloudmap:
