@@ -20,7 +20,13 @@
       "pitch": -90,
       "yaw": 7.25,
       "mass": 1.9891e+30,
-      "rotation": 2164320
+      "rotation": 2164320,
+      "atmosphere": {
+        "corona_texture": "sun_corona.png",
+        "corona_size": 300,
+        "corona_division": 100,
+        "corona_prob": 0.5
+      }
     },
     "mercury": {
       "texture": ["mercury.jpg", "mercury_small.jpg", [0.44, 0.43, 0.43]],

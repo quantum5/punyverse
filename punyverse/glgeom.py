@@ -4,7 +4,8 @@ from random import random, uniform
 
 TWOPI = pi * 2
 
-__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'torus', 'belt']
+__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'torus', 'belt',
+           'flare']
 
 
 def compile(pointer, *args, **kwargs):
@@ -72,6 +73,42 @@ def disk(rinner, router, segs, tex):
         glTexCoord2f(1, texture)
         glVertex2f(router * x, router * y)
         texture ^= 1
+    glEnd()
+    glEnable(GL_LIGHTING)
+    glDisable(GL_TEXTURE_2D)
+
+
+def flare(rinner, router, res, prob, tex):
+    glEnable(GL_TEXTURE_2D)
+    glDisable(GL_LIGHTING)
+    glBindTexture(GL_TEXTURE_2D, tex)
+    last_x = 1
+    last_y = 0
+    last_theta = 0
+    factor = TWOPI / res
+    rdelta = (router - rinner) * 5
+    glBegin(GL_QUADS)
+    for i in xrange(res + 1):
+        theta = last_theta + factor
+        x = cos(theta)
+        y = sin(theta)
+        if random() > prob:
+            distance = router + rdelta * random()
+            avg_theta = (last_theta + theta) / 2
+            x0, y0 = rinner * last_x, rinner * last_y
+            x1, y1 = rinner * x, rinner * y
+            x2, y2 = distance * cos(avg_theta), distance * sin(avg_theta)
+            glTexCoord2f(0, 0)
+            glVertex2f(x0, y0)
+            glTexCoord2f(0, 1)
+            glVertex2f(x1, y1)
+            glTexCoord2f(1, 0)
+            glVertex2f(x2, y2)
+            glTexCoord2f(1, 1)
+            glVertex2f(x2, y2)
+        last_theta = theta
+        last_x = x
+        last_y = y
     glEnd()
     glEnable(GL_LIGHTING)
     glDisable(GL_TEXTURE_2D)
