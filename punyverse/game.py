@@ -189,8 +189,6 @@ class Applet(pyglet.window.Window):
         self.asteroid_ids = [model_list(load_model(r"asteroids\01.obj"), 5, 5, 5, (0, 0, 0)),
                              model_list(load_model(r"asteroids\02.obj"), 5, 5, 5, (0, 0, 0)),
                              model_list(load_model(r"asteroids\03.obj"), 5, 5, 5, (0, 0, 0)),
-                             model_list(load_model(r"asteroids\04.obj"), 5, 5, 5, (0, 0, 0)),
-                             model_list(load_model(r"asteroids\05.obj"), 5, 5, 5, (0, 0, 0)),
         ]
 
         c = self.cam
