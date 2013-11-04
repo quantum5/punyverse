@@ -47,10 +47,10 @@ class Applet(pyglet.window.Window):
             if key.S in self.keys:
                 cam.roll -= 4
             if self.moving:
-                cam.move(self.speed)
+                cam.move(int(self.speed * dt * TICKS_PER_SECOND + 0.5))
 
         if self.running:
-            self.world.tick += self.tick
+            self.world.tick += int(self.tick * dt * TICKS_PER_SECOND + 0.5)
             for entity in self.world.tracker:
                 entity.update()
 
@@ -73,8 +73,8 @@ class Applet(pyglet.window.Window):
         self.atmosphere = True
         self.cloud = not texture.badcard
 
-        self.tick = self.world.tick_length
-        self.ticks = [20, 40, 60,                             # Second range
+        self.tick = self.world.tick_length / TICKS_PER_SECOND
+        self.ticks = [1, 2, 5, 10, 20, 40, 60,                # Second range
                       120, 300, 600, 1200, 1800, 2700, 3600,  # Minute range
                       7200, 14400, 21600, 43200, 86400,       # Hour range
                       172800, 432000, 604800,                 # 2, 5, 7 days
@@ -83,7 +83,8 @@ class Applet(pyglet.window.Window):
                       63072000, 157680000, 315360000,         # 2, 5, 10 years
                       630720000, 1576800000, 3153600000,      # 20, 50, 100 years
         ]
-        self.ticks = [i / 20 for i in self.ticks]
+        self.ticks = [i / TICKS_PER_SECOND for i in self.ticks]
+        self.ticks = sorted(set(i for i in self.ticks if i))
         self.__time_per_second_cache = None
         self.__time_per_second_value = None
 
