@@ -292,7 +292,7 @@
       "radius": "2.362 * AU",
       "cross": 1000,
       "scale": 30,
-      "count": "TEXTURE",
+      "count": 1024,
       "rotation": 114536500
     }
   },
