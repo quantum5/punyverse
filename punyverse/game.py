@@ -127,7 +127,7 @@ class Applet(pyglet.window.Window):
             key.P: attribute_toggler(self, 'info_precise'),
             key.C: attribute_toggler(self, 'cloud'),
             key.X: attribute_toggler(self, 'atmosphere'),
-            key.ENTER: attribute_toggler(self, self.running),
+            key.ENTER: attribute_toggler(self, 'running'),
             key.INSERT: increment_tick,
             key.DELETE: decrement_tick,
             key.SPACE: self.launch_meteor,
