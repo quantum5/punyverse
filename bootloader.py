@@ -4,6 +4,7 @@ import os
 import sys
 import uuid
 import imp
+import argparse
 
 def load_dll(dir, module):
     name = 'punyverse.' + module
