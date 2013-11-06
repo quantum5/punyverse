@@ -9,7 +9,7 @@ Installation
 To install, simply clone this repository, or download a copy [here]
 (https://github.com/xiaomao5/punyverse/archive/master.zip).
 
-After that, download the [launcher](https://github.com/xiaomao5/punyverse/releases/download/launcher0.2/launcher.exe),
+After that, download the [launcher](https://github.com/xiaomao5/punyverse/releases/download/launcher0.3/launcher.exe),
 put it into the repository directory and let it unpack in your repository (or copy).
 
 You may start playing any time by running `punyverse.exe`, or `punyverse_debug.exe` if you desire a console.
