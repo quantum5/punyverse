@@ -179,11 +179,11 @@ def load_world(file):
                              (pitch, yaw, roll), **params))
 
             for satellite, info in info.get('satellites', {}).iteritems():
-                print "Loading %s, satellite of %s." % (satellite, name)
+                print 'Loading %s, satellite of %s.' % (satellite, name)
                 body(satellite, info, object)
 
         for planet, info in root['bodies'].iteritems():
-            print "Loading %s." % planet
+            print 'Loading %s.' % planet
             body(planet, info)
 
         for name, info in root['belts'].iteritems():
