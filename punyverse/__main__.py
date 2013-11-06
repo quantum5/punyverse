@@ -1,7 +1,7 @@
 #!/usr/bin/python
 INITIAL_WIN_HEIGHT = 540
 INITIAL_WIN_WIDTH = 700
-WIN_TITLE = "Punyverse"
+WIN_TITLE = 'Punyverse'
 
 
 def main():

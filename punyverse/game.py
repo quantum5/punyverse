@@ -58,9 +58,9 @@ class Applet(pyglet.window.Window):
         super(Applet, self).__init__(*args, **kwargs)
         texture.init()
 
-        l = clock()
+        start = clock()
         self.fps = 0
-        self.world = load_world("world.json")
+        self.world = load_world('world.json')
         print 'Initializing game...'
         self.speed = INITIAL_SPEED
         self.keys = set()
@@ -187,9 +187,9 @@ class Applet(pyglet.window.Window):
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
 
         print 'Loading asteroids...'
-        self.asteroid_ids = [model_list(load_model(r"asteroids\01.obj"), 5, 5, 5, (0, 0, 0)),
-                             model_list(load_model(r"asteroids\02.obj"), 5, 5, 5, (0, 0, 0)),
-                             model_list(load_model(r"asteroids\03.obj"), 5, 5, 5, (0, 0, 0)),
+        self.asteroid_ids = [model_list(load_model(r'asteroids/01.obj'), 5, 5, 5, (0, 0, 0)),
+                             model_list(load_model(r'asteroids/02.obj'), 5, 5, 5, (0, 0, 0)),
+                             model_list(load_model(r'asteroids/03.obj'), 5, 5, 5, (0, 0, 0)),
         ]
 
         c = self.cam
@@ -200,7 +200,7 @@ class Applet(pyglet.window.Window):
         for entity in self.world.tracker:
             entity.update()
 
-        print "Loaded in %s seconds." % (clock() - l)
+        print 'Loaded in %s seconds.' % (clock() - start)
 
     def set_exclusive_mouse(self, exclusive):
         super(Applet, self).set_exclusive_mouse(exclusive)
@@ -335,7 +335,7 @@ class Applet(pyglet.window.Window):
                     glCallList(entity.corona)
                 glPopMatrix()
 
-            if self.cloud and hasattr(entity, "cloudmap") and entity.cloudmap:
+            if self.cloud and hasattr(entity, 'cloudmap') and entity.cloudmap:
                 glPushMatrix()
                 glEnable(GL_ALPHA_TEST)
                 glTranslatef(*entity.location)
