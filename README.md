@@ -18,15 +18,20 @@ You may start playing any time by running `punyverse.exe`, or `punyverse_debug.e
 
 If your graphics card doesn't support the massive texture sizes this module comes with, you can shrink them.
 
-You can run `small_images.exe` (or `small_images.py`, which requires either `PIL` or `pgmagick`) to generate
-smaller versions of shipped textures.
+You can run `small_images.exe` (or `small_images.py`, if you have python) to generate smaller versions of
+shipped textures, which requires either `PIL` or `pgmagick` to process the images.
 
-###Advanced Install
+### Advanced Install
 
-You need a C compiler to compile `_model.c` and `_glgeom.c`, both requiring OpenGL headers and libraries.
+If you wish to use your own python installation, to run `punyverse`, you can clone the code.
+Here are the things you need:
 
-You will also need to install `pyglet`.
+* Python 2.7, I have no Python 2.6 install to test this.
+* a C compiler to compile `_model.c` and `_glgeom.c`
+  * requires OpenGL headers and libraries.
+  * not really necessary, but it runs way faster with these.
+* install `pyglet`
 
-You can now run the `punyverse` module using `python -mpunyverse`.
+After getting the dependencies done, you can now run the `punyverse` module using `python -mpunyverse`.
 
 See above if you run into texture issues.
