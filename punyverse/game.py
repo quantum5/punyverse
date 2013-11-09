@@ -337,14 +337,14 @@ class Applet(pyglet.window.Window):
 
             if self.cloud and hasattr(entity, 'cloudmap') and entity.cloudmap:
                 glPushMatrix()
-                glEnable(GL_ALPHA_TEST)
+                glEnable(GL_BLEND)
                 glTranslatef(*entity.location)
                 pitch, yaw, roll = entity.rotation
                 glRotatef(pitch, 1, 0, 0)
                 glRotatef(yaw, 0, 1, 0)
                 glRotatef(roll, 0, 0, 1)
                 glCallList(entity.cloudmap)
-                glDisable(GL_ALPHA_TEST)
+                glDisable(GL_BLEND)
                 glPopMatrix()
 
             if self.orbit and hasattr(entity, 'get_orbit') and hasattr(entity, 'parent'):

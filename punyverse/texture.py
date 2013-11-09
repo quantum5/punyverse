@@ -3,6 +3,7 @@ from pyglet.gl import *
 from ctypes import c_int, byref, c_ulong
 import os.path
 import struct
+import itertools
 
 try:
     from _glgeom import bgr_to_rgb
@@ -41,7 +42,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-__all__ = ['load_texture']
+__all__ = ['load_texture', 'load_clouds', 'load_image']
 
 id = 0
 cache = {}
@@ -147,15 +148,7 @@ def check_size(width, height):
             raise ValueError('Texture not power of two')
 
 
-def load_texture(file):
-    if os.path.isabs(file):
-        path = file
-        file = os.path.basename(path)
-    else:
-        path = os.path.join(os.path.dirname(__file__), "assets", "textures", file)
-
-    if path in cache:
-        return cache[path]
+def load_image(file, path):
     print "Loading image %s..." % file,
 
     try:
@@ -163,7 +156,7 @@ def load_texture(file):
     except IOError:
         print 'exists not'
         raise ValueError('Texture exists not')
-    type, width, height = image_info(file.read(8192))
+    type, width, height = image_info(file.read(65536))
     file.seek(0, 0)
     if type:
         check_size(width, height)
@@ -192,9 +185,6 @@ def load_texture(file):
 
         mode = GL_RGBA if 'A' in raw.format else GL_RGB
         # Flip from BGR to RGB
-        # I hate you too, Pyglet...
-        # REGULAR EXPRESSIONS ARE NOT MEANT TO PARSE BINARY DATA!!!
-        #texture = raw.get_data('RGBA', width * 4) if safe else raw.data[::-1] if 'BGR' in raw.format else raw.data
         if raw.format in ('BGR', 'BGRA'):
             if bgra:
                 mode = {GL_RGBA: GL_BGRA, GL_RGB: GL_BGR}[mode]
@@ -205,6 +195,20 @@ def load_texture(file):
             texture = raw.data
         else:
             texture = raw.get_data('RGBA', width * 4)
+    return path, width, height, len(raw.format), mode, texture
+
+
+def load_texture(file):
+    if os.path.isabs(file):
+        path = file
+        file = os.path.basename(path)
+    else:
+        path = os.path.join(os.path.dirname(__file__), 'assets', 'textures', file)
+
+    if path in cache:
+        return cache[path]
+
+    path, width, height, depth, mode, texture = load_image(file, path)
 
     buffer = c_ulong()
     glGenTextures(1, byref(buffer))
@@ -215,7 +219,41 @@ def load_texture(file):
     filter = GL_NEAREST if badcard else GL_LINEAR
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter)
-    gluBuild2DMipmaps(GL_TEXTURE_2D, len(raw.format), width, height, mode, GL_UNSIGNED_BYTE, texture)
+    gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
+
+    cache[path] = id
+
+    return id
+
+
+def load_clouds(file):
+    if os.path.isabs(file):
+        path = file
+        file = os.path.basename(path)
+    else:
+        path = os.path.join(os.path.dirname(__file__), 'assets', 'textures', file)
+
+    if path in cache:
+        return cache[path]
+
+    path, width, height, depth, mode, texture = load_image(file, path)
+
+    buffer = c_ulong()
+    glGenTextures(1, byref(buffer))
+    id = buffer.value
+
+    pixels = bytearray(len(texture) * 4)
+    white = chr(255)
+    pixels[:] = itertools.chain.from_iterable(itertools.izip(itertools.repeat(white), itertools.repeat(white),
+                                                             itertools.repeat(white),
+                                                             itertools.islice(texture, 0, None, depth)))
+
+    glBindTexture(GL_TEXTURE_2D, id)
+
+    filter = GL_NEAREST if badcard else GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, str(pixels))
 
     cache[path] = id
 

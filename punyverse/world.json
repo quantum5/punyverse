@@ -59,7 +59,7 @@
       "rotation": 86400,
       "division": 70,
       "atmosphere": {
-        "cloud_texture": "cloudmap.png",
+        "cloud_texture": ["cloudmap.jpg", "cloudmap_small.jpg"],
         "diffuse_texture": "atmosphere_earth.png",
         "diffuse_size": 30
       },
