@@ -219,7 +219,8 @@ def load_texture(file):
     filter = GL_NEAREST if badcard else GL_LINEAR
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter)
-    gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
+    #gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
+    glTexImage2D(GL_TEXTURE_2D, 0, mode, width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
 
     cache[path] = id
 
