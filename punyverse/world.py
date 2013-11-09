@@ -24,7 +24,7 @@ from math import pi, sqrt
 G = 6.67384e-11  # Gravitation Constant
 
 
-def get_best_texture(info, optional=False):
+def get_best_texture(info, optional=False, loader=load_texture):
     cheap = False
     skip = False
     texture = None
@@ -37,14 +37,14 @@ def get_best_texture(info, optional=False):
                     break
                 continue
             try:
-                texture = load_texture(item)
+                texture = loader(item)
             except ValueError:
                 pass
             else:
                 break
     else:
         try:
-            texture = load_texture(info)
+            texture = loader(info)
         except ValueError:
             if optional:
                 skip = True
@@ -139,7 +139,7 @@ def load_world(file):
                 cloud_texture = atmosphere_data.get('cloud_texture', None)
                 corona_texture = atmosphere_data.get('corona_texture', None)
                 if cloud_texture is not None:
-                    cheap, _, cloud_texture = get_best_texture(cloud_texture)
+                    cheap, _, cloud_texture = get_best_texture(cloud_texture, loader=load_clouds)
                     if not cheap:
                         cloudmap_id = compile(sphere, radius + 2, division, division, cloud_texture,
                                               lighting=False)

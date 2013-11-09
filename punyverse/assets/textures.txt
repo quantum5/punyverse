@@ -3,6 +3,7 @@
 
 mercury.jpg
 earth.jpg
+cloudmap.jpg
 moon.jpg
 mars.jpg
 jupiter.jpg
