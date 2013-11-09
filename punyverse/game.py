@@ -69,8 +69,8 @@ class Applet(pyglet.window.Window):
         ]
         self.__time_per_second_cache = None
         self.__time_per_second_value = None
-        self.clock = pyglet.clock.Clock()
-        pyglet.clock.schedule(lambda dt: None)
+        self.__time_accumulate = 0
+        pyglet.clock.schedule(self.update)
 
         def speed_incrementer(object, increment):
             def incrementer():
@@ -245,24 +245,32 @@ class Applet(pyglet.window.Window):
         self.__time_per_second_value = result
         return result
 
+    def update(self, dt):
+        c = self.cam
+
+        if self.exclusive:
+            if key.A in self.keys:
+                c.roll += 4 * dt * 10
+            if key.S in self.keys:
+                c.roll -= 4 * dt * 10
+            if self.moving:
+                c.move(self.speed * 10 * dt)
+
+        if self.running:
+            delta = self.tick * dt
+            update = int(delta + self.__time_accumulate + 0.5)
+            if update:
+                self.__time_accumulate = 0
+                self.world.tick += update
+                for entity in self.world.tracker:
+                    entity.update()
+            else:
+                self.__time_accumulate += delta
+
     def on_draw(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         c = self.cam
-
-        delta = self.clock.tick()
-        if self.exclusive:
-            if key.A in self.keys:
-                c.roll += 4 * delta * 10
-            if key.S in self.keys:
-                c.roll -= 4 * delta * 10
-            if self.moving:
-                c.move(self.speed * 10 * delta)
-
-        if self.running:
-            self.world.tick += int(self.tick * delta + 0.5)
-            for entity in self.world.tracker:
-                entity.update()
 
         x, y, z = c.x, c.y, c.z
         glRotatef(c.pitch, 1, 0, 0)
@@ -367,11 +375,11 @@ class Applet(pyglet.window.Window):
             if self.info_precise:
                 info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n'
                         'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)\nTick: %d' %
-                        (self.clock.get_fps(), c.x, c.y, c.z, self.speed, self.get_time_per_second(),
+                        (pyglet.clock.get_fps(), c.x, c.y, c.z, self.speed, self.get_time_per_second(),
                          c.pitch, c.yaw, c.roll, self.world.tick))
             else:
                 info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n' %
-                        (self.clock.get_fps(), c.x, c.y, c.z, self.speed, self.get_time_per_second()))
+                        (pyglet.clock.get_fps(), c.x, c.y, c.z, self.speed, self.get_time_per_second()))
             self.label.text = info
             self.label.draw()
 
