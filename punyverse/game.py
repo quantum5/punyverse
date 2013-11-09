@@ -279,7 +279,6 @@ class Applet(pyglet.window.Window):
         glTranslatef(-x, -y, -z)
 
         glEnable(GL_LIGHTING)
-        glEnable(GL_BLEND)
         world = self.world
         get_distance = entity_distance(x, y, z)
         if x != world.x or y != world.y or z != world.z:
