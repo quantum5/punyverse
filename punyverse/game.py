@@ -143,7 +143,7 @@ class Applet(pyglet.window.Window):
             glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
             glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
 
-        glAlphaFunc(GL_GEQUAL, 0.9)
+        glAlphaFunc(GL_GEQUAL, 0.2)
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_SMOOTH)
@@ -338,12 +338,14 @@ class Applet(pyglet.window.Window):
             if self.cloud and hasattr(entity, 'cloudmap') and entity.cloudmap:
                 glPushMatrix()
                 glEnable(GL_BLEND)
+                glEnable(GL_ALPHA_TEST)
                 glTranslatef(*entity.location)
                 pitch, yaw, roll = entity.rotation
                 glRotatef(pitch, 1, 0, 0)
                 glRotatef(yaw, 0, 1, 0)
                 glRotatef(roll, 0, 0, 1)
                 glCallList(entity.cloudmap)
+                glDisable(GL_ALPHA_TEST)
                 glDisable(GL_BLEND)
                 glPopMatrix()
 
