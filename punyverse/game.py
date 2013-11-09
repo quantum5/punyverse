@@ -390,10 +390,8 @@ class Applet(pyglet.window.Window):
 
             cx, cy = width / 2, height / 2
 
-            glColor3f(0, 0, 1)
-            crosshair(15, (cx, cy))
             glColor4f(0, 1, 0, 1)
-            circle(20, 30, (cx, cy))
+            circle(10, 20, (cx, cy))
             glPopAttrib()
 
             frustrum()
