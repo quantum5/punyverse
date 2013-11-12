@@ -15,7 +15,7 @@
   "length": 63.7,
   "bodies": {
     "sun": {
-      "texture": ["sun.jpg", [0.99, 0.97, 0.66]],
+      "texture": ["sun.jpg", [0.99, 0.97, 0.66, 1]],
       "radius": 80000,
       "pitch": -90,
       "yaw": 7.25,
@@ -31,7 +31,7 @@
       }
     },
     "mercury": {
-      "texture": ["mercury.jpg", "mercury_small.jpg", [0.44, 0.43, 0.43]],
+      "texture": ["mercury.jpg", "mercury_small.jpg", [0.44, 0.43, 0.43, 1]],
       "radius": 2439.7,
       "z": "0.466697 * AU",
       "pitch": -90,
@@ -40,7 +40,7 @@
       "rotation": 5067014
     },
     "venus": {
-      "texture": ["venus.jpg", [0.655, 0.38, 0.1]],
+      "texture": ["venus.jpg", [0.655, 0.38, 0.1, 1]],
       "radius": 6051.8,
       "z": "0.723327 * AU",
       "pitch": -90,
