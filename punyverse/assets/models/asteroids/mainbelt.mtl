@@ -1,11 +1,11 @@
-# Blender MTL File: 'mainbeltastroid.blend'
+# Blender MTL File: 'None'
 # Material Count: 1
 
 newmtl Material
-Ns 96.078431
+Ns 92.156863
 Ka 0.000000 0.000000 0.000000
-Kd 0.254837 0.254837 0.254837
-Ks 0.159273 0.159273 0.159273
+Kd 0.389517 0.389517 0.389517
+Ks 0.303197 0.303197 0.303197
 Ni 1.000000
 d 1.000000
 illum 2

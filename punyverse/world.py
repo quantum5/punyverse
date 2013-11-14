@@ -201,10 +201,15 @@ def load_world(file):
             rotation = info.get('period', 31536000)
             theta = 360 / (rotation + .0) if rotation else 0
 
-            object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
-                                   info.get('sz', scale), (0, 0, 0))
+            models = info['model']
+            if not isinstance(models, list):
+                models = [models]
+            objects = []
+            for model in models:
+                objects.append(model_list(load_model(model), info.get('sx', scale), info.get('sy', scale),
+                                          info.get('sz', scale), (0, 0, 0)))
 
-            world.tracker.append(Belt(compile(belt, radius, cross, object_id, count),
+            world.tracker.append(Belt(compile(belt, radius, cross, objects, count),
                                       (x, y, z), (inclination, longitude, argument),
                                       rotation_angle=theta, world=world))
 
