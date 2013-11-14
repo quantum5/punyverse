@@ -288,11 +288,11 @@
   },
   "belts": {
     "main": {
-      "model": "asteroids/mainbelt.obj",
+      "model": ["asteroids/mainbelt.obj", "asteroids/mainbelt2.obj"],
       "radius": "2.362 * AU",
       "cross": 1000,
       "scale": 30,
-      "count": 1024,
+      "count": 2048,
       "rotation": 114536500
     }
   },

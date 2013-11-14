@@ -1,6 +1,6 @@
 from math import *
 from pyglet.gl import *
-from random import random, uniform
+from random import random, uniform, gauss, choice
 
 TWOPI = pi * 2
 
@@ -163,19 +163,16 @@ def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
 def belt(radius, cross, object, count):
     for i in xrange(count):
         theta = TWOPI * random()
-        x, y, z = cos(theta) * radius, 0, sin(theta) * radius
-        # Pretend to move horizontally around the x-axis by delta
-        # then I multiply it by a rotation matrix about angle theta
-        # the z-axis need not to be multiplied by the matrix, as it's 0
-        # Do note the rotation is counter clockwise
-        delta = cross * uniform(-1, 1)
-        x += cos(theta) * delta
-        z += sin(theta) * delta
-        y += cross * uniform(-1, 1)
+        r = gauss(radius, cross)
+        x, y, z = cos(theta) * r, gauss(0, cross), sin(theta) * r
 
         glPushMatrix()
         glTranslatef(x, y, z)
-        glCallList(object)
+        scale = gauss(1, 0.5)
+        if scale < 0:
+            scale = 1
+        glScalef(scale, scale, scale)
+        glCallList(choice(object))
         glPopMatrix()
 
 
