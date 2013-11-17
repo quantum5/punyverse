@@ -83,6 +83,12 @@
           "inclination": 51.65,
           "distance": 6800,
           "scale": 5
+        },
+        "hst": {
+          "model": "satellites/hst.obj",
+          "inclination": 28.5,
+          "distance": 6937,
+          "scale": 5
         }
       }
     },
