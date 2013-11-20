@@ -248,6 +248,14 @@
           "rotation": 0,
           "inclination": 28.304,
           "eccentricity": 0.0196
+        },
+        "cassini": {
+          "model": "satellites/cassini.obj",
+          "inclination": 51.65,
+          "eccentricity": 0.5,
+          "distance": "1221870 / 3 + 200000",
+          "sma": 1221870,
+          "scale": 100
         }
       }
     },
