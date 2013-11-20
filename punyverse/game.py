@@ -267,7 +267,7 @@ class Applet(pyglet.window.Window):
             else:
                 self.__time_accumulate += delta
 
-    def on_draw(self):
+    def on_draw(self, glMatrix=GLfloat * 16):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         c = self.cam
@@ -318,15 +318,14 @@ class Applet(pyglet.window.Window):
             if self.atmosphere and (has_corona or has_atmosphere):
                 glPushMatrix()
                 x0, y0, z0 = entity.location
-                dx, dy, dz = x - x0, y - y0, z - z0
-
-                distance = sqrt(dz * dz + dx * dx)
-                pitch = (360 - degrees(atan2(dy, distance)))
-                yaw = degrees(atan2(dx, dz))
 
                 glTranslatef(x0, y0, z0)
-                glRotatef(pitch, 1, 0, 0)
-                glRotatef(yaw, 0, 1, 0)
+                matrix = glMatrix()
+                glGetFloatv(GL_MODELVIEW_MATRIX, matrix)
+                matrix[0: 3] = [1, 0, 0]
+                matrix[4: 7] = [0, 1, 0]
+                matrix[8:11] = [0, 0, 1]
+                glLoadMatrixf(matrix)
                 if has_atmosphere:
                     glCallList(entity.atmosphere)
                 if has_corona:
