@@ -224,7 +224,7 @@ class Applet(pyglet.window.Window):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         # A field of view of 45
-        gluPerspective(45.0, width / float(height), 0.1, 50000000.0)
+        gluPerspective(45.0, width / float(height), 1, 50000000.0)
         glMatrixMode(GL_MODELVIEW)
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
