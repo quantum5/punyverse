@@ -1,11 +1,11 @@
 from math import *
 from pyglet.gl import *
-from random import random, uniform, gauss, choice
+from random import random, gauss, choice
 
 TWOPI = pi * 2
 
 __all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'torus', 'belt',
-           'flare']
+           'flare', 'normal_sphere']
 
 
 def compile(pointer, *args, **kwargs):
@@ -158,6 +158,66 @@ def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
 
     glEnable(GL_BLEND)
     gluDeleteQuadric(sphere)
+
+
+def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
+    from texture import pil_load
+    print 'Loading normal map: %s...' % normal,
+    normal_map = pil_load(normal)
+    normal = normal_map.load()
+    print
+    width, height = normal_map.size
+
+    glEnable(GL_TEXTURE_2D)
+    if lighting:
+        glDisable(GL_BLEND)
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(1, 1, 1, 0))
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 0))
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
+    else:
+        glDisable(GL_LIGHTING)
+    glBindTexture(GL_TEXTURE_2D, tex)
+
+    twopi_divide = TWOPI / divide
+    pi_divide = pi / divide
+    glBegin(GL_QUAD_STRIP)
+    for j in xrange(divide + 1):
+        phi1 = j * twopi_divide
+        phi2 = (j + 1) * twopi_divide
+
+        for i in xrange(divide + 1):
+            theta = i * pi_divide
+
+            s = phi2 / TWOPI
+            u = min(int(s * width), width - 1)
+            t = theta / pi
+            v = min(int(t * height), height - 1)
+            x, y, z = normal[u, v]
+            nx, ny, nz = sin(theta) * cos(phi2), sin(theta) * sin(phi2), cos(theta)
+            #delta = normal[u, v] / 255.
+            #glNormal3f(nx + delta, ny + delta, nz + delta)
+            #glNormal3f(nx + x / 64., ny + y / 64., nz + z / 64.)
+            glNormal3f(nx + x / 128. - 1, ny + y / 128. - 1, nz + z / 128. - 1)
+            #glNormal3f(nx, ny, nz)
+            glTexCoord2f(s, 1 - t)
+            glVertex3f(r * nx, r * ny, r * nz)
+
+            s = phi1 / TWOPI    # x
+            u = min(int(s * width), width - 1)
+            x, y, z = normal[u, v]
+            nx, ny, nz = sin(theta) * cos(phi1), sin(theta) * sin(phi1), cos(theta)
+            #delta = normal[u, v] / 255.
+            #glNormal3f(nx + delta, ny + delta, nz + delta)
+            #glNormal3f(nx + x / 64., ny + y / 64., nz + z / 64.)
+            glNormal3f(nx + x / 128. - 1, ny + y / 128. - 1, nz + z / 128. - 1)
+            #glNormal3f(nx, ny, nz)
+            glTexCoord2f(s, 1 - t)
+            glVertex3f(r * nx, r * ny, r * nz)
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+    glEnable(GL_LIGHTING)
+    glEnable(GL_BLEND)
 
 
 def belt(radius, cross, object, count):

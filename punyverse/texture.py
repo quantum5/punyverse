@@ -42,7 +42,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-__all__ = ['load_texture', 'load_clouds', 'load_image']
+__all__ = ['load_texture', 'load_clouds', 'load_image', 'pil_load']
 
 id = 0
 cache = {}
@@ -225,6 +225,11 @@ def load_texture(file):
     cache[path] = id
 
     return id
+
+
+def pil_load(file):
+    import Image
+    return Image.open(os.path.join(os.path.dirname(__file__), 'assets', 'textures', file))
 
 
 def load_clouds(file):
