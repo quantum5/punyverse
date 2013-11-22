@@ -180,7 +180,7 @@ def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
 
     twopi_divide = TWOPI / divide
     pi_divide = pi / divide
-    glBegin(GL_QUAD_STRIP)
+    glBegin(GL_TRIANGLE_STRIP)
     for j in xrange(divide + 1):
         phi1 = j * twopi_divide
         phi2 = (j + 1) * twopi_divide
