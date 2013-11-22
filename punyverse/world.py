@@ -97,7 +97,10 @@ def load_world(file):
                 if cheap:
                     object_id = compile(colourball, radius, division, division, texture)
                 else:
-                    object_id = compile(sphere, radius, division, division, texture, lighting=lighting)
+                    if 'normal' in info:
+                        object_id = compile(normal_sphere, radius, division, texture, info['normal'], lighting=lighting)
+                    else:
+                        object_id = compile(sphere, radius, division, division, texture, lighting=lighting)
             elif 'model' in info:
                 scale = info.get('scale', 1)
                 object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
