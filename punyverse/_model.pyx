@@ -7,6 +7,20 @@ from punyverse.texture import load_texture
 include "_cyopengl.pxi"
 from uuid import uuid4
 import os
+import gzip
+import bz2
+import zipfile
+
+def zip_open(file):
+    zip = zipfile.ZipFile(file)
+    return zip.open(zip.namelist()[0])
+
+openers = {
+    'gz': gzip.open,
+    'bz2': bz2.BZ2File,
+    'zip': zip_open,
+}
+
 
 cdef enum:
     FACE_TRIANGLES
@@ -85,7 +99,7 @@ cdef class WavefrontObject(object):
         self.textures = []
         self.groups = []
         self.materials = {}
-        
+
         self.perform_io(self.path)
     
     cdef void new_material(self, list words):
@@ -178,8 +192,8 @@ cdef class WavefrontObject(object):
 
         group.faces.append(Face(type, vindices, nindices, tindices, face_vertices, face_normals, face_textures))
 
-    cdef void material(self, list words):
-        self.perform_io(os.path.join(self.root, words[1]))
+    cdef bint material(self, list words) except False:
+        return self.perform_io(os.path.join(self.root, words[1]))
         
     cdef void use_material(self, list words):
         mat = words[1]
@@ -199,63 +213,54 @@ cdef class WavefrontObject(object):
         self.groups.append(group)
         self.current_group = group
 
-    cdef inline void perform_io(self, unicode file):
-        mbcsfile = file.encode('mbcs')
-        cdef char* fname = mbcsfile
-    
-        cdef FILE* cfile
-        cfile = fopen(fname, 'rb')
-        if cfile == NULL:
-            raise IOError(2, "No such file or directory: '%s'" % file)
-    
-        cdef size_t bufsize = 2048
-        cdef char *buf = <char*>malloc(bufsize)
-        cdef ssize_t read
-        cdef char *type
+    cdef inline bint perform_io(self, unicode file) except False:
+        cdef const char *type
         cdef list words
         cdef int hash, length
-     
-        while fgets(buf, bufsize, cfile):
-            if buf[0] in (0, 10, 13, 35):
-                continue # Empty or comment
-            words = buf.split()
-            type = words[0]
 
-            length = strlen(type)
-            if not length:
-                continue
-            elif length < 3:
-                hash = type[0] << 8 | type[1]
-                if hash == 0x7600:  # v\0
-                    self.vertex(words)
-                elif hash == 0x766e: # vn
-                    self.normal(words)
-                elif hash == 0x7674: # vt
-                    self.texture(words)
-                elif hash == 0x6600: # f
-                    self.face(words)
-                elif hash == 0x6700: # g
-                    self.group(words)
-                elif hash == 0x6f00: # o
-                    self.group(words)
-                elif hash == 0x4b61: # Ka
-                    self.Ka(words)
-                elif hash == 0x4b64: # Kd
-                    self.Kd(words)
-                elif hash == 0x4b73: # Ks
-                    self.Ks(words)
-                elif hash == 0x4e73: # Ns
-                    self.material_shininess(words)
-            elif strcmp(type, b'mtllib') == 0:
-                self.material(words)
-            elif strcmp(type, b'usemtl') == 0:
-                self.use_material(words)
-            elif strcmp(type, b'newmtl') == 0:
-                self.new_material(words)
-            elif strcmp(type, b'map_Kd') == 0:
-                self.material_texture(words)
-        free(buf)
-        fclose(cfile)
+        ext = os.path.splitext(file)[1].lstrip('.')
+        reader = openers.get(ext, open)(file)
+        with reader:
+            for buf in reader:
+                if not buf or buf.startswith(('\r', '\n', '#')):
+                    continue # Empty or comment
+                words = buf.split()
+                type = words[0]
+
+                length = strlen(type)
+                if not length:
+                    continue
+                elif length < 3:
+                    hash = type[0] << 8 | type[1]
+                    if hash == 0x7600:  # v\0
+                        self.vertex(words)
+                    elif hash == 0x766e: # vn
+                        self.normal(words)
+                    elif hash == 0x7674: # vt
+                        self.texture(words)
+                    elif hash == 0x6600: # f
+                        self.face(words)
+                    elif hash == 0x6700: # g
+                        self.group(words)
+                    elif hash == 0x6f00: # o
+                        self.group(words)
+                    elif hash == 0x4b61: # Ka
+                        self.Ka(words)
+                    elif hash == 0x4b64: # Kd
+                        self.Kd(words)
+                    elif hash == 0x4b73: # Ks
+                        self.Ks(words)
+                    elif hash == 0x4e73: # Ns
+                        self.material_shininess(words)
+                elif strcmp(type, b'mtllib') == 0:
+                    self.material(words)
+                elif strcmp(type, b'usemtl') == 0:
+                    self.use_material(words)
+                elif strcmp(type, b'newmtl') == 0:
+                    self.new_material(words)
+                elif strcmp(type, b'map_Kd') == 0:
+                    self.material_texture(words)
+        return True
 
 model_base = None
 
