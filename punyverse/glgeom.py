@@ -193,26 +193,24 @@ def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
             t = theta / pi
             v = min(int(t * height), height - 1)
             x, y, z = normal[u, v]
-            nx, ny, nz = sin(theta) * cos(phi2), sin(theta) * sin(phi2), cos(theta)
-            #delta = normal[u, v] / 255.
-            #glNormal3f(nx + delta, ny + delta, nz + delta)
-            #glNormal3f(nx + x / 64., ny + y / 64., nz + z / 64.)
-            glNormal3f(nx + x / 128. - 1, ny + y / 128. - 1, nz + z / 128. - 1)
-            #glNormal3f(nx, ny, nz)
+            dx, dy, dz = sin(theta) * cos(phi2), sin(theta) * sin(phi2), cos(theta)
+            nx, ny, nz = x / 128. - 1, y / 128. - 1, z / 128. - 1
+            nx, nz = cos(theta) * nx + sin(theta) * nz, -sin(theta) * nx + cos(theta) * nz
+            nx, ny = cos(phi2)  * nx - sin(phi2)  * ny,  sin(phi2)  * nx + cos(phi2)  * ny
+            glNormal3f(nx, ny, nz)
             glTexCoord2f(s, 1 - t)
-            glVertex3f(r * nx, r * ny, r * nz)
+            glVertex3f(r * dx, r * dy, r * dz)
 
             s = phi1 / TWOPI    # x
             u = min(int(s * width), width - 1)
             x, y, z = normal[u, v]
-            nx, ny, nz = sin(theta) * cos(phi1), sin(theta) * sin(phi1), cos(theta)
-            #delta = normal[u, v] / 255.
-            #glNormal3f(nx + delta, ny + delta, nz + delta)
-            #glNormal3f(nx + x / 64., ny + y / 64., nz + z / 64.)
-            glNormal3f(nx + x / 128. - 1, ny + y / 128. - 1, nz + z / 128. - 1)
-            #glNormal3f(nx, ny, nz)
+            dx, dy, dz = sin(theta) * cos(phi1), sin(theta) * sin(phi1), cos(theta)
+            nx, ny, nz = x / 128. - 1, y / 128. - 1, z / 128. - 1
+            nx, nz = cos(theta) * nx + sin(theta) * nz, -sin(theta) * nx + cos(theta) * nz
+            nx, ny = cos(phi2)  * nx - sin(phi2)  * ny,  sin(phi2)  * nx + cos(phi2)  * ny
+            glNormal3f(nx, ny, nz)
             glTexCoord2f(s, 1 - t)
-            glVertex3f(r * nx, r * ny, r * nz)
+            glVertex3f(r * dx, r * dy, r * dz)
     glEnd()
 
     glDisable(GL_TEXTURE_2D)
