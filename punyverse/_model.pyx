@@ -328,8 +328,6 @@ cpdef int model_list(WavefrontObject model, float sx=1, float sy=1, float sz=1, 
             glDisable(GL_TEXTURE_2D)
 
         if g.material is not None:
-            if g.material.texture is not None:
-                tex_id = load_texture(os.path.join(model.root, g.material.texture))
             if g.material.Ka:
                 kx, ky, kz = g.material.Ka
                 glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, [kx, ky, kz, 1])
