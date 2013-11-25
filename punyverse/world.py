@@ -42,6 +42,9 @@ def get_best_texture(info, optional=False, loader=load_texture):
                 pass
             else:
                 break
+        else:
+            cheap = True
+            texture = [1, 1, 1, 1]
     else:
         try:
             texture = loader(info)

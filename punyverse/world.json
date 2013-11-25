@@ -49,7 +49,7 @@
       "rotation": -20996798
     },
     "earth": {
-      "texture": ["earth.jpg", "earth_medium.jpg", "earth_small.jpg", [0, 0.28, 1, 1]],
+      "texture": ["earth.jpg", "earth_medium.jpg", "earth_small.jpg", [0.11, 0.32, 0.43, 1]],
       "radius": 6378.1,
       "z": "AU",
       "pitch": -90,
