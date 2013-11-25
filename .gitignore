@@ -37,6 +37,7 @@ nosetests.xml
 
 .idea
 punyverse/*.obj
+punyverse/*.c
 *.html
 *.exp
 *.lib
