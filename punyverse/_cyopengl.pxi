@@ -20,372 +20,372 @@ cdef extern from "GL/gl.h":
     ctypedef double         GLclampd
 
     # Miscellaneous 
-    void glClearIndex(GLfloat c)
-    void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
-    void glClear(GLbitfield mask)
-    void glIndexMask(GLuint mask)
-    void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
-    void glAlphaFunc(GLenum func, GLclampf ref)
-    void glBlendFunc(GLenum sfactor, GLenum dfactor)
-    void glLogicOp(GLenum opcode)
-    void glCullFace(GLenum mode)
-    void glFrontFace(GLenum mode)
-    void glPointSize(GLfloat size)
-    void glLineWidth(GLfloat width)
-    void glLineStipple(GLint factor, GLushort pattern)
-    void glPolygonMode(GLenum face, GLenum mode)
-    void glPolygonOffset(GLfloat factor, GLfloat units)
-    void glPolygonStipple(GLubyte *mask)
-    void glGetPolygonStipple(GLubyte *mask)
-    void glEdgeFlag(GLboolean flag)
-    void glEdgeFlagv(GLboolean *flag)
-    void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
-    void glClipPlane(GLenum plane, GLdouble *equation)
-    void glGetClipPlane(GLenum plane, GLdouble *equation)
-    void glDrawBuffer(GLenum mode)
-    void glReadBuffer(GLenum mode)
-    void glEnable(GLenum cap)
-    void glDisable(GLenum cap)
+    void glClearIndex(GLfloat c) nogil
+    void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) nogil
+    void glClear(GLbitfield mask) nogil
+    void glIndexMask(GLuint mask) nogil
+    void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) nogil
+    void glAlphaFunc(GLenum func, GLclampf ref) nogil
+    void glBlendFunc(GLenum sfactor, GLenum dfactor) nogil
+    void glLogicOp(GLenum opcode) nogil
+    void glCullFace(GLenum mode) nogil
+    void glFrontFace(GLenum mode) nogil
+    void glPointSize(GLfloat size) nogil
+    void glLineWidth(GLfloat width) nogil
+    void glLineStipple(GLint factor, GLushort pattern) nogil
+    void glPolygonMode(GLenum face, GLenum mode) nogil
+    void glPolygonOffset(GLfloat factor, GLfloat units) nogil
+    void glPolygonStipple(GLubyte *mask) nogil
+    void glGetPolygonStipple(GLubyte *mask) nogil
+    void glEdgeFlag(GLboolean flag) nogil
+    void glEdgeFlagv(GLboolean *flag) nogil
+    void glScissor(GLint x, GLint y, GLsizei width, GLsizei height) nogil
+    void glClipPlane(GLenum plane, GLdouble *equation) nogil
+    void glGetClipPlane(GLenum plane, GLdouble *equation) nogil
+    void glDrawBuffer(GLenum mode) nogil
+    void glReadBuffer(GLenum mode) nogil
+    void glEnable(GLenum cap) nogil
+    void glDisable(GLenum cap) nogil
     GLboolean glIsEnabled(GLenum cap)
-    void glEnableClientState(GLenum cap)  # 1.1 
-    void glDisableClientState(GLenum cap)  # 1.1 
-    void glGetBooleanv(GLenum pname, GLboolean *params)
-    void glGetDoublev(GLenum pname, GLdouble *params)
-    void glGetFloatv(GLenum pname, GLfloat *params)
-    void glGetIntegerv(GLenum pname, GLint *params)
-    void glPushAttrib(GLbitfield mask)
-    void glPopAttrib()
-    void glPushClientAttrib(GLbitfield mask)  # 1.1 
-    void glPopClientAttrib()  # 1.1 
+    void glEnableClientState(GLenum cap) nogil  # 1.1 
+    void glDisableClientState(GLenum cap) nogil  # 1.1 
+    void glGetBooleanv(GLenum pname, GLboolean *params) nogil
+    void glGetDoublev(GLenum pname, GLdouble *params) nogil
+    void glGetFloatv(GLenum pname, GLfloat *params) nogil
+    void glGetIntegerv(GLenum pname, GLint *params) nogil
+    void glPushAttrib(GLbitfield mask) nogil
+    void glPopAttrib() nogil
+    void glPushClientAttrib(GLbitfield mask) nogil  # 1.1 
+    void glPopClientAttrib() nogil  # 1.1 
     GLint glRenderMode(GLenum mode)
     GLenum glGetError()
     GLubyte* glGetString(GLenum name)
-    void glFinish()
-    void glFlush()
-    void glHint(GLenum target, GLenum mode)
+    void glFinish() nogil
+    void glFlush() nogil
+    void glHint(GLenum target, GLenum mode) nogil
 
     # Depth Buffer 
-    void glClearDepth(GLclampd depth)
-    void glDepthFunc(GLenum func)
-    void glDepthMask(GLboolean flag)
-    void glDepthRange(GLclampd near_val, GLclampd far_val)
+    void glClearDepth(GLclampd depth) nogil
+    void glDepthFunc(GLenum func) nogil
+    void glDepthMask(GLboolean flag) nogil
+    void glDepthRange(GLclampd near_val, GLclampd far_val) nogil
 
     # Accumulation Buffer 
-    void glClearAccum(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
-    void glAccum(GLenum op, GLfloat value)
+    void glClearAccum(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) nogil
+    void glAccum(GLenum op, GLfloat value) nogil
 
     # Transformation 
-    void glMatrixMode(GLenum mode)
-    void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
-    void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
-    void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
-    void glPushMatrix()
-    void glPopMatrix()
-    void glLoadIdentity()
-    void glLoadMatrixd(GLdouble *m)
-    void glLoadMatrixf(GLfloat *m)
-    void glMultMatrixd(GLdouble *m)
-    void glMultMatrixf(GLfloat *m)
-    void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
-    void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
-    void glScaled(GLdouble x, GLdouble y, GLdouble z)
-    void glScalef(GLfloat x, GLfloat y, GLfloat z)
-    void glTranslated(GLdouble x, GLdouble y, GLdouble z)
-    void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
+    void glMatrixMode(GLenum mode) nogil
+    void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) nogil
+    void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) nogil
+    void glViewport(GLint x, GLint y, GLsizei width, GLsizei height) nogil
+    void glPushMatrix() nogil
+    void glPopMatrix() nogil
+    void glLoadIdentity() nogil
+    void glLoadMatrixd(GLdouble *m) nogil
+    void glLoadMatrixf(GLfloat *m) nogil
+    void glMultMatrixd(GLdouble *m) nogil
+    void glMultMatrixf(GLfloat *m) nogil
+    void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z) nogil
+    void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) nogil
+    void glScaled(GLdouble x, GLdouble y, GLdouble z) nogil
+    void glScalef(GLfloat x, GLfloat y, GLfloat z) nogil
+    void glTranslated(GLdouble x, GLdouble y, GLdouble z) nogil
+    void glTranslatef(GLfloat x, GLfloat y, GLfloat z) nogil
 
     # Display Lists 
     GLboolean glIsList(GLuint list)
-    void glDeleteLists(GLuint list, GLsizei range)
+    void glDeleteLists(GLuint list, GLsizei range) nogil
     GLuint glGenLists(GLsizei range)
-    void glNewList(GLuint list, GLenum mode)
-    void glEndList()
-    void glCallList(GLuint list)
-    void glCallLists(GLsizei n, GLenum type, GLvoid *lists)
-    void glListBase(GLuint base)
+    void glNewList(GLuint list, GLenum mode) nogil
+    void glEndList() nogil
+    void glCallList(GLuint list) nogil
+    void glCallLists(GLsizei n, GLenum type, GLvoid *lists) nogil
+    void glListBase(GLuint base) nogil
 
     # Drawing Functions 
-    void glBegin(GLenum mode)
-    void glEnd()
-    void glVertex2d(GLdouble x, GLdouble y)
-    void glVertex2f(GLfloat x, GLfloat y)
-    void glVertex2i(GLint x, GLint y)
-    void glVertex2s(GLshort x, GLshort y)
-    void glVertex3d(GLdouble x, GLdouble y, GLdouble z)
-    void glVertex3f(GLfloat x, GLfloat y, GLfloat z)
-    void glVertex3i(GLint x, GLint y, GLint z)
-    void glVertex3s(GLshort x, GLshort y, GLshort z)
-    void glVertex4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-    void glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-    void glVertex4i(GLint x, GLint y, GLint z, GLint w)
-    void glVertex4s(GLshort x, GLshort y, GLshort z, GLshort w)
-    void glVertex2dv(GLdouble *v)
-    void glVertex2fv(GLfloat *v)
-    void glVertex2iv(GLint *v)
-    void glVertex2sv(GLshort *v)
-    void glVertex3dv(GLdouble *v)
-    void glVertex3fv(GLfloat *v)
-    void glVertex3iv(GLint *v)
-    void glVertex3sv(GLshort *v)
-    void glVertex4dv(GLdouble *v)
-    void glVertex4fv(GLfloat *v)
-    void glVertex4iv(GLint *v)
-    void glVertex4sv(GLshort *v)
-    void glNormal3b(GLbyte nx, GLbyte ny, GLbyte nz)
-    void glNormal3d(GLdouble nx, GLdouble ny, GLdouble nz)
-    void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
-    void glNormal3i(GLint nx, GLint ny, GLint nz)
-    void glNormal3s(GLshort nx, GLshort ny, GLshort nz)
-    void glNormal3bv(GLbyte *v)
-    void glNormal3dv(GLdouble *v)
-    void glNormal3fv(GLfloat *v)
-    void glNormal3iv(GLint *v)
-    void glNormal3sv(GLshort *v)
-    void glIndexd(GLdouble c)
-    void glIndexf(GLfloat c)
-    void glIndexi(GLint c)
-    void glIndexs(GLshort c)
-    void glIndexub(GLubyte c)  # 1.1 
-    void glIndexdv(GLdouble *c)
-    void glIndexfv(GLfloat *c)
-    void glIndexiv(GLint *c)
-    void glIndexsv(GLshort *c)
-    void glIndexubv(GLubyte *c)  # 1.1 
-    void glColor3b(GLbyte red, GLbyte green, GLbyte blue)
-    void glColor3d(GLdouble red, GLdouble green, GLdouble blue)
-    void glColor3f(GLfloat red, GLfloat green, GLfloat blue)
-    void glColor3i(GLint red, GLint green, GLint blue)
-    void glColor3s(GLshort red, GLshort green, GLshort blue)
-    void glColor3ub(GLubyte red, GLubyte green, GLubyte blue)
-    void glColor3ui(GLuint red, GLuint green, GLuint blue)
-    void glColor3us(GLushort red, GLushort green, GLushort blue)
-    void glColor4b(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha)
-    void glColor4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha)
-    void glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
-    void glColor4i(GLint red, GLint green, GLint blue, GLint alpha)
-    void glColor4s(GLshort red, GLshort green, GLshort blue, GLshort alpha)
-    void glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)
-    void glColor4ui(GLuint red, GLuint green, GLuint blue, GLuint alpha)
-    void glColor4us(GLushort red, GLushort green, GLushort blue, GLushort alpha)
-    void glColor3bv(GLbyte *v)
-    void glColor3dv(GLdouble *v)
-    void glColor3fv(GLfloat *v)
-    void glColor3iv(GLint *v)
-    void glColor3sv(GLshort *v)
-    void glColor3ubv(GLubyte *v)
-    void glColor3uiv(GLuint *v)
-    void glColor3usv(GLushort *v)
-    void glColor4bv(GLbyte *v)
-    void glColor4dv(GLdouble *v)
-    void glColor4fv(GLfloat *v)
-    void glColor4iv(GLint *v)
-    void glColor4sv(GLshort *v)
-    void glColor4ubv(GLubyte *v)
-    void glColor4uiv(GLuint *v)
-    void glColor4usv(GLushort *v)
-    void glTexCoord1d(GLdouble s)
-    void glTexCoord1f(GLfloat s)
-    void glTexCoord1i(GLint s)
-    void glTexCoord1s(GLshort s)
-    void glTexCoord2d(GLdouble s, GLdouble t)
-    void glTexCoord2f(GLfloat s, GLfloat t)
-    void glTexCoord2i(GLint s, GLint t)
-    void glTexCoord2s(GLshort s, GLshort t)
-    void glTexCoord3d(GLdouble s, GLdouble t, GLdouble r)
-    void glTexCoord3f(GLfloat s, GLfloat t, GLfloat r)
-    void glTexCoord3i(GLint s, GLint t, GLint r)
-    void glTexCoord3s(GLshort s, GLshort t, GLshort r)
-    void glTexCoord4d(GLdouble s, GLdouble t, GLdouble r, GLdouble q)
-    void glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
-    void glTexCoord4i(GLint s, GLint t, GLint r, GLint q)
-    void glTexCoord4s(GLshort s, GLshort t, GLshort r, GLshort q)
-    void glTexCoord1dv(GLdouble *v)
-    void glTexCoord1fv(GLfloat *v)
-    void glTexCoord1iv(GLint *v)
-    void glTexCoord1sv(GLshort *v)
-    void glTexCoord2dv(GLdouble *v)
-    void glTexCoord2fv(GLfloat *v)
-    void glTexCoord2iv(GLint *v)
-    void glTexCoord2sv(GLshort *v)
-    void glTexCoord3dv(GLdouble *v)
-    void glTexCoord3fv(GLfloat *v)
-    void glTexCoord3iv(GLint *v)
-    void glTexCoord3sv(GLshort *v)
-    void glTexCoord4dv(GLdouble *v)
-    void glTexCoord4fv(GLfloat *v)
-    void glTexCoord4iv(GLint *v)
-    void glTexCoord4sv(GLshort *v)
-    void glRasterPos2d(GLdouble x, GLdouble y)
-    void glRasterPos2f(GLfloat x, GLfloat y)
-    void glRasterPos2i(GLint x, GLint y)
-    void glRasterPos2s(GLshort x, GLshort y)
-    void glRasterPos3d(GLdouble x, GLdouble y, GLdouble z)
-    void glRasterPos3f(GLfloat x, GLfloat y, GLfloat z)
-    void glRasterPos3i(GLint x, GLint y, GLint z)
-    void glRasterPos3s(GLshort x, GLshort y, GLshort z)
-    void glRasterPos4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-    void glRasterPos4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-    void glRasterPos4i(GLint x, GLint y, GLint z, GLint w)
-    void glRasterPos4s(GLshort x, GLshort y, GLshort z, GLshort w)
-    void glRasterPos2dv(GLdouble *v)
-    void glRasterPos2fv(GLfloat *v)
-    void glRasterPos2iv(GLint *v)
-    void glRasterPos2sv(GLshort *v)
-    void glRasterPos3dv(GLdouble *v)
-    void glRasterPos3fv(GLfloat *v)
-    void glRasterPos3iv(GLint *v)
-    void glRasterPos3sv(GLshort *v)
-    void glRasterPos4dv(GLdouble *v)
-    void glRasterPos4fv(GLfloat *v)
-    void glRasterPos4iv(GLint *v)
-    void glRasterPos4sv(GLshort *v)
-    void glRectd(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
-    void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
-    void glRecti(GLint x1, GLint y1, GLint x2, GLint y2)
-    void glRects(GLshort x1, GLshort y1, GLshort x2, GLshort y2)
-    void glRectdv(GLdouble *v1, GLdouble *v2)
-    void glRectfv(GLfloat *v1, GLfloat *v2)
-    void glRectiv(GLint *v1, GLint *v2)
-    void glRectsv(GLshort *v1, GLshort *v2)
+    void glBegin(GLenum mode) nogil
+    void glEnd() nogil
+    void glVertex2d(GLdouble x, GLdouble y) nogil
+    void glVertex2f(GLfloat x, GLfloat y) nogil
+    void glVertex2i(GLint x, GLint y) nogil
+    void glVertex2s(GLshort x, GLshort y) nogil
+    void glVertex3d(GLdouble x, GLdouble y, GLdouble z) nogil
+    void glVertex3f(GLfloat x, GLfloat y, GLfloat z) nogil
+    void glVertex3i(GLint x, GLint y, GLint z) nogil
+    void glVertex3s(GLshort x, GLshort y, GLshort z) nogil
+    void glVertex4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w) nogil
+    void glVertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) nogil
+    void glVertex4i(GLint x, GLint y, GLint z, GLint w) nogil
+    void glVertex4s(GLshort x, GLshort y, GLshort z, GLshort w) nogil
+    void glVertex2dv(GLdouble *v) nogil
+    void glVertex2fv(GLfloat *v) nogil
+    void glVertex2iv(GLint *v) nogil
+    void glVertex2sv(GLshort *v) nogil
+    void glVertex3dv(GLdouble *v) nogil
+    void glVertex3fv(GLfloat *v) nogil
+    void glVertex3iv(GLint *v) nogil
+    void glVertex3sv(GLshort *v) nogil
+    void glVertex4dv(GLdouble *v) nogil
+    void glVertex4fv(GLfloat *v) nogil
+    void glVertex4iv(GLint *v) nogil
+    void glVertex4sv(GLshort *v) nogil
+    void glNormal3b(GLbyte nx, GLbyte ny, GLbyte nz) nogil
+    void glNormal3d(GLdouble nx, GLdouble ny, GLdouble nz) nogil
+    void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz) nogil
+    void glNormal3i(GLint nx, GLint ny, GLint nz) nogil
+    void glNormal3s(GLshort nx, GLshort ny, GLshort nz) nogil
+    void glNormal3bv(GLbyte *v) nogil
+    void glNormal3dv(GLdouble *v) nogil
+    void glNormal3fv(GLfloat *v) nogil
+    void glNormal3iv(GLint *v) nogil
+    void glNormal3sv(GLshort *v) nogil
+    void glIndexd(GLdouble c) nogil
+    void glIndexf(GLfloat c) nogil
+    void glIndexi(GLint c) nogil
+    void glIndexs(GLshort c) nogil
+    void glIndexub(GLubyte c) nogil  # 1.1 
+    void glIndexdv(GLdouble *c) nogil
+    void glIndexfv(GLfloat *c) nogil
+    void glIndexiv(GLint *c) nogil
+    void glIndexsv(GLshort *c) nogil
+    void glIndexubv(GLubyte *c) nogil  # 1.1 
+    void glColor3b(GLbyte red, GLbyte green, GLbyte blue) nogil
+    void glColor3d(GLdouble red, GLdouble green, GLdouble blue) nogil
+    void glColor3f(GLfloat red, GLfloat green, GLfloat blue) nogil
+    void glColor3i(GLint red, GLint green, GLint blue) nogil
+    void glColor3s(GLshort red, GLshort green, GLshort blue) nogil
+    void glColor3ub(GLubyte red, GLubyte green, GLubyte blue) nogil
+    void glColor3ui(GLuint red, GLuint green, GLuint blue) nogil
+    void glColor3us(GLushort red, GLushort green, GLushort blue) nogil
+    void glColor4b(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha) nogil
+    void glColor4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha) nogil
+    void glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) nogil
+    void glColor4i(GLint red, GLint green, GLint blue, GLint alpha) nogil
+    void glColor4s(GLshort red, GLshort green, GLshort blue, GLshort alpha) nogil
+    void glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha) nogil
+    void glColor4ui(GLuint red, GLuint green, GLuint blue, GLuint alpha) nogil
+    void glColor4us(GLushort red, GLushort green, GLushort blue, GLushort alpha) nogil
+    void glColor3bv(GLbyte *v) nogil
+    void glColor3dv(GLdouble *v) nogil
+    void glColor3fv(GLfloat *v) nogil
+    void glColor3iv(GLint *v) nogil
+    void glColor3sv(GLshort *v) nogil
+    void glColor3ubv(GLubyte *v) nogil
+    void glColor3uiv(GLuint *v) nogil
+    void glColor3usv(GLushort *v) nogil
+    void glColor4bv(GLbyte *v) nogil
+    void glColor4dv(GLdouble *v) nogil
+    void glColor4fv(GLfloat *v) nogil
+    void glColor4iv(GLint *v) nogil
+    void glColor4sv(GLshort *v) nogil
+    void glColor4ubv(GLubyte *v) nogil
+    void glColor4uiv(GLuint *v) nogil
+    void glColor4usv(GLushort *v) nogil
+    void glTexCoord1d(GLdouble s) nogil
+    void glTexCoord1f(GLfloat s) nogil
+    void glTexCoord1i(GLint s) nogil
+    void glTexCoord1s(GLshort s) nogil
+    void glTexCoord2d(GLdouble s, GLdouble t) nogil
+    void glTexCoord2f(GLfloat s, GLfloat t) nogil
+    void glTexCoord2i(GLint s, GLint t) nogil
+    void glTexCoord2s(GLshort s, GLshort t) nogil
+    void glTexCoord3d(GLdouble s, GLdouble t, GLdouble r) nogil
+    void glTexCoord3f(GLfloat s, GLfloat t, GLfloat r) nogil
+    void glTexCoord3i(GLint s, GLint t, GLint r) nogil
+    void glTexCoord3s(GLshort s, GLshort t, GLshort r) nogil
+    void glTexCoord4d(GLdouble s, GLdouble t, GLdouble r, GLdouble q) nogil
+    void glTexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q) nogil
+    void glTexCoord4i(GLint s, GLint t, GLint r, GLint q) nogil
+    void glTexCoord4s(GLshort s, GLshort t, GLshort r, GLshort q) nogil
+    void glTexCoord1dv(GLdouble *v) nogil
+    void glTexCoord1fv(GLfloat *v) nogil
+    void glTexCoord1iv(GLint *v) nogil
+    void glTexCoord1sv(GLshort *v) nogil
+    void glTexCoord2dv(GLdouble *v) nogil
+    void glTexCoord2fv(GLfloat *v) nogil
+    void glTexCoord2iv(GLint *v) nogil
+    void glTexCoord2sv(GLshort *v) nogil
+    void glTexCoord3dv(GLdouble *v) nogil
+    void glTexCoord3fv(GLfloat *v) nogil
+    void glTexCoord3iv(GLint *v) nogil
+    void glTexCoord3sv(GLshort *v) nogil
+    void glTexCoord4dv(GLdouble *v) nogil
+    void glTexCoord4fv(GLfloat *v) nogil
+    void glTexCoord4iv(GLint *v) nogil
+    void glTexCoord4sv(GLshort *v) nogil
+    void glRasterPos2d(GLdouble x, GLdouble y) nogil
+    void glRasterPos2f(GLfloat x, GLfloat y) nogil
+    void glRasterPos2i(GLint x, GLint y) nogil
+    void glRasterPos2s(GLshort x, GLshort y) nogil
+    void glRasterPos3d(GLdouble x, GLdouble y, GLdouble z) nogil
+    void glRasterPos3f(GLfloat x, GLfloat y, GLfloat z) nogil
+    void glRasterPos3i(GLint x, GLint y, GLint z) nogil
+    void glRasterPos3s(GLshort x, GLshort y, GLshort z) nogil
+    void glRasterPos4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w) nogil
+    void glRasterPos4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w) nogil
+    void glRasterPos4i(GLint x, GLint y, GLint z, GLint w) nogil
+    void glRasterPos4s(GLshort x, GLshort y, GLshort z, GLshort w) nogil
+    void glRasterPos2dv(GLdouble *v) nogil
+    void glRasterPos2fv(GLfloat *v) nogil
+    void glRasterPos2iv(GLint *v) nogil
+    void glRasterPos2sv(GLshort *v) nogil
+    void glRasterPos3dv(GLdouble *v) nogil
+    void glRasterPos3fv(GLfloat *v) nogil
+    void glRasterPos3iv(GLint *v) nogil
+    void glRasterPos3sv(GLshort *v) nogil
+    void glRasterPos4dv(GLdouble *v) nogil
+    void glRasterPos4fv(GLfloat *v) nogil
+    void glRasterPos4iv(GLint *v) nogil
+    void glRasterPos4sv(GLshort *v) nogil
+    void glRectd(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) nogil
+    void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2) nogil
+    void glRecti(GLint x1, GLint y1, GLint x2, GLint y2) nogil
+    void glRects(GLshort x1, GLshort y1, GLshort x2, GLshort y2) nogil
+    void glRectdv(GLdouble *v1, GLdouble *v2) nogil
+    void glRectfv(GLfloat *v1, GLfloat *v2) nogil
+    void glRectiv(GLint *v1, GLint *v2) nogil
+    void glRectsv(GLshort *v1, GLshort *v2) nogil
 
     # Lighting 
-    void glShadeModel(GLenum mode)
-    void glLightf(GLenum light, GLenum pname, GLfloat param)
-    void glLighti(GLenum light, GLenum pname, GLint param)
-    void glLightfv(GLenum light, GLenum pname, GLfloat *params)
-    void glLightiv(GLenum light, GLenum pname, GLint *params)
-    void glGetLightfv(GLenum light, GLenum pname, GLfloat *params)
-    void glGetLightiv(GLenum light, GLenum pname, GLint *params)
-    void glLightModelf(GLenum pname, GLfloat param)
-    void glLightModeli(GLenum pname, GLint param)
-    void glLightModelfv(GLenum pname, GLfloat *params)
-    void glLightModeliv(GLenum pname, GLint *params)
-    void glMaterialf(GLenum face, GLenum pname, GLfloat param)
-    void glMateriali(GLenum face, GLenum pname, GLint param)
-    void glMaterialfv(GLenum face, GLenum pname, GLfloat *params)
-    void glMaterialiv(GLenum face, GLenum pname, GLint *params)
-    void glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params)
-    void glGetMaterialiv(GLenum face, GLenum pname, GLint *params)
-    void glColorMaterial(GLenum face, GLenum mode)
+    void glShadeModel(GLenum mode) nogil
+    void glLightf(GLenum light, GLenum pname, GLfloat param) nogil
+    void glLighti(GLenum light, GLenum pname, GLint param) nogil
+    void glLightfv(GLenum light, GLenum pname, GLfloat *params) nogil
+    void glLightiv(GLenum light, GLenum pname, GLint *params) nogil
+    void glGetLightfv(GLenum light, GLenum pname, GLfloat *params) nogil
+    void glGetLightiv(GLenum light, GLenum pname, GLint *params) nogil
+    void glLightModelf(GLenum pname, GLfloat param) nogil
+    void glLightModeli(GLenum pname, GLint param) nogil
+    void glLightModelfv(GLenum pname, GLfloat *params) nogil
+    void glLightModeliv(GLenum pname, GLint *params) nogil
+    void glMaterialf(GLenum face, GLenum pname, GLfloat param) nogil
+    void glMateriali(GLenum face, GLenum pname, GLint param) nogil
+    void glMaterialfv(GLenum face, GLenum pname, GLfloat *params) nogil
+    void glMaterialiv(GLenum face, GLenum pname, GLint *params) nogil
+    void glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params) nogil
+    void glGetMaterialiv(GLenum face, GLenum pname, GLint *params) nogil
+    void glColorMaterial(GLenum face, GLenum mode) nogil
 
     # Raster functions 
-    void glPixelZoom(GLfloat xfactor, GLfloat yfactor)
-    void glPixelStoref(GLenum pname, GLfloat param)
-    void glPixelStorei(GLenum pname, GLint param)
-    void glPixelTransferf(GLenum pname, GLfloat param)
-    void glPixelTransferi(GLenum pname, GLint param)
-    void glPixelMapfv(GLenum map, GLint mapsize, GLfloat *values)
-    void glPixelMapuiv(GLenum map, GLint mapsize, GLuint *values)
-    void glPixelMapusv(GLenum map, GLint mapsize, GLushort *values)
-    void glGetPixelMapfv(GLenum map, GLfloat *values)
-    void glGetPixelMapuiv(GLenum map, GLuint *values)
-    void glGetPixelMapusv(GLenum map, GLushort *values)
-    void glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte *bitmap)
-    void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
-    void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
-    void glCopyPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type)
+    void glPixelZoom(GLfloat xfactor, GLfloat yfactor) nogil
+    void glPixelStoref(GLenum pname, GLfloat param) nogil
+    void glPixelStorei(GLenum pname, GLint param) nogil
+    void glPixelTransferf(GLenum pname, GLfloat param) nogil
+    void glPixelTransferi(GLenum pname, GLint param) nogil
+    void glPixelMapfv(GLenum map, GLint mapsize, GLfloat *values) nogil
+    void glPixelMapuiv(GLenum map, GLint mapsize, GLuint *values) nogil
+    void glPixelMapusv(GLenum map, GLint mapsize, GLushort *values) nogil
+    void glGetPixelMapfv(GLenum map, GLfloat *values) nogil
+    void glGetPixelMapuiv(GLenum map, GLuint *values) nogil
+    void glGetPixelMapusv(GLenum map, GLushort *values) nogil
+    void glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte *bitmap) nogil
+    void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) nogil
+    void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) nogil
+    void glCopyPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type) nogil
 
     # Stenciling 
-    void glStencilFunc(GLenum func, GLint ref, GLuint mask)
-    void glStencilMask(GLuint mask)
-    void glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
-    void glClearStencil(GLint s)
+    void glStencilFunc(GLenum func, GLint ref, GLuint mask) nogil
+    void glStencilMask(GLuint mask) nogil
+    void glStencilOp(GLenum fail, GLenum zfail, GLenum zpass) nogil
+    void glClearStencil(GLint s) nogil
 
     # Texture mapping 
-    void glTexGend(GLenum coord, GLenum pname, GLdouble param)
-    void glTexGenf(GLenum coord, GLenum pname, GLfloat param)
-    void glTexGeni(GLenum coord, GLenum pname, GLint param)
-    void glTexGendv(GLenum coord, GLenum pname, GLdouble *params)
-    void glTexGenfv(GLenum coord, GLenum pname, GLfloat *params)
-    void glTexGeniv(GLenum coord, GLenum pname, GLint *params)
-    void glGetTexGendv(GLenum coord, GLenum pname, GLdouble *params)
-    void glGetTexGenfv(GLenum coord, GLenum pname, GLfloat *params)
-    void glGetTexGeniv(GLenum coord, GLenum pname, GLint *params)
-    void glTexEnvf(GLenum target, GLenum pname, GLfloat param)
-    void glTexEnvi(GLenum target, GLenum pname, GLint param)
-    void glTexEnvfv(GLenum target, GLenum pname, GLfloat *params)
-    void glTexEnviv(GLenum target, GLenum pname, GLint *params)
-    void glGetTexEnvfv(GLenum target, GLenum pname, GLfloat *params)
-    void glGetTexEnviv(GLenum target, GLenum pname, GLint *params)
-    void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
-    void glTexParameteri(GLenum target, GLenum pname, GLint param)
-    void glTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
-    void glTexParameteriv(GLenum target, GLenum pname, GLint *params)
-    void glGetTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
-    void glGetTexParameteriv(GLenum target, GLenum pname, GLint *params)
-    void glGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params)
-    void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
-    void glTexImage1D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, GLvoid *pixels)
-    void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid *pixels)
-    void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid *pixels)
+    void glTexGend(GLenum coord, GLenum pname, GLdouble param) nogil
+    void glTexGenf(GLenum coord, GLenum pname, GLfloat param) nogil
+    void glTexGeni(GLenum coord, GLenum pname, GLint param) nogil
+    void glTexGendv(GLenum coord, GLenum pname, GLdouble *params) nogil
+    void glTexGenfv(GLenum coord, GLenum pname, GLfloat *params) nogil
+    void glTexGeniv(GLenum coord, GLenum pname, GLint *params) nogil
+    void glGetTexGendv(GLenum coord, GLenum pname, GLdouble *params) nogil
+    void glGetTexGenfv(GLenum coord, GLenum pname, GLfloat *params) nogil
+    void glGetTexGeniv(GLenum coord, GLenum pname, GLint *params) nogil
+    void glTexEnvf(GLenum target, GLenum pname, GLfloat param) nogil
+    void glTexEnvi(GLenum target, GLenum pname, GLint param) nogil
+    void glTexEnvfv(GLenum target, GLenum pname, GLfloat *params) nogil
+    void glTexEnviv(GLenum target, GLenum pname, GLint *params) nogil
+    void glGetTexEnvfv(GLenum target, GLenum pname, GLfloat *params) nogil
+    void glGetTexEnviv(GLenum target, GLenum pname, GLint *params) nogil
+    void glTexParameterf(GLenum target, GLenum pname, GLfloat param) nogil
+    void glTexParameteri(GLenum target, GLenum pname, GLint param) nogil
+    void glTexParameterfv(GLenum target, GLenum pname, GLfloat *params) nogil
+    void glTexParameteriv(GLenum target, GLenum pname, GLint *params) nogil
+    void glGetTexParameterfv(GLenum target, GLenum pname, GLfloat *params) nogil
+    void glGetTexParameteriv(GLenum target, GLenum pname, GLint *params) nogil
+    void glGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params) nogil
+    void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params) nogil
+    void glTexImage1D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, GLvoid *pixels) nogil
+    void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid *pixels) nogil
+    void glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid *pixels) nogil
 
     # Evaluators 
-    void glMap1d(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, GLdouble *points)
-    void glMap1f(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, GLfloat *points)
-    void glMap2d(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, GLdouble *points)
-    void glMap2f(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, GLfloat *points)
-    void glGetMapdv(GLenum target, GLenum query, GLdouble *v)
-    void glGetMapfv(GLenum target, GLenum query, GLfloat *v)
-    void glGetMapiv(GLenum target, GLenum query, GLint *v)
-    void glEvalCoord1d(GLdouble u)
-    void glEvalCoord1f(GLfloat u)
-    void glEvalCoord1dv(GLdouble *u)
-    void glEvalCoord1fv(GLfloat *u)
-    void glEvalCoord2d(GLdouble u, GLdouble v)
-    void glEvalCoord2f(GLfloat u, GLfloat v)
-    void glEvalCoord2dv(GLdouble *u)
-    void glEvalCoord2fv(GLfloat *u)
-    void glMapGrid1d(GLint un, GLdouble u1, GLdouble u2)
-    void glMapGrid1f(GLint un, GLfloat u1, GLfloat u2)
-    void glMapGrid2d(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2)
-    void glMapGrid2f(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2)
-    void glEvalPoint1(GLint i)
-    void glEvalPoint2(GLint i, GLint j)
-    void glEvalMesh1(GLenum mode, GLint i1, GLint i2)
-    void glEvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
+    void glMap1d(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, GLdouble *points) nogil
+    void glMap1f(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, GLfloat *points) nogil
+    void glMap2d(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, GLdouble *points) nogil
+    void glMap2f(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, GLfloat *points) nogil
+    void glGetMapdv(GLenum target, GLenum query, GLdouble *v) nogil
+    void glGetMapfv(GLenum target, GLenum query, GLfloat *v) nogil
+    void glGetMapiv(GLenum target, GLenum query, GLint *v) nogil
+    void glEvalCoord1d(GLdouble u) nogil
+    void glEvalCoord1f(GLfloat u) nogil
+    void glEvalCoord1dv(GLdouble *u) nogil
+    void glEvalCoord1fv(GLfloat *u) nogil
+    void glEvalCoord2d(GLdouble u, GLdouble v) nogil
+    void glEvalCoord2f(GLfloat u, GLfloat v) nogil
+    void glEvalCoord2dv(GLdouble *u) nogil
+    void glEvalCoord2fv(GLfloat *u) nogil
+    void glMapGrid1d(GLint un, GLdouble u1, GLdouble u2) nogil
+    void glMapGrid1f(GLint un, GLfloat u1, GLfloat u2) nogil
+    void glMapGrid2d(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2) nogil
+    void glMapGrid2f(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2) nogil
+    void glEvalPoint1(GLint i) nogil
+    void glEvalPoint2(GLint i, GLint j) nogil
+    void glEvalMesh1(GLenum mode, GLint i1, GLint i2) nogil
+    void glEvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2) nogil
 
     # Fog 
-    void glFogf(GLenum pname, GLfloat param)
-    void glFogi(GLenum pname, GLint param)
-    void glFogfv(GLenum pname, GLfloat *params)
-    void glFogiv(GLenum pname, GLint *params)
+    void glFogf(GLenum pname, GLfloat param) nogil
+    void glFogi(GLenum pname, GLint param) nogil
+    void glFogfv(GLenum pname, GLfloat *params) nogil
+    void glFogiv(GLenum pname, GLint *params) nogil
 
     # Selection and Feedback 
-    void glFeedbackBuffer(GLsizei size, GLenum type, GLfloat *buffer)
-    void glPassThrough(GLfloat token)
-    void glSelectBuffer(GLsizei size, GLuint *buffer)
-    void glInitNames()
-    void glLoadName(GLuint name)
-    void glPushName(GLuint name)
-    void glPopName()
+    void glFeedbackBuffer(GLsizei size, GLenum type, GLfloat *buffer) nogil
+    void glPassThrough(GLfloat token) nogil
+    void glSelectBuffer(GLsizei size, GLuint *buffer) nogil
+    void glInitNames() nogil
+    void glLoadName(GLuint name) nogil
+    void glPushName(GLuint name) nogil
+    void glPopName() nogil
 
 
     # 1.1 functions 
     # texture objects 
-    void glGenTextures(GLsizei n, GLuint *textures)
-    void glDeleteTextures(GLsizei n, GLuint *textures)
-    void glBindTexture(GLenum target, GLuint texture)
-    void glPrioritizeTextures(GLsizei n, GLuint *textures, GLclampf *priorities)
+    void glGenTextures(GLsizei n, GLuint *textures) nogil
+    void glDeleteTextures(GLsizei n, GLuint *textures) nogil
+    void glBindTexture(GLenum target, GLuint texture) nogil
+    void glPrioritizeTextures(GLsizei n, GLuint *textures, GLclampf *priorities) nogil
     GLboolean glAreTexturesResident(GLsizei n, GLuint *textures, GLboolean *residences)
     GLboolean glIsTexture(GLuint texture)
     # texture mapping 
-    void glTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, GLvoid *pixels)
-    void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
-    void glCopyTexImage1D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border)
-    void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
-    void glCopyTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
-    void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+    void glTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, GLvoid *pixels) nogil
+    void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) nogil
+    void glCopyTexImage1D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border) nogil
+    void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) nogil
+    void glCopyTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width) nogil
+    void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) nogil
     # vertex arrays 
-    void glVertexPointer(GLint size, GLenum type, GLsizei stride, GLvoid *ptr)
-    void glNormalPointer(GLenum type, GLsizei stride, GLvoid *ptr)
-    void glColorPointer(GLint size, GLenum type, GLsizei stride, GLvoid *ptr)
-    void glIndexPointer(GLenum type, GLsizei stride, GLvoid *ptr)
-    void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, GLvoid *ptr)
-    void glEdgeFlagPointer(GLsizei stride, GLvoid *ptr)
-    void glGetPointerv(GLenum pname, GLvoid **params)
-    void glArrayElement(GLint i)
-    void glDrawArrays(GLenum mode, GLint first, GLsizei count)
-    void glDrawElements(GLenum mode, GLsizei count, GLenum type, GLvoid *indices)
-    void glInterleavedArrays(GLenum format, GLsizei stride, GLvoid *pointer)
+    void glVertexPointer(GLint size, GLenum type, GLsizei stride, GLvoid *ptr) nogil
+    void glNormalPointer(GLenum type, GLsizei stride, GLvoid *ptr) nogil
+    void glColorPointer(GLint size, GLenum type, GLsizei stride, GLvoid *ptr) nogil
+    void glIndexPointer(GLenum type, GLsizei stride, GLvoid *ptr) nogil
+    void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, GLvoid *ptr) nogil
+    void glEdgeFlagPointer(GLsizei stride, GLvoid *ptr) nogil
+    void glGetPointerv(GLenum pname, GLvoid **params) nogil
+    void glArrayElement(GLint i) nogil
+    void glDrawArrays(GLenum mode, GLint first, GLsizei count) nogil
+    void glDrawElements(GLenum mode, GLsizei count, GLenum type, GLvoid *indices) nogil
+    void glInterleavedArrays(GLenum format, GLsizei stride, GLvoid *pointer) nogil
 
 cdef extern from "stddef.h":
     ctypedef unsigned int wchar_t
@@ -403,54 +403,54 @@ cdef extern from "GL/glu.h":
     ctypedef GLUtesselator GLUtesselatorObj
     ctypedef GLUtesselator GLUtriangulatorObj
 
-    void gluBeginCurve(GLUnurbs* nurb)
-    void gluBeginPolygon(GLUtesselator* tess)
-    void gluBeginSurface(GLUnurbs* nurb)
-    void gluBeginTrim(GLUnurbs* nurb)
-    GLint gluBuild1DMipmaps(GLenum target, GLint internalFormat, GLsizei width, GLenum format, GLenum type, void *data)
-    GLint gluBuild2DMipmaps(GLenum target, GLint internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type, void *data)
-    void gluCylinder(GLUquadric* quad, GLdouble base, GLdouble top, GLdouble height, GLint slices, GLint stacks)
-    void gluDeleteNurbsRenderer(GLUnurbs* nurb)
-    void gluDeleteQuadric(GLUquadric* quad)
-    void gluDeleteTess(GLUtesselator* tess)
-    void gluDisk(GLUquadric* quad, GLdouble inner, GLdouble outer, GLint slices, GLint loops)
-    void gluEndCurve(GLUnurbs* nurb)
-    void gluEndPolygon(GLUtesselator* tess)
-    void gluEndSurface(GLUnurbs* nurb)
-    void gluEndTrim(GLUnurbs* nurb)
+    void gluBeginCurve(GLUnurbs* nurb) nogil
+    void gluBeginPolygon(GLUtesselator* tess) nogil
+    void gluBeginSurface(GLUnurbs* nurb) nogil
+    void gluBeginTrim(GLUnurbs* nurb) nogil
+    GLint gluBuild1DMipmaps(GLenum target, GLint internalFormat, GLsizei width, GLenum format, GLenum type, void *data) nogil
+    GLint gluBuild2DMipmaps(GLenum target, GLint internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type, void *data) nogil
+    void gluCylinder(GLUquadric* quad, GLdouble base, GLdouble top, GLdouble height, GLint slices, GLint stacks) nogil
+    void gluDeleteNurbsRenderer(GLUnurbs* nurb) nogil
+    void gluDeleteQuadric(GLUquadric* quad) nogil
+    void gluDeleteTess(GLUtesselator* tess) nogil
+    void gluDisk(GLUquadric* quad, GLdouble inner, GLdouble outer, GLint slices, GLint loops) nogil
+    void gluEndCurve(GLUnurbs* nurb) nogil
+    void gluEndPolygon(GLUtesselator* tess) nogil
+    void gluEndSurface(GLUnurbs* nurb) nogil
+    void gluEndTrim(GLUnurbs* nurb) nogil
     GLubyte * gluErrorString(GLenum error)
     wchar_t * gluErrorUnicodeStringEXT(GLenum error)
-    void gluGetNurbsProperty(GLUnurbs* nurb, GLenum property, GLfloat* data)
+    void gluGetNurbsProperty(GLUnurbs* nurb, GLenum property, GLfloat* data) nogil
     GLubyte * gluGetString(GLenum name)
-    void gluGetTessProperty(GLUtesselator* tess, GLenum which, GLdouble* data)
-    void gluLoadSamplingMatrices(GLUnurbs* nurb, GLfloat *model, GLfloat *perspective, GLint *view)
-    void gluLookAt(GLdouble eyeX, GLdouble eyeY, GLdouble eyeZ, GLdouble centerX, GLdouble centerY, GLdouble centerZ, GLdouble upX, GLdouble upY, GLdouble upZ)
+    void gluGetTessProperty(GLUtesselator* tess, GLenum which, GLdouble* data) nogil
+    void gluLoadSamplingMatrices(GLUnurbs* nurb, GLfloat *model, GLfloat *perspective, GLint *view) nogil
+    void gluLookAt(GLdouble eyeX, GLdouble eyeY, GLdouble eyeZ, GLdouble centerX, GLdouble centerY, GLdouble centerZ, GLdouble upX, GLdouble upY, GLdouble upZ) nogil
     GLUnurbs* gluNewNurbsRenderer()
     GLUquadric* gluNewQuadric()
     GLUtesselator* gluNewTess()
-    void gluNextContour(GLUtesselator* tess, GLenum type)
-    void gluNurbsCurve(GLUnurbs* nurb, GLint knotCount, GLfloat *knots, GLint stride, GLfloat *control, GLint order, GLenum type)
-    void gluNurbsProperty(GLUnurbs* nurb, GLenum property, GLfloat value)
-    void gluNurbsSurface(GLUnurbs* nurb, GLint sKnotCount, GLfloat* sKnots, GLint tKnotCount, GLfloat* tKnots, GLint sStride, GLint tStride, GLfloat* control, GLint sOrder, GLint tOrder, GLenum type)
-    void gluOrtho2D(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top)
-    void gluPartialDisk(GLUquadric* quad, GLdouble inner, GLdouble outer, GLint slices, GLint loops, GLdouble start, GLdouble sweep)
-    void gluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
-    void gluPickMatrix(GLdouble x, GLdouble y, GLdouble delX, GLdouble delY, GLint *viewport)
+    void gluNextContour(GLUtesselator* tess, GLenum type) nogil
+    void gluNurbsCurve(GLUnurbs* nurb, GLint knotCount, GLfloat *knots, GLint stride, GLfloat *control, GLint order, GLenum type) nogil
+    void gluNurbsProperty(GLUnurbs* nurb, GLenum property, GLfloat value) nogil
+    void gluNurbsSurface(GLUnurbs* nurb, GLint sKnotCount, GLfloat* sKnots, GLint tKnotCount, GLfloat* tKnots, GLint sStride, GLint tStride, GLfloat* control, GLint sOrder, GLint tOrder, GLenum type) nogil
+    void gluOrtho2D(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top) nogil
+    void gluPartialDisk(GLUquadric* quad, GLdouble inner, GLdouble outer, GLint slices, GLint loops, GLdouble start, GLdouble sweep) nogil
+    void gluPerspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar) nogil
+    void gluPickMatrix(GLdouble x, GLdouble y, GLdouble delX, GLdouble delY, GLint *viewport) nogil
     GLint gluProject(GLdouble objX, GLdouble objY, GLdouble objZ, GLdouble *model, GLdouble *proj, GLint *view, GLdouble* winX, GLdouble* winY, GLdouble* winZ)
-    void gluPwlCurve(GLUnurbs* nurb, GLint count, GLfloat* data, GLint stride, GLenum type)
-    void gluQuadricDrawStyle(GLUquadric* quad, GLenum draw)
-    void gluQuadricNormals(GLUquadric* quad, GLenum normal)
-    void gluQuadricOrientation(GLUquadric* quad, GLenum orientation)
-    void gluQuadricTexture(GLUquadric* quad, GLboolean texture)
-    GLint gluScaleImage(GLenum format, GLsizei wIn, GLsizei hIn, GLenum typeIn, void *dataIn, GLsizei wOut, GLsizei hOut, GLenum typeOut, GLvoid* dataOut)
-    void gluSphere(GLUquadric* quad, GLdouble radius, GLint slices, GLint stacks)
-    void gluTessBeginContour(GLUtesselator* tess)
-    void gluTessBeginPolygon(GLUtesselator* tess, GLvoid* data)
-    void gluTessEndContour(GLUtesselator* tess)
-    void gluTessEndPolygon(GLUtesselator* tess)
-    void gluTessNormal(GLUtesselator* tess, GLdouble valueX, GLdouble valueY, GLdouble valueZ)
-    void gluTessProperty(GLUtesselator* tess, GLenum which, GLdouble data)
-    void gluTessVertex(GLUtesselator* tess, GLdouble *location, GLvoid* data)
+    void gluPwlCurve(GLUnurbs* nurb, GLint count, GLfloat* data, GLint stride, GLenum type) nogil
+    void gluQuadricDrawStyle(GLUquadric* quad, GLenum draw) nogil
+    void gluQuadricNormals(GLUquadric* quad, GLenum normal) nogil
+    void gluQuadricOrientation(GLUquadric* quad, GLenum orientation) nogil
+    void gluQuadricTexture(GLUquadric* quad, GLboolean texture) nogil
+    GLint gluScaleImage(GLenum format, GLsizei wIn, GLsizei hIn, GLenum typeIn, void *dataIn, GLsizei wOut, GLsizei hOut, GLenum typeOut, GLvoid* dataOut) nogil
+    void gluSphere(GLUquadric* quad, GLdouble radius, GLint slices, GLint stacks) nogil
+    void gluTessBeginContour(GLUtesselator* tess) nogil
+    void gluTessBeginPolygon(GLUtesselator* tess, GLvoid* data) nogil
+    void gluTessEndContour(GLUtesselator* tess) nogil
+    void gluTessEndPolygon(GLUtesselator* tess) nogil
+    void gluTessNormal(GLUtesselator* tess, GLdouble valueX, GLdouble valueY, GLdouble valueZ) nogil
+    void gluTessProperty(GLUtesselator* tess, GLenum which, GLdouble data) nogil
+    void gluTessVertex(GLUtesselator* tess, GLdouble *location, GLvoid* data) nogil
     GLint gluUnProject(GLdouble winX, GLdouble winY, GLdouble winZ, GLdouble *model, GLdouble *proj, GLint *view, GLdouble* objX, GLdouble* objY, GLdouble* objZ)
     GLint gluUnProject4(GLdouble winX, GLdouble winY, GLdouble winZ, GLdouble clipW, GLdouble *model, GLdouble *proj, GLint *view, GLdouble nearVal, GLdouble farVal, GLdouble* objX, GLdouble* objY, GLdouble* objZ, GLdouble* objW)
 
