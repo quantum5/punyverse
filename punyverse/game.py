@@ -6,7 +6,7 @@ import time
 import random
 
 from punyverse.camera import Camera
-from punyverse.world import load_world
+from punyverse.world import World
 from punyverse.glgeom import *
 from punyverse.entity import Asteroid
 from punyverse import texture
@@ -42,10 +42,33 @@ class Applet(pyglet.window.Window):
         super(Applet, self).__init__(*args, **kwargs)
         texture.init()
 
+        self.loaded = False
+        self.__load_started = False
+        self._loading_phase = pyglet.text.Label(font_name='Consolas', font_size=20, x=10, y=self.height - 100,
+                                                color=(255, 255, 255, 255), width=self.width - 20, halign='center',
+                                                multiline=True, text='Punyverse is starting...')
+        self._loading_label = pyglet.text.Label(font_name='Consolas', font_size=16, x=10, y=self.height - 200,
+                                                color=(255, 255, 255, 255), width=self.width - 20, halign='center',
+                                                multiline=True)
+        pyglet.clock.schedule_once(self.load, 0)
+
+    def load(self, *args, **kwargs):
+        if self.loaded or self.__load_started:
+            return
+
+        self.__load_started = True
+
+        def callback(phase, message, progress):
+            self.draw_loading(phase, message, progress)
+            self.flip()
+            self.dispatch_events()
+
         start = clock()
         self.fps = 0
-        self.world = load_world('world.json')
-        print 'Initializing game...'
+        self.world = World('world.json', callback)
+        phase = 'Initializing game...'
+        print phase
+        callback(phase, '', 0)
         self.speed = INITIAL_SPEED
         self.keys = set()
         self.info = True
@@ -70,7 +93,6 @@ class Applet(pyglet.window.Window):
         self.__time_per_second_cache = None
         self.__time_per_second_value = None
         self.__time_accumulate = 0
-        pyglet.clock.schedule(self.update)
 
         def speed_incrementer(object, increment):
             def incrementer():
@@ -160,26 +182,35 @@ class Applet(pyglet.window.Window):
 
         glLightfv(GL_LIGHT0, GL_POSITION, fv4(.5, .5, 1, 0))
         glLightfv(GL_LIGHT0, GL_SPECULAR, fv4(.5, .5, 1, 1))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, fv4(1, 1, 1, 1))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE,  fv4(1, 1, 1, 1))
         glLightfv(GL_LIGHT1, GL_POSITION, fv4(1, 0, .5, 0))
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, fv4(.5, .5, .5, 1))
+        glLightfv(GL_LIGHT1, GL_DIFFUSE,  fv4(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
 
-        print 'Loading asteroids...'
-        self.asteroid_ids = [model_list(load_model(r'asteroids/01.obj'), 5, 5, 5, (0, 0, 0)),
-                             model_list(load_model(r'asteroids/02.obj'), 5, 5, 5, (0, 0, 0)),
-                             model_list(load_model(r'asteroids/03.obj'), 5, 5, 5, (0, 0, 0)),
-        ]
+        phase = 'Loading asteroids...'
+        print phase
+
+        def load_asteroids(files):
+            for id, file in enumerate(files):
+                callback(phase, 'Loading %s...' % file, float(id) / len(files))
+                yield model_list(load_model(file), 5, 5, 5, (0, 0, 0))
+
+        self.asteroid_ids = list(load_asteroids([r'asteroids/01.obj', r'asteroids/02.obj', r'asteroids/03.obj']))
 
         c = self.cam
         c.x, c.y, c.z = self.world.start
         c.pitch, c.yaw, c.roll = self.world.direction
 
-        print 'Updating entities...'
+        phase = 'Updating entities...'
+        print phase
+        callback(phase, '', 0)
         for entity in self.world.tracker:
             entity.update()
 
         print 'Loaded in %s seconds.' % (clock() - start)
+        self.loaded = True
+        pyglet.clock.schedule(self.update)
+        self.on_resize(self.width, self.height)  # On resize handler does nothing unless it's loaded
 
     def set_exclusive_mouse(self, exclusive):
         super(Applet, self).set_exclusive_mouse(exclusive)
@@ -196,6 +227,9 @@ class Applet(pyglet.window.Window):
                                            direction=(dx, dy, dz)))
 
     def on_mouse_press(self, x, y, button, modifiers):
+        if not self.loaded:
+            return
+
         if not self.exclusive:
             self.set_exclusive_mouse(True)
         else:
@@ -203,10 +237,16 @@ class Applet(pyglet.window.Window):
                 self.mouse_press_handler[button]()
 
     def on_mouse_motion(self, x, y, dx, dy):
+        if not self.loaded:
+            return
+
         if self.exclusive:  # Only handle camera movement if mouse is grabbed
             self.cam.mouse_move(dx * MOUSE_SENSITIVITY, dy * MOUSE_SENSITIVITY)
 
     def on_key_press(self, symbol, modifiers):
+        if not self.loaded:
+            return
+
         if self.exclusive:  # Only handle keyboard input if mouse is grabbed
             if symbol in self.key_handler:
                 self.key_handler[symbol]()
@@ -214,10 +254,16 @@ class Applet(pyglet.window.Window):
                 self.keys.add(symbol)
 
     def on_key_release(self, symbol, modifiers):
+        if not self.loaded:
+            return
+
         if symbol in self.keys:
             self.keys.remove(symbol)
 
     def on_resize(self, width, height):
+        if not self.loaded:
+            return super(Applet, self).on_resize(width, height)
+
         height = max(height, 1) # Prevent / by 0
         self.label.y = height - 20
         glViewport(0, 0, width, height)
@@ -228,6 +274,9 @@ class Applet(pyglet.window.Window):
         glMatrixMode(GL_MODELVIEW)
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
+        if not self.loaded:
+            return
+
         self.speed += scroll_y * 50 + scroll_x * 500
 
     def get_time_per_second(self):
@@ -267,9 +316,25 @@ class Applet(pyglet.window.Window):
             else:
                 self.__time_accumulate += delta
 
+    def draw_loading(self, phase=None, message=None, progress=None):
+        glClear(GL_COLOR_BUFFER_BIT)
+        glLoadIdentity()
+        if phase is not None:
+            self._loading_phase.text = phase
+        if message is not None:
+            self._loading_label.text = message
+        self._loading_phase.draw()
+        self._loading_label.draw()
+        if progress is not None:
+            progress_bar(10, self.height - 300, self.width - 20, 50, progress)
+
     def on_draw(self, glMatrix=GLfloat * 16):
+        if not self.loaded:
+            return self.draw_loading()
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
+
         c = self.cam
 
         x, y, z = c.x, c.y, c.z

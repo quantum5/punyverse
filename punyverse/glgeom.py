@@ -5,7 +5,18 @@ from random import random, gauss, choice
 TWOPI = pi * 2
 
 __all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'torus', 'belt',
-           'flare', 'normal_sphere']
+           'flare', 'normal_sphere', 'glSection', 'progress_bar']
+
+
+class glSection(object):
+    def __init__(self, type):
+        self.type = type
+
+    def __enter__(self):
+        glBegin(self.type)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        glEnd()
 
 
 def compile(pointer, *args, **kwargs):
@@ -290,3 +301,36 @@ except ImportError:
 
             glEnd()
         glPopAttrib()
+
+
+def progress_bar(x, y, width, height, filled):
+    x1 = x
+    x2 = x + width
+    y1 = y
+    y2 = y - height
+    y3 = 0.65 * y1 + 0.35 * y2
+    y4 = 0.25 * y1 + 0.75 * y2
+
+    glColor3f(0.6, 0.6, 0.6)
+    with glSection(GL_LINE_LOOP):
+        glVertex2f(x1, y1)
+        glVertex2f(x1, y2)
+        glVertex2f(x2, y2)
+        glVertex2f(x2, y1)
+
+    x1 += 1
+    y1 -= 1
+    x2 = x + width * filled - 1
+
+    with glSection(GL_TRIANGLE_STRIP):
+        glColor3f(0.81, 1, 0.82)
+        glVertex2f(x1, y1)
+        glVertex2f(x2, y1)
+        glColor3f(0, 0.83, 0.16)
+        glVertex2f(x1, y3)
+        glVertex2f(x2, y3)
+        glVertex2f(x1, y4)
+        glVertex2f(x2, y4)
+        glColor3f(0.37, 0.92, 0.43)
+        glVertex2f(x1, y2)
+        glVertex2f(x2, y2)

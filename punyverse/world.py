@@ -73,22 +73,34 @@ class World(object):
         self.tick = 0
 
         self.callback = callback
+        self._phase = 'Parsing configuration...'
         self._parse(file)
         del self.callback # So it can't be used after loading finishes
 
     def _eval(self, value):
-        return eval(str(value), {'__builtins__': None}, self.context)
+        return eval(str(value), {'__builtins__': None}, self._context)
 
     def _parse(self, file):
-        self.callback('Loading configuration file...', 0)
+        self.callback(self._phase, 'Loading configuration file...', 0)
         with open(os.path.join(os.path.dirname(__file__), file)) as f:
             root = json.load(f, object_pairs_hook=OrderedDict)
-        self.au = root.get('au', 2000)
-        self.length = root.get('length', 4320)
-        self.context = {'AU': self.au, 'TEXTURE': texture.max_texture, 'KM': 1.0 / self.length}
+        self._au = root.get('au', 2000)
+        self._length = root.get('length', 4320)
+        self._context = {'AU': self._au, 'TEXTURE': texture.max_texture, 'KM': 1.0 / self._length}
 
         tick = root.get('tick', 4320)  # How many second is a tick?
         self.tick_length = tick
+
+        # Need to know how many objects are being loaded
+        self._objects = 0
+        self._current_object = 0
+
+        def count_objects(bodies):
+            for body in bodies.itervalues():
+                self._objects += 1
+                count_objects(body.get('satellites', {}))
+        count_objects(root['bodies'])
+        print self._objects, 'objects to be loaded...'
 
         if 'start' in root:
             info = root['start']
@@ -102,11 +114,21 @@ class World(object):
             self.direction = (pitch, yaw, roll)
 
         for planet, info in root['bodies'].iteritems():
-            print 'Loading %s.' % planet
+            message = 'Loading %s.' % planet
+            print message
+            self.callback('Loading objects (%d of %d)...' % (self._current_object, self._objects),
+                          message, float(self._current_object) / self._objects)
             self._body(planet, info)
+            self._current_object += 1
 
-        for name, info in root['belts'].iteritems():
-            print 'Loading %s.' % name
+        if 'belts' in root:
+            self._phase = 'Loading belts...'
+            self._current_object = 0
+            for name, info in root['belts'].iteritems():
+                message = 'Loading %s.' % name
+                print message
+                self.callback(self._phase, message, float(self._current_object) / len(root['belts']))
+                self._belt(name, info)
 
     def _belt(self, name, info):
         x = self._eval(info.get('x', 0))
@@ -143,9 +165,9 @@ class World(object):
         yaw = self._eval(info.get('yaw', 0))
         roll = self._eval(info.get('roll', 0))
         rotation = self._eval(info.get('rotation', 86400))
-        radius = self._eval(info.get('radius', self.length)) / self.length
+        radius = self._eval(info.get('radius', self._length)) / self._length
         background = info.get('background', False)
-        orbit_distance = self._eval(info.get('orbit_distance', self.au))
+        orbit_distance = self._eval(info.get('orbit_distance', self._au))
         division = info.get('division', max(min(int(radius / 8), 60), 10))
 
         if 'texture' in info:
@@ -183,7 +205,7 @@ class World(object):
                 speed = info.get('orbit_speed', 1)
             type = Satellite
             params.update(parent=parent, orbit_speed=speed,
-                          distance=distance / self.length, eccentricity=info.get('eccentricity', 0),
+                          distance=distance / self._length, eccentricity=info.get('eccentricity', 0),
                           inclination=info.get('inclination', 0), longitude=info.get('longitude', 0),
                           argument=info.get('argument', 0))
 
@@ -240,5 +262,9 @@ class World(object):
                          (pitch, yaw, roll), **params))
 
         for satellite, info in info.get('satellites', {}).iteritems():
-            print 'Loading %s, satellite of %s.' % (satellite, name)
+            message = 'Loading %s, satellite of %s.' % (satellite, name)
+            print message
+            self.callback('Loading objects (%d of %d)...' % (self._current_object, self._objects),
+                          message, float(self._current_object) / self._objects)
             self._body(satellite, info, object)
+            self._current_object += 1
