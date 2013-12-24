@@ -21,7 +21,7 @@ def main():
     if args:
         game.TICKS_PER_SECOND = args.ticks
 
-    game.Applet(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT, caption=WIN_TITLE, resizable=True, vsync=0)
+    game.Applet(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT, caption=WIN_TITLE, resizable=True)
     pyglet.app.run()
 
 

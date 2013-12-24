@@ -157,14 +157,6 @@ class Applet(pyglet.window.Window):
         glClearColor(0, 0, 0, 1)
         glClearDepth(1.0)
 
-        if not texture.badcard:
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-            glEnable(GL_LINE_SMOOTH)
-            glEnable(GL_POLYGON_SMOOTH)
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-            glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
-
         glAlphaFunc(GL_GEQUAL, 0.2)
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_DEPTH_TEST)
