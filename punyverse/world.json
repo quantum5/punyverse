@@ -57,8 +57,7 @@
       "roll": -90,
       "mass": 5.97219e+24,
       "rotation": 86400,
-      "division": 250,
-      "normal": "earth_normal.jpg",
+      "division": 90,
       "atmosphere": {
         "cloud_texture": ["cloudmap.jpg", "cloudmap_small.jpg"],
         "diffuse_texture": "atmosphere_earth.png",
@@ -307,7 +306,7 @@
       "radius": "2.362 * AU",
       "cross": 1000,
       "scale": 30,
-      "count": 2048,
+      "count": 1024,
       "rotation": 114536500
     }
   },
