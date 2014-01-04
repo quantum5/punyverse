@@ -208,7 +208,29 @@ class Applet(pyglet.window.Window):
 
     def screenshot(self):
         image = pyglet.image.get_buffer_manager().get_color_buffer()
-        image.save(os.path.expanduser('~/punyverse.png'))
+        if hasattr(self, '_hwnd'):
+            from ctypes import windll, cdll
+            from PIL import Image
+            import tempfile
+            CF_BITMAP = 2
+            
+            image = Image.fromstring(image.format, (image.width, image.height), image.get_image_data().data)
+            image = image.convert('RGB').transpose(Image.FLIP_TOP_BOTTOM)
+            fd, filename = tempfile.mkstemp('.bmp')
+            try:
+                with os.fdopen(fd, 'w') as file:
+                    image.save(file, 'BMP')
+                if not isinstance(filename, unicode):
+                    filename = filename.decode('mbcs')
+                image = windll.user32.LoadImageW(None, filename, 0, 0, 0, 0x10)
+                windll.user32.OpenClipboard(self._hwnd)
+                windll.user32.EmptyClipboard()
+                windll.user32.SetClipboardData(CF_BITMAP, image)
+                windll.user32.CloseClipboard()
+            finally:
+                os.remove(filename)
+        else:
+            image.save(os.path.expanduser('~/punyverse.png'))
 
     def set_exclusive_mouse(self, exclusive):
         super(Applet, self).set_exclusive_mouse(exclusive)
