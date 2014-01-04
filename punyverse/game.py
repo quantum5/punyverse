@@ -4,6 +4,7 @@ from math import hypot, sqrt, atan2, degrees
 from time import clock
 import time
 import random
+import os
 
 from punyverse.camera import Camera
 from punyverse.world import World
@@ -136,6 +137,7 @@ class Applet(pyglet.window.Window):
             key.C: attribute_toggler(self, 'cloud'),
             key.X: attribute_toggler(self, 'atmosphere'),
             key.ENTER: attribute_toggler(self, 'running'),
+            #key.Q: self.screenshot,
             key.INSERT: increment_tick,
             key.DELETE: decrement_tick,
             key.SPACE: self.launch_meteor,
@@ -204,6 +206,10 @@ class Applet(pyglet.window.Window):
         pyglet.clock.schedule(self.update)
         self.on_resize(self.width, self.height)  # On resize handler does nothing unless it's loaded
 
+    def screenshot(self):
+        image = pyglet.image.get_buffer_manager().get_color_buffer()
+        image.save(os.path.expanduser('~/punyverse.png'))
+
     def set_exclusive_mouse(self, exclusive):
         super(Applet, self).set_exclusive_mouse(exclusive)
         self.exclusive = exclusive
@@ -236,9 +242,10 @@ class Applet(pyglet.window.Window):
             self.cam.mouse_move(dx * MOUSE_SENSITIVITY, dy * MOUSE_SENSITIVITY)
 
     def on_key_press(self, symbol, modifiers):
+        if symbol == key.Q:
+            self.screenshot()
         if not self.loaded:
             return
-
         if self.exclusive:  # Only handle keyboard input if mouse is grabbed
             if symbol in self.key_handler:
                 self.key_handler[symbol]()
