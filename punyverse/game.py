@@ -208,7 +208,7 @@ class Applet(pyglet.window.Window):
 
     def screenshot(self):
         image = pyglet.image.get_buffer_manager().get_color_buffer()
-        if hasattr(self, '_hwnd'):
+        if hasattr(self, '_hwnd') and not self.modifiers & key.MOD_CTRL:
             from ctypes import windll, cdll
             from PIL import Image
             import tempfile
@@ -247,6 +247,7 @@ class Applet(pyglet.window.Window):
                                            direction=(dx, dy, dz)))
 
     def on_mouse_press(self, x, y, button, modifiers):
+        self.modifiers = modifiers
         if not self.loaded:
             return
 
@@ -264,6 +265,7 @@ class Applet(pyglet.window.Window):
             self.cam.mouse_move(dx * MOUSE_SENSITIVITY, dy * MOUSE_SENSITIVITY)
 
     def on_key_press(self, symbol, modifiers):
+        self.modifiers = modifiers
         if symbol == key.Q:
             self.screenshot()
         if not self.loaded:
