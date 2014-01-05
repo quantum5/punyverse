@@ -5,23 +5,18 @@ WIN_TITLE = 'Punyverse'
 
 
 def main():
-    try:
-        import argparse
-    except ImportError:
-        args = False
-    else:
-        parser = argparse.ArgumentParser(prog='punyverse', description='Python simulator of a puny universe.')
-        parser.add_argument('-t', '--ticks', help='Ticks per second for game, more means more responsive, but '
-                            ' may run slower, default is 20.', default=20, type=int)
-        args = parser.parse_args()
+    import argparse
+    parser = argparse.ArgumentParser(prog='punyverse', description='Python simulator of a puny universe.')
+    parser.add_argument('-v', '--no-vsync', help='Disables vsync',
+                        action='store_false', dest='vsync')
+    args = parser.parse_args()
 
     import pyglet
     from punyverse import game
     pyglet.options['shadow_window'] = False
-    if args:
-        game.TICKS_PER_SECOND = args.ticks
 
-    game.Applet(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT, caption=WIN_TITLE, resizable=True)
+    game.Applet(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
+                caption=WIN_TITLE, resizable=True, vsync=args.vsync)
     pyglet.app.run()
 
 
