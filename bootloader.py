@@ -24,6 +24,10 @@ if __name__ == '__main__':
         sys.exit('This is only meant to be ran frozen.')
 
     sys.path.insert(0, dir)
+    try:
+        import punyverse
+    except ImportError:
+        pass
 
     # Model indirectly depends on _glgeom to handle textures
     load_dll(dir, '_glgeom')
