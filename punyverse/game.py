@@ -41,6 +41,8 @@ def entity_distance(x0, y0, z0):
 
 class Applet(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
+        self.world_options = kwargs.pop('world_options', {})
+
         super(Applet, self).__init__(*args, **kwargs)
         texture.init()
 
@@ -79,7 +81,7 @@ class Applet(pyglet.window.Window):
 
         start = clock()
         self.fps = 0
-        self.world = World('world.json', callback)
+        self.world = World('world.json', callback, self.world_options)
         phase = 'Initializing game...'
         print phase
         callback(phase, '', 0)

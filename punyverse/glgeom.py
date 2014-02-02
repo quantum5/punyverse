@@ -1,6 +1,7 @@
 from math import *
 from pyglet.gl import *
 from random import random, gauss, choice
+from pyglet.gl.gl_info import have_extension
 
 TWOPI = pi * 2
 
@@ -181,71 +182,64 @@ def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
         gluDeleteQuadric(sphere)
 
 
-try:
-    from _glgeom import normal_sphere
-except ImportError:
-    import warnings
-    warnings.warn('Large sphere drawing in Python is slow')
+def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
+    if (not have_extension('GL_ARB_multitexture') or not
+            have_extension('GL_ARB_texture_env_combine') or not
+            have_extension('GL_EXT_texture_env_dot3')):
+        print 'No hardware normal mapping support. No bumping for you.'
+        return sphere(r, divide, divide, tex, lighting)
 
-    def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
-        from texture import pil_load
-        print 'Loading normal map: %s...' % normal,
-        normal_map = pil_load(normal)
-        normal = normal_map.load()
-        print
-        width, height = normal_map.size
-        gray_scale = len(normal[0, 0]) == 1
+    from texture import load_texture
+    normal = load_texture(normal)
 
-        with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
-            glEnable(GL_TEXTURE_2D)
-            if lighting:
-                glDisable(GL_BLEND)
-                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(1, 1, 1, 0))
-                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 0))
-                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
-            else:
-                glDisable(GL_LIGHTING)
-            glBindTexture(GL_TEXTURE_2D, tex)
+    with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+        glActiveTextureARB(GL_TEXTURE0_ARB)
+        glBindTexture(GL_TEXTURE_2D, normal)
+        glEnable(GL_TEXTURE_2D)
 
-            twopi_divide = TWOPI / divide
-            pi_divide = pi / divide
-            with glSection(GL_TRIANGLE_STRIP):
-                for j in xrange(divide + 1):
-                    phi1 = j * twopi_divide
-                    phi2 = (j + 1) * twopi_divide
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB)
+        glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_DOT3_RGBA_ARB)
 
-                    for i in xrange(divide + 1):
-                        theta = i * pi_divide
+        glActiveTextureARB(GL_TEXTURE1_ARB)
+        glBindTexture(GL_TEXTURE_2D, tex)
+        glEnable(GL_TEXTURE_2D)
 
-                        s = phi2 / TWOPI
-                        u = min(int(s * width), width - 1)
-                        t = theta / pi
-                        v = min(int(t * height), height - 1)
-                        if gray_scale:
-                            x = y = z = normal[u, v]
-                        else:
-                            x, y, z = normal[u, v]
-                        dx, dy, dz = sin(theta) * cos(phi2), sin(theta) * sin(phi2), cos(theta)
-                        nx, ny, nz = x / 127.5 - 1, y / 127.5 - 1, z / 127.5 - 1  # Make into [-1, 1]
-                        nx, nz = cos(theta) * nx + sin(theta) * nz, -sin(theta) * nx + cos(theta) * nz
-                        nx, ny = cos(phi2)  * nx - sin(phi2)  * ny,  sin(phi2)  * nx + cos(phi2)  * ny
-                        glNormal3f(nx, ny, nz)
-                        glTexCoord2f(s, 1 - t)  # GL is bottom up
-                        glVertex3f(r * dx, r * dy, r * dz)
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB)
+        glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE)
 
-                        s = phi1 / TWOPI    # x
-                        u = min(int(s * width), width - 1)
-                        if gray_scale:
-                            x = y = z = normal[u, v]
-                        else:
-                            x, y, z = normal[u, v]
-                        dx, dy = sin(theta) * cos(phi1), sin(theta) * sin(phi1)
-                        nx, ny, nz = x / 127.5 - 1, y / 127.5 - 1, z / 127.5 - 1
-                        nx, nz = cos(theta) * nx + sin(theta) * nz, -sin(theta) * nx + cos(theta) * nz
-                        nx, ny = cos(phi1)  * nx - sin(phi1)  * ny,  sin(phi1)  * nx + cos(phi1)  * ny
-                        glNormal3f(nx, ny, nz)
-                        glTexCoord2f(s, 1 - t)
-                        glVertex3f(r * dx, r * dy, r * dz)
+        if lighting:
+            glDisable(GL_BLEND)
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(1, 1, 1, 0))
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 0))
+            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
+        else:
+            glDisable(GL_LIGHTING)
+        glBindTexture(GL_TEXTURE_2D, tex)
+
+        twopi_divide = TWOPI / divide
+        pi_divide = pi / divide
+        with glSection(GL_TRIANGLE_STRIP):
+            for j in xrange(divide + 1):
+                phi1 = j * twopi_divide
+                phi2 = (j + 1) * twopi_divide
+
+                for i in xrange(divide + 1):
+                    theta = i * pi_divide
+
+                    s = phi2 / TWOPI
+                    t = theta / pi
+                    dx, dy, dz = sin(theta) * cos(phi2), sin(theta) * sin(phi2), cos(theta)
+                    glNormal3f(dx, dy, dz)
+                    glMultiTexCoord2fARB(GL_TEXTURE0_ARB, s, 1 - t)
+                    glMultiTexCoord2fARB(GL_TEXTURE1_ARB, s, 1 - t)
+                    glVertex3f(r * dx, r * dy, r * dz)
+
+                    s = phi1 / TWOPI    # x
+                    dx, dy = sin(theta) * cos(phi1), sin(theta) * sin(phi1)
+                    glNormal3f(dx, dy, dz)
+                    glMultiTexCoord2fARB(GL_TEXTURE0_ARB, s, 1 - t)
+                    glMultiTexCoord2fARB(GL_TEXTURE1_ARB, s, 1 - t)
+                    glVertex3f(r * dx, r * dy, r * dz)
 
 
 def belt(radius, cross, object, count):

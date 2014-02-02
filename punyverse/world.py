@@ -62,7 +62,7 @@ def load_world(file, callback=lambda message, completion: None):
 
 
 class World(object):
-    def __init__(self, file, callback):
+    def __init__(self, file, callback, options=None):
         self.tracker = []
         self.start = (0, 0, 0)
         self.direction = (0, 0, 0)
@@ -73,6 +73,7 @@ class World(object):
         self.tick = 0
 
         self.callback = callback
+        self.options = options or {}
         self._phase = 'Parsing configuration...'
         self._parse(file)
         del self.callback # So it can't be used after loading finishes
@@ -177,7 +178,7 @@ class World(object):
             if cheap:
                 object_id = compile(colourball, radius, division, division, texture)
             else:
-                if 'normal' in info:
+                if self.options.get('normal', False) and 'normal' in info:
                     object_id = compile(normal_sphere, radius, division, texture, info['normal'], lighting=lighting)
                 else:
                     object_id = compile(sphere, radius, division, division, texture, lighting=lighting)

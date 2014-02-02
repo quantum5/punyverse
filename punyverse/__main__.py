@@ -16,6 +16,8 @@ def main():
                         type=int)
     parser.add_argument('-v', '--no-vsync', help='Disables vsync',
                         action='store_false', dest='vsync')
+    parser.add_argument('-n', '--normal', help='Enables the use of normal maps',
+                        action='store_true')
     args = parser.parse_args()
 
     import pyglet
@@ -38,10 +40,14 @@ def main():
             for key in config._attribute_names:
                 print '  %-17s %s' % (key + ':', getattr(config, key))
 
+    world_options = {
+        'normal': args.normal,
+    }
+
     from punyverse import game
     game.Applet(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
                 caption=WIN_TITLE, resizable=True, vsync=args.vsync,
-                config=config)
+                config=config, world_options=world_options)
     pyglet.app.run()
 
 
