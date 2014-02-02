@@ -365,7 +365,7 @@ class Applet(pyglet.window.Window):
             progress_bar(10, self.height - 240, self.width - 20, 50, progress)
         self._info_label.draw()
 
-    def on_draw(self, glMatrix=GLfloat * 16):
+    def on_draw(self, glMatrixBuffer=GLfloat * 16):
         if not self.loaded:
             return self.draw_loading()
 
@@ -392,79 +392,67 @@ class Applet(pyglet.window.Window):
             x, y, z = entity.location
             pitch, yaw, roll = entity.rotation
 
-            glPushMatrix()
-            glTranslatef(x, y, z)
-            glRotatef(pitch, 1, 0, 0)
-            glRotatef(yaw, 0, 1, 0)
-            glRotatef(roll, 0, 0, 1)
-            glPushAttrib(GL_CURRENT_BIT)
-            glCallList(entity.id)
-            if self.debug:
-                glPushMatrix()
-                glLineWidth(0.25)
-                glPolygonOffset(1, 1)
-                glDisable(GL_LIGHTING)
-                glDisable(GL_TEXTURE_2D)
-                glColor3f(0, 1, 0)
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+            with glMatrix(), glRestore(GL_CURRENT_BIT):
+                glTranslatef(x, y, z)
+                glRotatef(pitch, 1, 0, 0)
+                glRotatef(yaw, 0, 1, 0)
+                glRotatef(roll, 0, 0, 1)
                 glCallList(entity.id)
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-                glEnable(GL_LIGHTING)
-                glEnable(GL_TEXTURE_2D)
-                glPopMatrix()
-            glPopAttrib()
-            glPopMatrix()
+                if self.debug:
+                    with glMatrix(), glRestore(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT):
+                        glLineWidth(0.25)
+                        glPolygonOffset(1, 1)
+                        glDisable(GL_LIGHTING)
+                        glDisable(GL_TEXTURE_2D)
+                        glColor3f(0, 1, 0)
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+                        glCallList(entity.id)
 
             has_corona = hasattr(entity, 'corona') and entity.corona
             has_atmosphere = hasattr(entity, 'atmosphere') and entity.atmosphere
             if self.atmosphere and (has_corona or has_atmosphere):
-                glPushMatrix()
-                x0, y0, z0 = entity.location
-
-                glTranslatef(x0, y0, z0)
-                matrix = glMatrix()
-                glGetFloatv(GL_MODELVIEW_MATRIX, matrix)
-                matrix[0: 3] = [1, 0, 0]
-                matrix[4: 7] = [0, 1, 0]
-                matrix[8:11] = [0, 0, 1]
-                glLoadMatrixf(matrix)
-                if has_atmosphere:
-                    glCallList(entity.atmosphere)
-                if has_corona:
-                    x, y, z = c.direction()
-                    glTranslatef(-x, -y, -z)
-                    glCallList(entity.corona)
-                glPopMatrix()
+                with glMatrix(), glRestore(GL_ENABLE_BIT):
+                    x0, y0, z0 = entity.location
+                    glTranslatef(x0, y0, z0)
+                    matrix = glMatrixBuffer()
+                    glGetFloatv(GL_MODELVIEW_MATRIX, matrix)
+                    matrix[0: 3] = [1, 0, 0]
+                    matrix[4: 7] = [0, 1, 0]
+                    matrix[8:11] = [0, 0, 1]
+                    glLoadMatrixf(matrix)
+                    glEnable(GL_BLEND)
+                    if has_atmosphere:
+                        glCallList(entity.atmosphere)
+                    if has_corona:
+                        x, y, z = c.direction()
+                        glTranslatef(-x, -y, -z)
+                        glCallList(entity.corona)
 
             if self.cloud and hasattr(entity, 'cloudmap') and entity.cloudmap:
-                glPushMatrix()
-                glEnable(GL_BLEND)
-                glEnable(GL_ALPHA_TEST)
-                glTranslatef(*entity.location)
-                pitch, yaw, roll = entity.rotation
-                glRotatef(pitch, 1, 0, 0)
-                glRotatef(yaw, 0, 1, 0)
-                glRotatef(roll, 0, 0, 1)
-                glCallList(entity.cloudmap)
-                glDisable(GL_ALPHA_TEST)
-                glDisable(GL_BLEND)
-                glPopMatrix()
+                with glMatrix(), glRestore(GL_ENABLE_BIT):
+                    glEnable(GL_BLEND)
+                    glEnable(GL_ALPHA_TEST)
+                    glTranslatef(*entity.location)
+                    pitch, yaw, roll = entity.rotation
+                    glRotatef(pitch, 1, 0, 0)
+                    glRotatef(yaw, 0, 1, 0)
+                    glRotatef(roll, 0, 0, 1)
+                    glCallList(entity.cloudmap)
 
             if self.orbit and hasattr(entity, 'get_orbit') and hasattr(entity, 'parent'):
                 parent = entity.parent
                 distance = get_distance(parent)
                 if distance < parent.orbit_show:
-                    glPushMatrix()
-                    glTranslatef(*entity.parent.location)
-                    glDisable(GL_LIGHTING)
-                    glPushAttrib(GL_LINE_BIT | GL_CURRENT_BIT)
-                    glColor4f(1, 1, 1, 1 if distance < parent.orbit_opaque else
-                              (1 - (distance - parent.orbit_opaque) / parent.orbit_blend))
-                    glLineWidth(1)
-                    glCallList(entity.get_orbit())
-                    glPopAttrib()
-                    glEnable(GL_LIGHTING)
-                    glPopMatrix()
+                    with glMatrix(), glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
+                        glTranslatef(*entity.parent.location)
+                        glDisable(GL_LIGHTING)
+                        solid = distance < parent.orbit_opaque
+                        glColor4f(1, 1, 1, 1 if solid else
+                                  (1 - (distance - parent.orbit_opaque) / parent.orbit_blend))
+                        if not solid:
+                            glEnable(GL_BLEND)
+                        glLineWidth(1)
+                        glCallList(entity.get_orbit())
 
         glColor4f(1, 1, 1, 1)
         glDisable(GL_TEXTURE_2D)
@@ -473,7 +461,6 @@ class Applet(pyglet.window.Window):
 
         if self.info:
             ortho(width, height)
-
             if self.info_precise:
                 info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n'
                         'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)\nTick: %d' %
@@ -484,15 +471,10 @@ class Applet(pyglet.window.Window):
                         (pyglet.clock.get_fps(), c.x, c.y, c.z, self.speed, self.get_time_per_second()))
             self.label.text = info
             self.label.draw()
-
-            glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT)
-
-            glLineWidth(2)
-
-            cx, cy = width / 2, height / 2
-
-            glColor4f(0, 1, 0, 1)
-            circle(10, 20, (cx, cy))
-            glPopAttrib()
-
+            with glRestore(GL_CURRENT_BIT | GL_LINE_BIT):
+                glLineWidth(2)
+                cx, cy = width / 2, height / 2
+                glColor4f(0, 1, 0, 1)
+                circle(10, 20, (cx, cy))
+                glPopAttrib()
             frustrum()
