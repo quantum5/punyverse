@@ -88,6 +88,7 @@ def disk(rinner, router, segs, tex):
         glEnable(GL_TEXTURE_2D)
         glEnable(GL_BLEND)
         glDisable(GL_LIGHTING)
+        glDisable(GL_CULL_FACE)
         glBindTexture(GL_TEXTURE_2D, tex)
         res = segs * 5
 
@@ -107,6 +108,7 @@ def disk(rinner, router, segs, tex):
 def flare(rinner, router, res, prob, tex):
     with glRestore(GL_ENABLE_BIT):
         glEnable(GL_TEXTURE_2D)
+        glDisable(GL_CULL_FACE)
         glDisable(GL_LIGHTING)
         glBindTexture(GL_TEXTURE_2D, tex)
         last_x = 1
@@ -149,6 +151,8 @@ def sphere(r, lats, longs, tex, lighting=True, fv4=GLfloat * 4):
         if lighting:
             gluQuadricNormals(sphere, GLU_SMOOTH)
 
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
         glEnable(GL_TEXTURE_2D)
         if lighting:
             glDisable(GL_BLEND)
@@ -175,6 +179,8 @@ def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(*colour))
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 1))
         glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
 
         gluSphere(sphere, r, lats, longs)
 
@@ -193,6 +199,9 @@ def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
     normal = load_texture(normal)
 
     with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
+
         glActiveTextureARB(GL_TEXTURE0_ARB)
         glBindTexture(GL_TEXTURE_2D, normal)
         glEnable(GL_TEXTURE_2D)
