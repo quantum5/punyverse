@@ -190,7 +190,7 @@ class World(object):
             print 'Nothing to load for %s.' % name
             return
 
-        params = {'world': self, 'orbit_distance': orbit_distance}
+        params = {'world': self, 'orbit_distance': orbit_distance, 'radius': None if background else radius}
         if parent is None:
             type = Body
         else:

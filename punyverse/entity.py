@@ -1,5 +1,6 @@
-from punyverse.orbit import KeplerOrbit
+from math import sqrt
 
+from punyverse.orbit import KeplerOrbit
 from pyglet.gl import *
 
 
@@ -15,6 +16,9 @@ class Entity(object):
         x, y, z = self.location
         dx, dy, dz = self.direction
         self.location = x + dx, y + dy, z + dz
+    
+    def collides(self, x, y, z):
+        return False
 
 
 class Asteroid(Entity):
@@ -48,6 +52,7 @@ class Body(Entity):
         self.corona = kwargs.pop('corona', 0)
         self.last_tick = 0
         self.mass = kwargs.pop('mass', None)
+        self.radius = kwargs.pop('radius', None)
         self.world = kwargs.pop('world')
         orbit_distance = kwargs.pop('orbit_distance', 40000) + .0
         self.orbit_show = orbit_distance * 1.25
@@ -64,6 +69,18 @@ class Body(Entity):
             pitch, yaw, roll = self.rotation
             roll = (self.initial_roll + self.world.tick * self.rotation_angle) % 360
             self.rotation = pitch, yaw, roll
+    
+    def collides(self, x, y, z):
+        if self.radius is None:
+            return False
+        ox, oy, oz = self.location
+        dx, dy, dz = x - ox, y - oy, z - oz
+        distance = sqrt(dx*dx + dy*dy + dz*dz)
+        if distance > self.radius:
+            return False
+        return (ox + dx * self.radius / distance,
+                oy + dy * self.radius / distance,
+                oz + dz * self.radius / distance)
 
 
 class Satellite(Body):

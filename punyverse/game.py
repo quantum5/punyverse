@@ -351,6 +351,10 @@ class Applet(pyglet.window.Window):
                 self.world.tick += update
                 for entity in self.world.tracker:
                     entity.update()
+                    collision = entity.collides(c.x, c.y, c.z)
+                    if collision:
+                        self.speed *= -1
+                        c.move(self.speed * 12 * dt)
             else:
                 self.__time_accumulate += delta
 
