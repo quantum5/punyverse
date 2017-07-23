@@ -1,15 +1,16 @@
 punyverse
 =========
 
-Python simulator of a puny universe. (How many words can i stick into one?)
+Python simulator of a puny universe. (How many words can I stick into one?)
+
+![Punyverse Preview](https://quantum2.xyz/wp-content/uploads/2017/07/punyverse.png)
 
 Installation
 ------------
 
-To install, simply clone this repository, or download a copy [here]
-(https://github.com/quantum5/punyverse/archive/master.zip).
+To install, simply clone this repository, or download a copy [here](https://github.com/quantum5/punyverse/archive/master.zip).
 
-After that, download the [launcher](https://github.com/quantum5/punyverse/releases/download/launcher0.3/launcher.exe),
+After that, download the [launcher](https://github.com/quantum5/punyverse/releases/download/launcher0.4/launcher.exe),
 put it into the repository directory and let it unpack in your repository (or copy).
 
 You may start playing any time by running `punyverse.exe`, or `punyverse_debug.exe` if you desire a console.
