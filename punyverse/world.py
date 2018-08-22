@@ -179,9 +179,11 @@ class World(object):
                 object_id = compile(colourball, radius, division, division, texture)
             else:
                 if self.options.get('normal', False) and 'normal' in info:
-                    object_id = compile(normal_sphere, radius, division, texture, info['normal'], lighting=lighting)
+                    object_id = compile(normal_sphere, radius, division, texture,
+                                        info['normal'], lighting=lighting, inside=background)
                 else:
-                    object_id = compile(sphere, radius, division, division, texture, lighting=lighting)
+                    object_id = compile(sphere, radius, division, division, texture,
+                                        lighting=lighting, inside=background)
         elif 'model' in info:
             scale = info.get('scale', 1)
             object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),

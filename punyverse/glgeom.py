@@ -140,7 +140,7 @@ def flare(rinner, router, res, prob, tex):
                 last_y = y
 
 
-def sphere(r, lats, longs, tex, lighting=True, fv4=GLfloat * 4):
+def sphere(r, lats, longs, tex, lighting=True, fv4=GLfloat * 4, inside=False):
     """
         Sphere function from the OpenGL red book.
     """
@@ -152,7 +152,7 @@ def sphere(r, lats, longs, tex, lighting=True, fv4=GLfloat * 4):
             gluQuadricNormals(sphere, GLU_SMOOTH)
 
         glEnable(GL_CULL_FACE)
-        glCullFace(GL_BACK)
+        glCullFace(GL_FRONT if inside else GL_BACK)
         glEnable(GL_TEXTURE_2D)
         if lighting:
             glDisable(GL_BLEND)

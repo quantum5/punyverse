@@ -47,9 +47,9 @@ class Applet(pyglet.window.Window):
         texture.init()
 
         if hasattr(self.config, '_attribute_names'):
-            info = ['  %-17s %s' % (key + ':', getattr(self.config, key))
+            info = ['  %-22s %s' % (key + ':', getattr(self.config, key))
                     for key in self.config._attribute_names]
-            info = ['%-25s %-25s' % group for group in
+            info = ['%-30s %-30s' % group for group in
                     izip_longest(info[::2], info[1::2], fillvalue='')]
             info = 'OpenGL configuration:\n' + '\n'.join(info)
         else:
@@ -57,15 +57,21 @@ class Applet(pyglet.window.Window):
 
         self.loaded = False
         self.__load_started = False
-        self._loading_phase = pyglet.text.Label(font_name='Consolas', font_size=20, x=10, y=self.height - 100,
-                                                color=(255, 255, 255, 255), width=self.width - 20, halign='center',
-                                                multiline=True, text='Punyverse is starting...')
-        self._loading_label = pyglet.text.Label(font_name='Consolas', font_size=16, x=10, y=self.height - 200,
-                                                color=(255, 255, 255, 255), width=self.width - 20, halign='center',
-                                                multiline=True)
-        self._info_label = pyglet.text.Label(font_name='Consolas', font_size=13, x=10, y=self.height - 320,
-                                             color=(255, 255, 255, 255), width=self.width - 20,
-                                             multiline=True, text=info)
+        self._loading_phase = pyglet.text.Label(
+            font_name='Consolas', font_size=20, x=10, y=self.height - 80,
+            color=(255, 255, 255, 255), width=self.width - 20, align='center',
+            multiline=True, text='Punyverse is starting...'
+        )
+        self._loading_label = pyglet.text.Label(
+            font_name='Consolas', font_size=16, x=10, y=self.height - 150,
+            color=(255, 255, 255, 255), width=self.width - 20, align='center',
+            multiline=True
+        )
+        self._info_label = pyglet.text.Label(
+            font_name='Consolas', font_size=13, x=10, y=self.height - 250,
+            color=(255, 255, 255, 255), width=self.width - 20,
+            multiline=True, text=info
+        )
         pyglet.clock.schedule_once(self.load, 0)
 
     def load(self, *args, **kwargs):
@@ -368,7 +374,7 @@ class Applet(pyglet.window.Window):
         self._loading_phase.draw()
         self._loading_label.draw()
         if progress is not None:
-            progress_bar(10, self.height - 240, self.width - 20, 50, progress)
+            progress_bar(10, self.height - 170, self.width - 20, 50, progress)
         self._info_label.draw()
 
     def on_draw(self, glMatrixBuffer=GLfloat * 16):
@@ -399,7 +405,10 @@ class Applet(pyglet.window.Window):
             pitch, yaw, roll = entity.rotation
 
             with glMatrix(), glRestore(GL_CURRENT_BIT):
-                glTranslatef(x, y, z)
+                if entity.background:
+                    glTranslatef(c.x, c.y, c.z)
+                else:
+                    glTranslatef(x, y, z)
                 glRotatef(pitch, 1, 0, 0)
                 glRotatef(yaw, 0, 1, 0)
                 glRotatef(roll, 0, 0, 1)
@@ -482,5 +491,4 @@ class Applet(pyglet.window.Window):
                 cx, cy = width / 2, height / 2
                 glColor4f(0, 1, 0, 1)
                 circle(10, 20, (cx, cy))
-                glPopAttrib()
             frustrum()
