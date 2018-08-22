@@ -6,6 +6,7 @@ yum install -y atlas-devel
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
+    "${PYBIN}/pip" install -r /io/dev-requirements.txt
     "${PYBIN}/pip" wheel /io/ -w wheelhouse/
 done
 
@@ -13,3 +14,4 @@ done
 for whl in wheelhouse/*.whl; do
     auditwheel repair "$whl" -w /io/wheelhouse/
 done
+
