@@ -247,7 +247,7 @@ class Applet(pyglet.window.Window):
                 with os.fdopen(fd, 'wb') as file:
                     image.save(file, 'BMP')
                 if isinstance(filename, six.binary_type):
-                    filename = filename.decode('mbcs')
+                    filename = filename.decode('mbcs' if os.name == 'nt' else 'utf8')
                 image = windll.user32.LoadImageW(None, filename, 0, 0, 0, 0x10)
                 windll.user32.OpenClipboard(self._hwnd)
                 windll.user32.EmptyClipboard()

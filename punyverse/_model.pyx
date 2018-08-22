@@ -272,7 +272,7 @@ def load_model(path):
     if not os.path.isabs(path):
         path = os.path.join(model_base, path)
     if not isinstance(path, unicode):
-        path = path.decode('mbcs')
+        path = path.decode('mbcs' if os.name == 'nt' else 'utf8')
     return WavefrontObject(path)
 
 @cython.nonecheck(False)

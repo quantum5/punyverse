@@ -241,7 +241,7 @@ def load_model(path):
     if not os.path.isabs(path):
         path = os.path.join(model_base, path)
     if isinstance(path, six.binary_type):
-        path = path.decode('mbcs')
+        path = path.decode('mbcs' if os.name == 'nt' else 'utf8')
     return WavefrontObject(path)
 
 
