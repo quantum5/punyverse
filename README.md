@@ -3,36 +3,19 @@ punyverse
 
 Python simulator of a puny universe. (How many words can I stick into one?)
 
-![Punyverse Preview](https://quantum2.xyz/wp-content/uploads/2017/07/punyverse.png)
+![Punyverse Preview](https://guanzhong.ca/assets/projects/punyverse-c91f1cb1415c2922c5dcdf9773bc8d86e52e86e1c1b01d33a0969af7b669b8c4.png)
 
 Installation
 ------------
 
-To install, simply clone this repository, or download a copy [here](https://github.com/quantum5/punyverse/archive/master.zip).
+Currently, only Python 2 on Windows is supported.
 
-After that, download the [launcher](https://github.com/quantum5/punyverse/releases/download/launcher0.4/launcher.exe),
-put it into the repository directory and let it unpack in your repository (or copy).
+To install, run `pip install punyverse`.
 
-You may start playing any time by running `punyverse.exe`, or `punyverse_debug.exe` if you desire a console.
+Then, run `punyverse` to launch the simulator, or `punyversew` to launch without the console.
 
 ### A Note on Textures
 
 If your graphics card doesn't support the massive texture sizes this module comes with, you can shrink them.
 
-You can run `small_images.exe` (or `small_images.py`, if you have python) to generate smaller versions of
-shipped textures, which requires either `PIL` or `pgmagick` to process the images.
-
-### Advanced Install
-
-If you wish to use your own python installation, to run `punyverse`, you can clone the code.
-Here are the things you need:
-
-* Python 2.7, I have no Python 2.6 install to test this.
-* a C compiler to compile `_model.c` and `_glgeom.c`
-  * requires OpenGL headers and libraries.
-  * not really necessary, but it runs way faster with these.
-* install `pyglet`
-
-After getting the dependencies done, you can now run the `punyverse` module using `python -mpunyverse`.
-
-See above if you run into texture issues.
+To do this, run `punyverse_small_images`.

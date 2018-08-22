@@ -1,0 +1,7 @@
+include MANIFEST.in
+include LICENSE
+include README.md
+include punyverse/world.json
+graft punyverse/assets
+include punyverse/*.c
+exclude punyverse/*.pyx

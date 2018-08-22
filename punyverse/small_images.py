@@ -39,20 +39,20 @@ try:
     def save(image, file):
         image.write(file)
 except ImportError:
-    import Image
-    
+    from PIL import Image
+
     def get_image(image):
         return Image.open(image)
-    
+
     def get_size(image):
         return image.size
-    
+
     def scale(image, width, height):
         original_width, original_height = image.size
         if width * 3 < original_width and height * 3 < original_height:
             image = image.resize((width * 2, height * 2))
         return image.resize((width, height), Image.ANTIALIAS)
-    
+
     def save(image, file):
         image.save(file)
 
@@ -97,19 +97,8 @@ textures = [
     'moons/mimas.jpg',
 ]
 
-def frozen():
-    import imp
-    return (hasattr(sys, 'frozen') or # new py2exe
-            hasattr(sys, 'importers') # old py2exe
-            or imp.is_frozen('__main__')) # tools/freeze
-
-def get_main_dir():
-    if frozen():
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(__file__)
-
 def main():
-    punyverse = os.path.join(get_main_dir(), 'punyverse')
+    punyverse = os.path.dirname(__file__)
     try:
         with open(os.path.join(punyverse, 'assets', 'textures.txt')) as f:
             files = [i.strip() for i in f if not i.startswith('#') and i.strip()]
