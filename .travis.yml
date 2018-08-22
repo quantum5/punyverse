@@ -1,18 +1,23 @@
 matrix:
   include:
-    - sudo: required
-      services:
-        - docker
-      env: DOCKER_IMAGE=quay.io/pypa/manylinux1_x86_64
-    - sudo: required
-      services:
-        - docker
-      env: DOCKER_IMAGE=quay.io/pypa/manylinux1_i686
-           PRE_CMD=linux32
-
+  - sudo: required
+    services:
+    - docker
+    env: DOCKER_IMAGE=quay.io/pypa/manylinux1_x86_64
+  - sudo: required
+    services:
+    - docker
+    env: DOCKER_IMAGE=quay.io/pypa/manylinux1_i686 PRE_CMD=linux32
 install:
-  - docker pull $DOCKER_IMAGE
-
+- docker pull $DOCKER_IMAGE
 script:
-  - docker run --rm -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /io/.travis-wheels.sh
-  - ls wheelhouse/
+- docker run --rm -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /io/.travis-wheels.sh
+- ls wheelhouse/
+deploy:
+  provider: releases
+  api_key:
+    secure: kNH5YcvrRmDmFI61Wu0tS4QdKrCbLIJQrVsiU5Cyzqz+hP9FG64uGVHN+J/IJ6Dbt2ny8rnk47pPln8kigfEY3EtnvvFsxexJ1JuefFqZXRPlvzqSm4BEcti5Iui7jMTHczK2eUOY6M2bjC0X4CHMa2dGh16JmfG0RAdUaAhvDCSXkbanoMkOkqyN3go7CAny7aZpyRYwv0GGBDAjXBom4kh5C8wqpXcXlVCmdvrvnmIr2EvMKzvup7FV4FlCkSr03F1APdvTK+GgIE8pLjI9sOw3zo8+tm7krwQsItbqTmPRb0TwL4CD4m2zQTREsLWtYHMy5Z+nqAhADWQqhO0mZDZSozs0TLevasmYdirsPaIufjwE3njWCud/7Mq2ahiBjDhTPHDPk1LzVyrMLo6SVpYru37Ft+Be9oWldz8m+t53RiusfFUVh6MH4+crS+FpdgL9FnQsiNiB+wpb8m6c4tDTWBvsNn2PF2w9NCTlu4u4B+EicM4QoZDK0Pmyg29d6nkEx6EI6Ts6Oz9WIE/z0ZLI3JhTZFZO7be8+xGQ8C3UrCNVS5BOlnyyjcXvnO1Vz56iXKjNLWybeLtMqw7DH58qmSBkRcPcl2+oMdqqIH53BdMHxTfSc9IoCbD1gXekpYPbfo7E2bA/9o4QiphnojWsMw1Yzxs4sXy4vMoxNY=
+  file_glob: true
+  file: wheelhouse/*
+  on:
+    tags: true
