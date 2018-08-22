@@ -16,12 +16,15 @@ except ImportError:
         sys.exit(1)
     cythonize = lambda x: x
 
-
 if has_pyx:
     pyx_path = lambda x: x
 else:
     pyx_path = lambda x: x.replace('.pyx', '.c')
 
+if os.name == 'nt':
+    gl_libs = ['opengl32']
+else:
+    gl_libs = ['GL']
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
     long_description = f.read()
@@ -46,8 +49,8 @@ setup(
         ],
     },
     ext_modules=cythonize([
-        Extension('punyverse._glgeom', sources=[pyx_path('punyverse/_glgeom.pyx')], libraries=['opengl32']),
-        Extension('punyverse._model', sources=[pyx_path('punyverse/_model.pyx')], libraries=['opengl32']),
+        Extension('punyverse._glgeom', sources=[pyx_path('punyverse/_glgeom.pyx')], libraries=gl_libs),
+        Extension('punyverse._model', sources=[pyx_path('punyverse/_model.pyx')], libraries=gl_libs),
     ]),
 
     entry_points={

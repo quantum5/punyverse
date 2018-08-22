@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from pyglet import image
 from pyglet.gl import *
-from ctypes import c_int, byref, c_ulong
+from ctypes import c_int, byref, c_uint
 import os.path
 import struct
 import itertools
@@ -12,11 +12,11 @@ import six
 from six.moves import zip
 
 try:
-    from punyverse._glgeom import bgr_to_rgb
+    from punyverse._glgeom import bgr_to_rgb, flip_vertical
 except ImportError:
     import warnings
     warnings.warn('Compile _glgeom.c, or double the start up time.')
-    
+
     # Use magick when _glgeom is not compiled (is actually slower)
     try:
         from pgmagick import Blob, Image
@@ -27,7 +27,7 @@ except ImportError:
 
     from six.moves import range
 
-    def bgr_to_rgb(source, width, height, alpha=False, bottom_up=True):
+    def bgr_to_rgb(source, width, height, alpha=False):
         length = len(source)
         depth = length // (width * height)
         depth2 = depth - alpha
@@ -35,13 +35,21 @@ except ImportError:
         row = width * depth
         for y in range(height):
             for x in range(width):
-                ioffset = y * width * depth + x * depth
-                ooffset = (height - y - 1 if bottom_up else y) * row + x * depth
+                offset = y * row + x * depth
                 for i in range(depth2):
-                    result[ooffset+i] = source[ioffset+depth2-i-1]
+                    result[offset+i] = source[offset+depth2-i-1]
                 if alpha:
-                    result[ooffset+depth2] = source[ioffset+depth2]
-        return str(result)
+                    result[offset+depth2] = source[offset+depth2]
+        return six.binary_type(result)
+
+    def flip_vertical(source, width, height):
+        length = len(source)
+        row = length // height
+        result = bytearray(length)
+        for y1 in range(height):
+            y2 = height - y1 - 1
+            result[y1*row:y1*row+row] = source[y2*row:y2*row+row]
+        return six.binary_type(result)
 else:
     magick = False
 
@@ -67,8 +75,8 @@ def init():
         if badcard:
             import warnings
             warnings.warn('Please update your graphics drivers if possible')
-        # Currently, BGRA images are flipped.
-        # bgra = gl_info.have_extension('GL_EXT_bgra')
+
+        #bgra = gl_info.have_extension('GL_EXT_bgra')
 
     if power_of_two is None:
         power_of_two = gl_info.have_version(2) or gl_info.have_extension('GL_ARB_texture_non_power_of_two')
@@ -196,7 +204,7 @@ def load_image(file, path):
             texture = raw.data
         else:
             texture = raw.get_data('RGBA', width * 4)
-    return path, width, height, len(raw.format), mode, texture
+    return path, width, height, len(raw.format), mode, flip_vertical(texture, width, height)
 
 
 def load_texture(file):
@@ -211,7 +219,7 @@ def load_texture(file):
 
     path, width, height, depth, mode, texture = load_image(file, path)
 
-    buffer = c_ulong()
+    buffer = c_uint()
     glGenTextures(1, byref(buffer))
     id = buffer.value
 
@@ -232,7 +240,7 @@ def load_texture(file):
 
 
 def pil_load(file):
-    import Image
+    from PIL import Image
     return Image.open(os.path.join(os.path.dirname(__file__), 'assets', 'textures', file))
 
 
@@ -248,7 +256,7 @@ def load_clouds(file):
 
     path, width, height, depth, mode, texture = load_image(file, path)
 
-    buffer = c_ulong()
+    buffer = c_uint()
     glGenTextures(1, byref(buffer))
     id = buffer.value
 

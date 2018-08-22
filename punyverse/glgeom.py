@@ -144,10 +144,7 @@ def flare(rinner, router, res, prob, tex):
                 last_y = y
 
 
-def sphere(r, lats, longs, tex, lighting=True, fv4=GLfloat * 4, inside=False):
-    """
-        Sphere function from the OpenGL red book.
-    """
+def sphere(r, lats, longs, tex, lighting=True, inside=False, fv4=GLfloat * 4):
     with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
         sphere = gluNewQuadric()
         gluQuadricDrawStyle(sphere, GLU_FILL)
@@ -192,19 +189,19 @@ def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
         gluDeleteQuadric(sphere)
 
 
-def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
+def normal_sphere(r, divide, tex, normal, lighting=True, inside=False, fv4=GLfloat * 4):
     if (not have_extension('GL_ARB_multitexture') or not
             have_extension('GL_ARB_texture_env_combine') or not
             have_extension('GL_EXT_texture_env_dot3')):
         print('No hardware normal mapping support. No bumping for you.')
-        return sphere(r, divide, divide, tex, lighting)
+        return sphere(r, divide, divide, tex, lighting, inside)
 
-    from texture import load_texture
+    from .texture import load_texture
     normal = load_texture(normal)
 
     with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
         glEnable(GL_CULL_FACE)
-        glCullFace(GL_BACK)
+        glCullFace(GL_FRONT if inside else GL_BACK)
 
         glActiveTextureARB(GL_TEXTURE0_ARB)
         glBindTexture(GL_TEXTURE_2D, normal)

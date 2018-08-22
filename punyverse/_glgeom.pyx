@@ -66,96 +66,31 @@ cpdef torus(float major_radius, float minor_radius, int n_major, int n_minor, tu
         glPopAttrib()
 
 
-@cython.cdivision(True)
-cpdef normal_sphere(double r, int divide, GLuint tex, normal, bint lighting=True):
-    from texture import pil_load
-    print 'Loading normal map: %s...' % normal,
-    normal_map = pil_load(normal)
-    normal = normal_map.load()
-    print 'Loaded'
-
-    cdef int width, height
-    width, height = normal_map.size
-    cdef bint gray_scale = len(normal[0, 0]) == 1
-
-    glEnable(GL_TEXTURE_2D)
-    if lighting:
-        glDisable(GL_BLEND)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [1, 1, 1, 0])
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1, 1, 1, 0])
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
-    else:
-        glDisable(GL_LIGHTING)
-    glBindTexture(GL_TEXTURE_2D, tex)
-
-    cdef double twopi_divide, pi_divide
-    cdef int i, j
-    cdef double phi1, phi2
-    cdef double theta, s, t
-    cdef int u, v
-    cdef double x, y, z
-    cdef double dx, dy, xz
-    cdef double nx, ny, nz
-    twopi_divide = TWOPI / divide
-    pi_divide = PI / divide
-    glBegin(GL_TRIANGLE_STRIP)
-    for j in xrange(divide + 1):
-        phi1 = j * twopi_divide
-        phi2 = (j + 1) * twopi_divide
-
-        for i in xrange(divide + 1):
-            theta = i * pi_divide
-
-            s = phi2 / TWOPI
-            u = min(<int>(s * width), width - 1)
-            t = theta / PI
-            v = min(<int>(t * height), height - 1)
-            if gray_scale:
-                x = y = z = normal[u, v]
-            else:
-                x, y, z = normal[u, v]
-            dx, dy, dz = sin(theta) * cos(phi2), sin(theta) * sin(phi2), cos(theta)
-            nx, ny, nz = x / 127.5 - 1, y / 127.5 - 1, z / 127.5 - 1  # Make into [-1, 1]
-            nx, nz = cos(theta) * nx + sin(theta) * nz, -sin(theta) * nx + cos(theta) * nz
-            nx, ny = cos(phi2)  * nx - sin(phi2)  * ny,  sin(phi2)  * nx + cos(phi2)  * ny
-            glNormal3f(nx, ny, nz)
-            glTexCoord2f(s, 1 - t)  # GL is bottom up
-            glVertex3f(r * dx, r * dy, r * dz)
-
-            s = phi1 / TWOPI    # x
-            u = min(<int>(s * width), width - 1)
-            if gray_scale:
-                x = y = z = normal[u, v]
-            else:
-                x, y, z = normal[u, v]
-            dx, dy = sin(theta) * cos(phi1), sin(theta) * sin(phi1)
-            nx, ny, nz = x / 127.5 - 1, y / 127.5 - 1, z / 127.5 - 1
-            nx, nz = cos(theta) * nx + sin(theta) * nz, -sin(theta) * nx + cos(theta) * nz
-            nx, ny = cos(phi1)  * nx - sin(phi1)  * ny,  sin(phi1)  * nx + cos(phi1)  * ny
-            glNormal3f(nx, ny, nz)
-            glTexCoord2f(s, 1 - t)
-            glVertex3f(r * dx, r * dy, r * dz)
-    glEnd()
-
-    glDisable(GL_TEXTURE_2D)
-    glEnable(GL_LIGHTING)
-    glEnable(GL_BLEND)
-
-
-cpdef bytes bgr_to_rgb(bytes buffer, int width, int height, bint alpha=0, bint bottom_up=1):
+cpdef bytes bgr_to_rgb(bytes buffer, int width, int height, bint alpha=0):
     cdef int length = len(buffer)
     cdef int depth = length / (width * height)
     cdef int depth2 = depth - alpha
     cdef object final = PyBytes_FromStringAndSize(NULL, length)
     cdef char *result = PyBytes_AsString(final)
     cdef const char *source = PyBytes_AsString(buffer)
-    cdef int x, y, ioffset, ooffset, i, row = width * depth
+    cdef int x, y, offset, i, row = width * depth
     for y in xrange(height):
         for x in xrange(width):
-            ioffset = y * width * depth + x * depth
-            ooffset = (height - y - 1 if bottom_up else y) * row + x * depth
+            offset = y * row + x * depth
             for i in xrange(depth2):
-                result[ooffset+i] = source[ioffset+depth2-i-1]
+                result[offset+i] = source[offset+depth2-i-1]
             if alpha:
-                result[ooffset+depth2] = source[ioffset+depth2]
+                result[offset+depth2] = source[offset+depth2]
+    return final
+
+
+cpdef bytes flip_vertical(bytes buffer, int width, int height):
+    cdef int length = len(buffer)
+    cdef object final = PyBytes_FromStringAndSize(NULL, length)
+    cdef char *result = PyBytes_AsString(final)
+    cdef const char *source = PyBytes_AsString(buffer)
+    cdef int y1, y2, row = length / height
+    for y1 in xrange(height):
+        y2 = height - y1 - 1
+        memcpy(result + y1 * row, source + y2 * row, row)
     return final
