@@ -2,10 +2,11 @@
 from operator import attrgetter
 from math import hypot, sqrt, atan2, degrees
 from time import clock
-from itertools import izip_longest
 import time
 import random
 import os
+
+import six
 
 from punyverse.camera import Camera
 from punyverse.world import World
@@ -17,6 +18,11 @@ try:
     from punyverse._model import model_list, load_model
 except ImportError:
     from punyverse.model import model_list, load_model
+
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
 
 from pyglet.gl import *
 from pyglet.window import key, mouse
@@ -50,7 +56,7 @@ class Applet(pyglet.window.Window):
             info = ['  %-22s %s' % (key + ':', getattr(self.config, key))
                     for key in self.config._attribute_names]
             info = ['%-30s %-30s' % group for group in
-                    izip_longest(info[::2], info[1::2], fillvalue='')]
+                    zip_longest(info[::2], info[1::2], fillvalue='')]
             info = 'OpenGL configuration:\n' + '\n'.join(info)
         else:
             info = 'Unknown OpenGL configuration'
@@ -89,7 +95,7 @@ class Applet(pyglet.window.Window):
         self.fps = 0
         self.world = World('world.json', callback, self.world_options)
         phase = 'Initializing game...'
-        print phase
+        print(phase)
         callback(phase, '', 0)
         self.speed = INITIAL_SPEED
         self.keys = set()
@@ -158,7 +164,6 @@ class Applet(pyglet.window.Window):
             key.C: attribute_toggler(self, 'cloud'),
             key.X: attribute_toggler(self, 'atmosphere'),
             key.ENTER: attribute_toggler(self, 'running'),
-            #key.Q: self.screenshot,
             key.INSERT: increment_tick,
             key.DELETE: decrement_tick,
             key.SPACE: self.launch_meteor,
@@ -203,7 +208,7 @@ class Applet(pyglet.window.Window):
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
 
         phase = 'Loading asteroids...'
-        print phase
+        print(phase)
 
         def load_asteroids(files):
             for id, file in enumerate(files):
@@ -217,12 +222,12 @@ class Applet(pyglet.window.Window):
         c.pitch, c.yaw, c.roll = self.world.direction
 
         phase = 'Updating entities...'
-        print phase
+        print(phase)
         callback(phase, '', 0)
         for entity in self.world.tracker:
             entity.update()
 
-        print 'Loaded in %s seconds.' % (clock() - start)
+        print('Loaded in %s seconds.' % (clock() - start))
         self.loaded = True
         pyglet.clock.schedule(self.update)
         self.on_resize(self.width, self.height)  # On resize handler does nothing unless it's loaded
@@ -234,14 +239,14 @@ class Applet(pyglet.window.Window):
             from PIL import Image
             import tempfile
             CF_BITMAP = 2
-            
-            image = Image.fromstring(image.format, (image.width, image.height), image.get_image_data().data)
+
+            image = Image.frombytes(image.format, (image.width, image.height), image.get_image_data().data)
             image = image.convert('RGB').transpose(Image.FLIP_TOP_BOTTOM)
             fd, filename = tempfile.mkstemp('.bmp')
             try:
-                with os.fdopen(fd, 'w') as file:
+                with os.fdopen(fd, 'wb') as file:
                     image.save(file, 'BMP')
-                if not isinstance(filename, unicode):
+                if isinstance(filename, six.binary_type):
                     filename = filename.decode('mbcs')
                 image = windll.user32.LoadImageW(None, filename, 0, 0, 0, 0x10)
                 windll.user32.OpenClipboard(self._hwnd)

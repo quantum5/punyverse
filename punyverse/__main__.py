@@ -36,9 +36,9 @@ def main():
         raise SystemExit('Graphics configuration not supported.')
     else:
         if hasattr(config, '_attribute_names'):
-            print 'OpenGL configuration:'
+            print('OpenGL configuration:')
             for key in config._attribute_names:
-                print '  %-17s %s' % (key + ':', getattr(config, key))
+                print('  %-17s %s' % (key + ':', getattr(config, key)))
 
     world_options = {
         'normal': args.normal,

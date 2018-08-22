@@ -1,5 +1,7 @@
+from __future__ import print_function
+
 from collections import OrderedDict
-import os.path
+import os
 
 try:
     import json
@@ -8,6 +10,8 @@ except ImportError:
         import simplejson as json
     except ImportError:
         raise SystemExit('No JSON module found')
+
+import six
 
 try:
     from punyverse._model import model_list, load_model
@@ -97,11 +101,11 @@ class World(object):
         self._current_object = 0
 
         def count_objects(bodies):
-            for body in bodies.itervalues():
+            for body in six.itervalues(bodies):
                 self._objects += 1
                 count_objects(body.get('satellites', {}))
         count_objects(root['bodies'])
-        print self._objects, 'objects to be loaded...'
+        print(self._objects, 'objects to be loaded...')
 
         if 'start' in root:
             info = root['start']
@@ -114,9 +118,9 @@ class World(object):
             self.start = (x, y, z)
             self.direction = (pitch, yaw, roll)
 
-        for planet, info in root['bodies'].iteritems():
+        for planet, info in six.iteritems(root['bodies']):
             message = 'Loading %s.' % planet
-            print message
+            print(message)
             self.callback('Loading objects (%d of %d)...' % (self._current_object, self._objects),
                           message, float(self._current_object) / self._objects)
             self._body(planet, info)
@@ -125,9 +129,9 @@ class World(object):
         if 'belts' in root:
             self._phase = 'Loading belts...'
             self._current_object = 0
-            for name, info in root['belts'].iteritems():
+            for name, info in six.iteritems(root['belts']):
                 message = 'Loading %s.' % name
-                print message
+                print(message)
                 self.callback(self._phase, message, float(self._current_object) / len(root['belts']))
                 self._belt(name, info)
 
@@ -189,7 +193,7 @@ class World(object):
             object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
                                    info.get('sz', scale), (0, 0, 0))
         else:
-            print 'Nothing to load for %s.' % name
+            print('Nothing to load for %s.' % name)
             return
 
         params = {'world': self, 'orbit_distance': orbit_distance, 'radius': None if background else radius}
@@ -243,7 +247,7 @@ class World(object):
                 if not cheap:
                     atmosphere_id = compile(disk, radius, radius + atm_size, 30, atm_texture)
 
-        theta = 360 / (rotation + .0) if rotation else 0
+        theta = 360.0 / rotation if rotation else 0
         object = type(object_id, (x, y, z), (pitch, yaw, roll), rotation_angle=theta,
                       atmosphere=atmosphere_id, cloudmap=cloudmap_id, background=background,
                       corona=corona_id, **params)
@@ -264,9 +268,9 @@ class World(object):
                     type(compile(disk, distance, distance + size, 30, texture), (x, y, z),
                          (pitch, yaw, roll), **params))
 
-        for satellite, info in info.get('satellites', {}).iteritems():
+        for satellite, info in six.iteritems(info.get('satellites', {})):
             message = 'Loading %s, satellite of %s.' % (satellite, name)
-            print message
+            print(message)
             self.callback('Loading objects (%d of %d)...' % (self._current_object, self._objects),
                           message, float(self._current_object) / self._objects)
             self._body(satellite, info, object)

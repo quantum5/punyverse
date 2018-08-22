@@ -1,7 +1,9 @@
 from math import sqrt
 
-from punyverse.orbit import KeplerOrbit
+from six.moves import range
 from pyglet.gl import *
+
+from punyverse.orbit import KeplerOrbit
 
 
 class Entity(object):
@@ -118,7 +120,7 @@ class Satellite(Body):
         id = glGenLists(1)
         glNewList(id, GL_COMPILE)
         glBegin(GL_LINE_LOOP)
-        for theta in xrange(360):
+        for theta in range(360):
             x, z, y = self.orbit.orbit(theta)
             glVertex3f(x, y, z)
         glEnd()

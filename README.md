@@ -8,7 +8,7 @@ Python simulator of a puny universe. (How many words can I stick into one?)
 Installation
 ------------
 
-Currently, only Python 2 on Windows is supported.
+Currently, only Windows is supported.
 
 To install, run `pip install punyverse`.
 

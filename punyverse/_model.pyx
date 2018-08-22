@@ -29,7 +29,7 @@ cdef enum:
 cdef class Face(object):
     cdef public int type
     cdef public list verts, norms, texs, vertices, normals, textures
-    
+
     def __init__(self, int type, list verts, list norms, list texs,
                  list vertices, list normals, list textures):
         self.type = type
@@ -41,11 +41,11 @@ cdef class Face(object):
         self.textures = textures
 
 cdef class Material(object):
-    cdef public str name, texture
+    cdef public unicode name, texture
     cdef public tuple Ka, Kd, Ks
     cdef public double shininess
-    
-    def __init__(self, str name, str texture=None, tuple Ka=(0, 0, 0),
+
+    def __init__(self, unicode name, unicode texture=None, tuple Ka=(0, 0, 0),
                  tuple Kd=(0, 0, 0), tuple Ks=(0, 0, 0), double shininess=0.0):
         self.name = name
         self.texture = texture
@@ -55,15 +55,15 @@ cdef class Material(object):
         self.shininess = shininess
 
 cdef class Group(object):
-    cdef public str name
+    cdef public unicode name
     cdef public tuple min
     cdef public Material material
     cdef public list faces, indices, vertices, normals, textures
     cdef public int idx_count
-    
-    def __init__(self, str name=None):
+
+    def __init__(self, unicode name=None):
         if name is None:
-            self.name = str(uuid4())
+            self.name = unicode(uuid4())
         else:
             self.name = name
         self.min = ()
@@ -101,35 +101,36 @@ cdef class WavefrontObject(object):
         self.materials = {}
 
         self.perform_io(self.path)
-    
+
     cdef void new_material(self, list words):
-        material = Material(words[1])
-        self.materials[words[1]] = material
+        name = words[1].decode('utf-8')
+        material = Material(name)
+        self.materials[name] = material
         self.current_material = material
-    
+
     cdef void Ka(self, list words):
         self.current_material.Ka = (float(words[1]), float(words[2]), float(words[3]))
-    
+
     cdef void Kd(self, list words):
         self.current_material.Kd = (float(words[1]), float(words[2]), float(words[3]))
-    
+
     cdef void Ks(self, list words):
         self.current_material.Ks = (float(words[1]), float(words[2]), float(words[3]))
-    
+
     cdef void material_shininess(self, list words):
         self.current_material.shininess = min(float(words[1]), 125)
-    
+
     cdef void material_texture(self, list words):
-        self.current_material.texture = words[-1]
-    
+        self.current_material.texture = words[-1].decode('utf-8')
+
     @cython.nonecheck(False)
     cdef void vertex(self, list words):
         self.vertices.append((float(words[1]), float(words[2]), float(words[3])))
-    
+
     @cython.nonecheck(False)
     cdef void normal(self, list words):
         self.normals.append((float(words[1]), float(words[2]), float(words[3])))
-    
+
     cdef void texture(self, list words):
         cdef int l = len(words)
         cdef object x = 0, y = 0, z = 0
@@ -141,7 +142,7 @@ cdef class WavefrontObject(object):
         if l >= 4:
             z = float(words[3])
         self.textures.append((x, y, z))
-    
+
     cdef void face(self, list words):
         cdef int l = len(words)
         cdef int type = -1
@@ -157,7 +158,7 @@ cdef class WavefrontObject(object):
         cdef list raw_faces, vindices = [], nindices = [], tindices = []
 
         for i in xrange(1, vertex_count + 1):
-            raw_faces = words[i].split('/')
+            raw_faces = words[i].split(b'/')
             l = len(raw_faces)
 
             current_value = int(raw_faces[0])
@@ -193,10 +194,10 @@ cdef class WavefrontObject(object):
         group.faces.append(Face(type, vindices, nindices, tindices, face_vertices, face_normals, face_textures))
 
     cdef bint material(self, list words) except False:
-        return self.perform_io(os.path.join(self.root, words[1]))
-        
+        return self.perform_io(os.path.join(self.root, words[1].decode('utf-8')))
+
     cdef void use_material(self, list words):
-        mat = words[1]
+        mat = words[1].decode('utf-8')
         try:
             self.current_group.material = self.materials[mat]
         except KeyError:
@@ -205,7 +206,7 @@ cdef class WavefrontObject(object):
             print "Warning: no group"
 
     cdef void group(self, list words):
-        name = words[1]
+        name = words[1].decode('utf-8')
         group = Group(name)
 
         if self.groups:
@@ -219,10 +220,10 @@ cdef class WavefrontObject(object):
         cdef int hash, length
 
         ext = os.path.splitext(file)[1].lstrip('.')
-        reader = openers.get(ext, open)(file)
+        reader = openers.get(ext, lambda x: open(x, 'rb'))(file)
         with reader:
             for buf in reader:
-                if not buf or buf.startswith(('\r', '\n', '#')):
+                if not buf or buf.startswith((b'\r', b'\n', b'#')):
                     continue # Empty or comment
                 words = buf.split()
                 type = words[0]
@@ -267,11 +268,7 @@ model_base = None
 def load_model(path):
     global model_base
     if model_base is None:
-        import sys
-        if hasattr(sys, 'frozen'):
-            model_base = os.path.dirname(sys.executable)
-        else:
-            model_base = os.path.join(os.path.dirname(__file__), 'assets', 'models')
+        model_base = os.path.join(os.path.dirname(__file__), 'assets', 'models')
     if not os.path.isabs(path):
         path = os.path.join(model_base, path)
     if not isinstance(path, unicode):
@@ -305,7 +302,7 @@ cpdef int model_list(WavefrontObject model, float sx=1, float sy=1, float sz=1, 
 
     cdef float pitch, yaw, roll
     cdef float kx, ky, kz
-    
+
     pitch, yaw, roll = rotation
     glPushAttrib(GL_TRANSFORM_BIT)
     glRotatef(pitch, 1, 0, 0)

@@ -1,11 +1,14 @@
-from punyverse.texture import load_texture
-
-from pyglet.gl import *
 from uuid import uuid4
 import os
 import gzip
 import bz2
 import zipfile
+
+import six
+from six.moves import range
+from pyglet.gl import *
+
+from punyverse.texture import load_texture
 
 
 def zip_open(file):
@@ -82,8 +85,9 @@ class WavefrontObject(object):
         self.perform_io(self.path)
 
     def new_material(self, words):
-        material = Material(words[1])
-        self.materials[words[1]] = material
+        name = words[1].decode('utf-8')
+        material = Material(name)
+        self.materials[name] = material
         self.current_material = material
 
     def Ka(self, words):
@@ -99,7 +103,7 @@ class WavefrontObject(object):
         self.current_material.shininess = min(float(words[1]), 125)
 
     def material_texture(self, words):
-        self.current_material.texture = words[-1]
+        self.current_material.texture = words[-1].decode('utf-8')
 
     def vertex(self, words):
         self.vertices.append((float(words[1]), float(words[2]), float(words[3])))
@@ -138,8 +142,8 @@ class WavefrontObject(object):
         nindices = []
         tindices = []
 
-        for i in xrange(1, vertex_count + 1):
-            raw_faces = words[i].split('/')
+        for i in range(1, vertex_count + 1):
+            raw_faces = words[i].split(b'/')
             l = len(raw_faces)
 
             current_value = int(raw_faces[0])
@@ -174,19 +178,19 @@ class WavefrontObject(object):
         group.faces.append(Face(type, vindices, nindices, tindices, face_vertices, face_normals, face_textures))
 
     def material(self, words):
-        self.perform_io(os.path.join(self.root, words[1]))
+        self.perform_io(os.path.join(self.root, words[1].decode('utf-8')))
 
     def use_material(self, words):
-        mat = words[1]
+        mat = words[1].decode('utf-8')
         try:
             self.current_group.material = self.materials[mat]
         except KeyError:
-            print "Warning: material %s undefined, only %s defined." % (mat, self.materials)
+            print("Warning: material %s undefined, only %s defined." % (mat, self.materials))
         except AttributeError:
-            print "Warning: no group"
+            print("Warning: no group")
 
     def group(self, words):
-        name = words[1]
+        name = words[1].decode('utf-8')
         group = Group(name)
 
         if self.groups:
@@ -196,29 +200,29 @@ class WavefrontObject(object):
 
     def perform_io(self, file):
         ext = os.path.splitext(file)[1].lstrip('.')
-        reader = openers.get(ext, open)(file)
+        reader = openers.get(ext, lambda x: open(x, 'rb'))(file)
 
         dispatcher = {
-            'v': self.vertex,
-            'vn': self.normal,
-            'vt': self.texture,
-            'f': self.face,
-            'mtllib': self.material,
-            'usemtl': self.use_material,
-            'g': self.group,
-            'o': self.group,
-            'newmtl': self.new_material,
-            'Ka': self.Ka,
-            'Kd': self.Kd,
-            'Ks': self.Ks,
-            'Ns': self.material_shininess,
-            'map_Kd': self.material_texture,
+            b'v': self.vertex,
+            b'vn': self.normal,
+            b'vt': self.texture,
+            b'f': self.face,
+            b'mtllib': self.material,
+            b'usemtl': self.use_material,
+            b'g': self.group,
+            b'o': self.group,
+            b'newmtl': self.new_material,
+            b'Ka': self.Ka,
+            b'Kd': self.Kd,
+            b'Ks': self.Ks,
+            b'Ns': self.material_shininess,
+            b'map_Kd': self.material_texture,
         }
         default = lambda words: None
 
         with reader:
             for buf in reader:
-                if not buf or buf.startswith(('\r', '\n', '#')):
+                if not buf or buf.startswith((b'\r', b'\n', b'#')):
                     continue # Empty or comment
                 words = buf.split()
                 type = words[0]
@@ -236,13 +240,13 @@ else:
 def load_model(path):
     if not os.path.isabs(path):
         path = os.path.join(model_base, path)
-    if not isinstance(path, unicode):
+    if isinstance(path, six.binary_type):
         path = path.decode('mbcs')
     return WavefrontObject(path)
 
 
 def model_list(model, sx=1, sy=1, sz=1, rotation=(0, 0, 0)):
-    for m, text in model.materials.iteritems():
+    for m, text in six.iteritems(model.materials):
         if text.texture:
             load_texture(os.path.join(model.root, text.texture))
 
@@ -300,18 +304,13 @@ def model_list(model, sx=1, sy=1, sz=1, rotation=(0, 0, 0)):
             x, y, z = vertices[f.verts[n]]
             glVertex3f(x * sx, y * sy, z * sz)
 
+        glBegin(GL_TRIANGLES)
         for f in g.faces:
-            if type != f.type:
-                if type != -1:
-                    glEnd()
-                glBegin(GL_TRIANGLES)
-            type = f.type
-
             point(f, vertices, normals, textures, 0)
             point(f, vertices, normals, textures, 1)
             point(f, vertices, normals, textures, 2)
 
-            if type == FACE_QUADS:
+            if f.type == FACE_QUADS:
                 point(f, vertices, normals, textures, 2)
                 point(f, vertices, normals, textures, 3)
                 point(f, vertices, normals, textures, 0)

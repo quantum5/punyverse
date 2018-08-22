@@ -1,12 +1,18 @@
+from __future__ import print_function
+
 from pyglet import image
 from pyglet.gl import *
 from ctypes import c_int, byref, c_ulong
 import os.path
 import struct
 import itertools
+from io import BytesIO
+
+import six
+from six.moves import zip
 
 try:
-    from _glgeom import bgr_to_rgb
+    from punyverse._glgeom import bgr_to_rgb
 except ImportError:
     import warnings
     warnings.warn('Compile _glgeom.c, or double the start up time.')
@@ -19,28 +25,25 @@ except ImportError:
     else:
         magick = True
 
+    from six.moves import range
+
     def bgr_to_rgb(source, width, height, alpha=False, bottom_up=True):
         length = len(source)
-        depth = length / (width * height)
+        depth = length // (width * height)
         depth2 = depth - alpha
         result = bytearray(length)
         row = width * depth
-        for y in xrange(height):
-            for x in xrange(width):
+        for y in range(height):
+            for x in range(width):
                 ioffset = y * width * depth + x * depth
                 ooffset = (height - y - 1 if bottom_up else y) * row + x * depth
-                for i in xrange(depth2):
+                for i in range(depth2):
                     result[ooffset+i] = source[ioffset+depth2-i-1]
                 if alpha:
                     result[ooffset+depth2] = source[ioffset+depth2]
         return str(result)
 else:
     magick = False
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
 
 __all__ = ['load_texture', 'load_clouds', 'load_image', 'pil_load']
 
@@ -64,10 +67,8 @@ def init():
         if badcard:
             import warnings
             warnings.warn('Please update your graphics drivers if possible')
-        #extensions = gl_info.get_extensions()
-        #bgra = 'GL_EXT_bgra' in extensions
-        #if bgra and magick:
-        #    magick = False # Disable magick because BGRA needs it not
+        # Currently, BGRA images are flipped.
+        # bgra = gl_info.have_extension('GL_EXT_bgra')
 
     if power_of_two is None:
         power_of_two = gl_info.have_version(2) or gl_info.have_extension('GL_ARB_texture_non_power_of_two')
@@ -111,7 +112,7 @@ def image_info(data):
     # handle JPEGs
     elif (size >= 2) and data.startswith('\377\330'):
         content_type = 'image/jpeg'
-        jpeg = StringIO(data)
+        jpeg = BytesIO(data)
         jpeg.read(2)
         b = jpeg.read(1)
         try:
@@ -140,21 +141,21 @@ def image_info(data):
 def check_size(width, height):
     init()
     if width > max_texture or height > max_texture:
-        print 'too large'
+        print('too large')
         raise ValueError('Texture too large')
     elif not power_of_two:
         if not is_power2(width) or not is_power2(height):
-            print 'not power of two'
+            print('not power of two')
             raise ValueError('Texture not power of two')
 
 
 def load_image(file, path):
-    print "Loading image %s..." % file,
+    print('Loading image %s...' % file, end=' ')
 
     try:
         file = open(path, 'rb')
     except IOError:
-        print 'exists not'
+        print('exists not')
         raise ValueError('Texture exists not')
     type, width, height = image_info(file.read(65536))
     file.seek(0, 0)
@@ -166,7 +167,7 @@ def load_image(file, path):
         file = Image(path.encode('mbcs' if os.name == 'nt' else 'utf8'))
         geo = file.size()
         check_size(geo.width(), geo.height())
-        print
+        print()
         blob = Blob()
         file.flip()
         file.write(blob, 'RGBA')
@@ -176,12 +177,12 @@ def load_image(file, path):
         try:
             raw = image.load(path, file=file)
         except IOError:
-            print 'exists not'
+            print('exists not')
             raise ValueError('Texture exists not')
 
         width, height = raw.width, raw.height
         check_size(width, height)
-        print
+        print()
 
         mode = GL_RGBA if 'A' in raw.format else GL_RGB
         # Flip from BGR to RGB
@@ -252,17 +253,16 @@ def load_clouds(file):
     id = buffer.value
 
     pixels = bytearray(len(texture) * 4)
-    white = chr(255)
-    pixels[:] = itertools.chain.from_iterable(itertools.izip(itertools.repeat(white), itertools.repeat(white),
-                                                             itertools.repeat(white),
-                                                             itertools.islice(texture, 0, None, depth)))
+    white = b'\xff'[0]
+    pixels[:] = itertools.chain.from_iterable(zip(itertools.repeat(white), itertools.repeat(white),
+                                                  itertools.repeat(white),
+                                                  itertools.islice(texture, 0, None, depth)))
 
     glBindTexture(GL_TEXTURE_2D, id)
 
-    filter = GL_LINEAR
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, str(pixels))
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, six.binary_type(pixels))
 
     cache[path] = id
 

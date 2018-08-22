@@ -1,6 +1,8 @@
 from math import *
-from pyglet.gl import *
 from random import random, gauss, choice
+
+from six.moves import range
+from pyglet.gl import *
 from pyglet.gl.gl_info import have_extension
 
 TWOPI = pi * 2
@@ -68,7 +70,8 @@ def frustrum():
     glEnable(GL_DEPTH_TEST)
 
 
-def crosshair(size, (cx, cy)):
+def crosshair(size, coords):
+    cx, cy = coords
     with glSection(GL_LINES):
         glVertex2f(cx - size, cy)
         glVertex2f(cx + size, cy)
@@ -76,9 +79,10 @@ def crosshair(size, (cx, cy)):
         glVertex2f(cx, cy + size)
 
 
-def circle(r, seg, (cx, cy)):
+def circle(r, seg, coords):
+    cx, cy = coords
     with glSection(GL_LINE_LOOP):
-        for i in xrange(seg):
+        for i in range(seg):
             theta = TWOPI * i / seg
             glVertex2f(cx + cos(theta) * r, cy + sin(theta) * r)
 
@@ -95,7 +99,7 @@ def disk(rinner, router, segs, tex):
         with glSection(GL_TRIANGLE_STRIP):
             factor = TWOPI / res
             theta = 0
-            for n in xrange(res + 1):
+            for n in range(res + 1):
                 theta += factor
                 x = cos(theta)
                 y = sin(theta)
@@ -117,7 +121,7 @@ def flare(rinner, router, res, prob, tex):
         factor = TWOPI / res
         rdelta = (router - rinner)
         with glSection(GL_QUADS):
-            for i in xrange(res + 1):
+            for i in range(res + 1):
                 theta = last_theta + factor
                 x = cos(theta)
                 y = sin(theta)
@@ -192,7 +196,7 @@ def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
     if (not have_extension('GL_ARB_multitexture') or not
             have_extension('GL_ARB_texture_env_combine') or not
             have_extension('GL_EXT_texture_env_dot3')):
-        print 'No hardware normal mapping support. No bumping for you.'
+        print('No hardware normal mapping support. No bumping for you.')
         return sphere(r, divide, divide, tex, lighting)
 
     from texture import load_texture
@@ -228,11 +232,11 @@ def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
         twopi_divide = TWOPI / divide
         pi_divide = pi / divide
         with glSection(GL_TRIANGLE_STRIP):
-            for j in xrange(divide + 1):
+            for j in range(divide + 1):
                 phi1 = j * twopi_divide
                 phi2 = (j + 1) * twopi_divide
 
-                for i in xrange(divide + 1):
+                for i in range(divide + 1):
                     theta = i * pi_divide
 
                     s = phi2 / TWOPI
@@ -252,7 +256,7 @@ def normal_sphere(r, divide, tex, normal, lighting=True, fv4=GLfloat * 4):
 
 
 def belt(radius, cross, object, count):
-    for i in xrange(count):
+    for i in range(count):
         theta = TWOPI * random()
         r = gauss(radius, cross)
         x, y, z = cos(theta) * r, gauss(0, cross), sin(theta) * r
@@ -285,7 +289,7 @@ except ImportError:
                 m = 1.0 / sqrt(x * x + y * y + z * z)
                 return x * m, y * m, z * m
 
-            for i in xrange(n_major):
+            for i in range(n_major):
                 a0 = i * major_s
                 a1 = a0 + major_s
                 x0 = cos(a0)
@@ -294,7 +298,7 @@ except ImportError:
                 y1 = sin(a1)
 
                 with glSection(GL_TRIANGLE_STRIP):
-                    for j in xrange(n_minor + 1):
+                    for j in range(n_minor + 1):
                         b = j * minor_s
                         c = cos(b)
                         r = minor_radius * c + major_radius

@@ -28,7 +28,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
 
 setup(
     name='punyverse',
-    version='0.2',
+    version='0.3',
     packages=['punyverse'],
     package_data={
         'punyverse': [
@@ -60,7 +60,7 @@ setup(
         ]
 
     },
-    install_requires=['pyglet', 'Pillow'],
+    install_requires=['pyglet', 'Pillow', 'six'],
 
     author='quantum',
     author_email='quantum2048@gmail.com',

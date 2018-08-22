@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import os
 
@@ -60,7 +62,7 @@ def shrink(file):
     image = get_image(file)
     width, height = get_size(image)
     if fits(width, height):
-        print 'no need'
+        print('no need')
         return
     width, height = resize(width, height, 2048)
     if fits(width, height):
@@ -68,14 +70,14 @@ def shrink(file):
     else:
         width, height = resize(width, height, 1024) # 1024 is minimum
         size = 'small'
-    print 'size %s, %dx%d...' % (size, width, height),
+    print('size %s, %dx%d...' % (size, width, height), end=' ')
     name = make_name(file, size)
     if not os.path.exists(name):
         image = scale(image, width, height)
-        print 'saved to:', os.path.basename(name)
+        print('saved to:', os.path.basename(name))
         save(image, name)
     else:
-        print 'alrady there'
+        print('alrady there')
 
 textures = [
     'mercury.jpg',
@@ -106,12 +108,12 @@ def main():
         files = textures
     texture = os.path.join(punyverse, 'assets', 'textures')
     for file in files:
-        print 'Resizing %s:' % file,
+        print('Resizing %s:' % file, end=' ')
         file = os.path.join(texture, file.replace('/', os.sep))
         if os.path.exists(file):
             shrink(file)
         else:
-            print 'exists not'
+            print('exists not')
 
 if __name__ == '__main__':
     main()
