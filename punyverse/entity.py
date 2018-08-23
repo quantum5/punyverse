@@ -1,6 +1,5 @@
 from math import sqrt
 
-from six.moves import range
 from pyglet.gl import *
 
 from punyverse.orbit import KeplerOrbit

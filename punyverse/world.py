@@ -1,7 +1,7 @@
 from __future__ import print_function
 
-from collections import OrderedDict
 import os
+from collections import OrderedDict
 
 try:
     import json
@@ -28,37 +28,16 @@ from math import pi, sqrt
 G = 6.67384e-11  # Gravitation Constant
 
 
-def get_best_texture(info, optional=False, loader=load_texture):
-    cheap = False
-    skip = False
-    texture = None
+def get_best_texture(info, loader=load_texture):
     if isinstance(info, list):
         for item in info:
-            if isinstance(item, list):
-                if len(item) == 4:
-                    cheap = True
-                    texture = item
-                    break
-                continue
             try:
-                texture = loader(item)
+                return loader(item)
             except ValueError:
                 pass
-            else:
-                break
-        else:
-            cheap = True
-            texture = [1, 1, 1, 1]
     else:
-        try:
-            texture = loader(info)
-        except ValueError:
-            if optional:
-                skip = True
-            else:
-                cheap = True
-                texture = [1, 1, 1, 1]
-    return cheap, skip, texture
+        return loader(info)
+    raise ValueError('No texture found')
 
 
 def load_world(file, callback=lambda message, completion: None):
@@ -176,18 +155,13 @@ class World(object):
         division = info.get('division', max(min(int(radius / 8), 60), 10))
 
         if 'texture' in info:
-            cheap, skip, texture = get_best_texture(info['texture'], optional=info.get('optional', False))
-            if skip:
-                return
-            if cheap:
-                object_id = compile(colourball, radius, division, division, texture)
+            texture = get_best_texture(info['texture'])
+            if self.options.get('normal', False) and 'normal' in info:
+                object_id = compile(normal_sphere, radius, division, texture,
+                                    info['normal'], lighting=lighting, inside=background)
             else:
-                if self.options.get('normal', False) and 'normal' in info:
-                    object_id = compile(normal_sphere, radius, division, texture,
-                                        info['normal'], lighting=lighting, inside=background)
-                else:
-                    object_id = compile(sphere, radius, division, division, texture,
-                                        lighting=lighting, inside=background)
+                object_id = compile(sphere, radius, division, division, texture,
+                                    lighting=lighting, inside=background)
         elif 'model' in info:
             scale = info.get('scale', 1)
             object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
@@ -229,23 +203,19 @@ class World(object):
             cloud_texture = atmosphere_data.get('cloud_texture', None)
             corona_texture = atmosphere_data.get('corona_texture', None)
             if cloud_texture is not None:
-                cheap, _, cloud_texture = get_best_texture(cloud_texture, loader=load_clouds)
-                if not cheap:
-                    cloudmap_id = compile(sphere, radius + 2, division, division, cloud_texture,
-                                          lighting=False)
+                cloud_texture = get_best_texture(cloud_texture, loader=load_clouds)
+                cloudmap_id = compile(sphere, radius + 2, division, division, cloud_texture, lighting=False)
+
             if corona_texture is not None:
-                cheap, _, corona = get_best_texture(corona_texture)
-                if not cheap:
-                    corona_size = atmosphere_data.get('corona_size', radius / 2)
-                    corona_division = atmosphere_data.get('corona_division', 100)
-                    corona_ratio = atmosphere_data.get('corona_ratio', 0.5)
-                    corona_id = compile(flare, radius, radius + corona_size, corona_division,
-                                        corona_ratio, corona)
+                corona = get_best_texture(corona_texture)
+                corona_size = atmosphere_data.get('corona_size', radius / 2)
+                corona_division = atmosphere_data.get('corona_division', 100)
+                corona_ratio = atmosphere_data.get('corona_ratio', 0.5)
+                corona_id = compile(flare, radius, radius + corona_size, corona_division, corona_ratio, corona)
 
             if atm_texture is not None:
-                cheap, _, atm_texture = get_best_texture(atm_texture)
-                if not cheap:
-                    atmosphere_id = compile(disk, radius, radius + atm_size, 30, atm_texture)
+                atm_texture = get_best_texture(atm_texture)
+                atmosphere_id = compile(disk, radius, radius + atm_size, 30, atm_texture)
 
         theta = 360.0 / rotation if rotation else 0
         object = type(object_id, (x, y, z), (pitch, yaw, roll), rotation_angle=theta,
@@ -262,11 +232,9 @@ class World(object):
             yaw = self._eval(ring_data.get('yaw', yaw))
             roll = self._eval(ring_data.get('roll', roll))
 
-            cheap, _, texture = get_best_texture(texture)
-            if not cheap:
-                self.tracker.append(
-                    type(compile(disk, distance, distance + size, 30, texture), (x, y, z),
-                         (pitch, yaw, roll), **params))
+            texture = get_best_texture(texture)
+            self.tracker.append(type(compile(disk, distance, distance + size, 30, texture), (x, y, z),
+                                     (pitch, yaw, roll), **params))
 
         for satellite, info in six.iteritems(info.get('satellites', {})):
             message = 'Loading %s, satellite of %s.' % (satellite, name)
