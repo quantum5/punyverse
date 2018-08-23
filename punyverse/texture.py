@@ -74,12 +74,7 @@ def init():
         buf = c_int()
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, byref(buf))
         max_texture = buf.value
-        badcard = gl_info.get_renderer() in ('GDI Generic',)
-        if badcard:
-            import warnings
-            warnings.warn('Please update your graphics drivers if possible')
-
-            # bgra = gl_info.have_extension('GL_EXT_bgra')
+        bgra = gl_info.have_extension('GL_EXT_bgra')
 
     if power_of_two is None:
         power_of_two = gl_info.have_version(2) or gl_info.have_extension('GL_ARB_texture_non_power_of_two')
@@ -229,14 +224,9 @@ def load_texture(file):
 
     glBindTexture(GL_TEXTURE_2D, id)
 
-    if badcard:
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-        glTexImage2D(GL_TEXTURE_2D, 0, mode, width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
-    else:
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-        gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+    gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
     cache[path] = id
     return id
 

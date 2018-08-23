@@ -38,7 +38,7 @@ def main():
         if hasattr(config, '_attribute_names'):
             print('OpenGL configuration:')
             for key in config._attribute_names:
-                print('  %-17s %s' % (key + ':', getattr(config, key)))
+                print('  %-22s %s' % (key + ':', getattr(config, key)))
 
     world_options = {
         'normal': args.normal,

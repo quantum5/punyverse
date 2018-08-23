@@ -51,28 +51,34 @@ class Applet(pyglet.window.Window):
         texture.init()
 
         if hasattr(self.config, '_attribute_names'):
-            info = ['  %-22s %s' % (key + ':', getattr(self.config, key))
-                    for key in self.config._attribute_names]
+            info = ['  %-22s %s' % (key + ':', value)
+                    for key, value in self.config.get_gl_attributes()]
             info = ['%-30s %-30s' % group for group in
                     zip_longest(info[::2], info[1::2], fillvalue='')]
             info = 'OpenGL configuration:\n' + '\n'.join(info)
         else:
             info = 'Unknown OpenGL configuration'
 
+        info = '\n'.join([
+            'Graphics Vendor:   ' + gl_info.get_vendor(),
+            'Graphics Version:  ' + gl_info.get_version(),
+            'Graphics Renderer: ' + gl_info.get_renderer(),
+            ]) + '\n\n' + info
+
         self.loaded = False
         self.__load_started = False
         self._loading_phase = pyglet.text.Label(
-            font_name='Consolas', font_size=20, x=10, y=self.height - 80,
+            font_name='Consolas', font_size=20, x=10, y=self.height - 50,
             color=(255, 255, 255, 255), width=self.width - 20, align='center',
             multiline=True, text='Punyverse is starting...'
         )
         self._loading_label = pyglet.text.Label(
-            font_name='Consolas', font_size=16, x=10, y=self.height - 150,
+            font_name='Consolas', font_size=16, x=10, y=self.height - 120,
             color=(255, 255, 255, 255), width=self.width - 20, align='center',
             multiline=True
         )
         self._info_label = pyglet.text.Label(
-            font_name='Consolas', font_size=13, x=10, y=self.height - 250,
+            font_name='Consolas', font_size=13, x=10, y=self.height - 220,
             color=(255, 255, 255, 255), width=self.width - 20,
             multiline=True, text=info
         )
@@ -376,7 +382,7 @@ class Applet(pyglet.window.Window):
         self._loading_phase.draw()
         self._loading_label.draw()
         if progress is not None:
-            progress_bar(10, self.height - 170, self.width - 20, 50, progress)
+            progress_bar(10, self.height - 140, self.width - 20, 50, progress)
         self._info_label.draw()
 
     def on_draw(self, glMatrixBuffer=GLfloat * 16):
