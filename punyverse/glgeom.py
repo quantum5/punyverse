@@ -1,6 +1,7 @@
 from math import *
 from random import random, gauss, choice
 
+# noinspection PyUnresolvedReferences
 from six.moves import range
 from pyglet.gl import *
 from pyglet.gl.gl_info import have_extension
@@ -34,8 +35,21 @@ class glRestore(object):
 
 
 class glMatrix(object):
+    def __init__(self, location=None, rotation=None):
+        self.location = location
+        self.rotation = rotation
+
     def __enter__(self):
         glPushMatrix()
+
+        if self.location:
+            glTranslatef(*self.location)
+
+        if self.rotation:
+            pitch, yaw, roll = self.rotation
+            glRotatef(pitch, 1, 0, 0)
+            glRotatef(yaw, 0, 1, 0)
+            glRotatef(roll, 0, 0, 1)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         glPopMatrix()

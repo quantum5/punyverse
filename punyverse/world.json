@@ -286,19 +286,6 @@
       "rotation": 57996,
       "pitch": -90,
       "yaw": 28.32
-    },
-    "sky": {
-      "texture": "sky.jpg",
-      "rotation": 0,
-      "optional": true,
-      "lighting": false,
-      "radius": 305000000,
-      "division": 30,
-      "pitch": 90,
-      "yaw": 30,
-      "roll": 180,
-      "delta": 0,
-      "background": true
     }
   },
   "belts": {
@@ -310,6 +297,15 @@
       "count": 1024,
       "rotation": 114536500
     }
+  },
+  "sky": {
+    "texture": "sky.jpg",
+    "rotation": 0,
+    "radius": 305000000,
+    "division": 30,
+    "pitch": 90,
+    "yaw": 30,
+    "roll": 180
   },
   "start": {
     "z": "AU - 400",

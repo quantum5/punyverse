@@ -1,9 +1,8 @@
 #!/usr/bin/python
 from operator import attrgetter
-from math import hypot, sqrt, atan2, degrees
+from math import hypot
 from time import clock
 import time
-import random
 import os
 
 import six
@@ -29,8 +28,7 @@ from pyglet.window import key, mouse
 
 import pyglet
 
-
-INITIAL_SPEED = 0        # The initial speed of the player
+INITIAL_SPEED = 0  # The initial speed of the player
 MOUSE_SENSITIVITY = 0.3  # Mouse sensitivity, 0..1, none...hyperspeed
 
 MAX_DELTA = 5
@@ -109,15 +107,15 @@ class Applet(pyglet.window.Window):
         self.cloud = not texture.badcard
 
         self.tick = self.world.tick_length
-        self.ticks = [1, 2, 5, 10, 20, 40, 60,                # Second range
+        self.ticks = [1, 2, 5, 10, 20, 40, 60,  # Second range
                       120, 300, 600, 1200, 1800, 2700, 3600,  # Minute range
-                      7200, 14400, 21600, 43200, 86400,       # Hour range
-                      172800, 432000, 604800,                 # 2, 5, 7 days
-                      1209600, 2592000,                       # 2 week, 1 month
-                      5270400, 7884000, 15768000, 31536000,   # 2, 3, 6, 12 months
-                      63072000, 157680000, 315360000,         # 2, 5, 10 years
-                      630720000, 1576800000, 3153600000,      # 20, 50, 100 years
-        ]
+                      7200, 14400, 21600, 43200, 86400,  # Hour range
+                      172800, 432000, 604800,  # 2, 5, 7 days
+                      1209600, 2592000,  # 2 week, 1 month
+                      5270400, 7884000, 15768000, 31536000,  # 2, 3, 6, 12 months
+                      63072000, 157680000, 315360000,  # 2, 5, 10 years
+                      630720000, 1576800000, 3153600000,  # 20, 50, 100 years
+                      ]
         self.__time_per_second_cache = None
         self.__time_per_second_value = None
         self.__time_accumulate = 0
@@ -202,9 +200,9 @@ class Applet(pyglet.window.Window):
 
         glLightfv(GL_LIGHT0, GL_POSITION, fv4(.5, .5, 1, 0))
         glLightfv(GL_LIGHT0, GL_SPECULAR, fv4(.5, .5, 1, 1))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE,  fv4(1, 1, 1, 1))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, fv4(1, 1, 1, 1))
         glLightfv(GL_LIGHT1, GL_POSITION, fv4(1, 0, .5, 0))
-        glLightfv(GL_LIGHT1, GL_DIFFUSE,  fv4(.5, .5, .5, 1))
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, fv4(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
 
         phase = 'Loading asteroids...'
@@ -213,9 +211,9 @@ class Applet(pyglet.window.Window):
         def load_asteroids(files):
             for id, file in enumerate(files):
                 callback(phase, 'Loading %s...' % file, float(id) / len(files))
-                yield model_list(load_model(file), 5, 5, 5, (0, 0, 0))
+                Asteroid.load_asteroid(file)
 
-        self.asteroid_ids = list(load_asteroids([r'asteroids/01.obj', r'asteroids/02.obj', r'asteroids/03.obj']))
+        load_asteroids(['asteroids/01.obj', 'asteroids/02.obj', 'asteroids/03.obj'])
 
         c = self.cam
         c.x, c.y, c.z = self.world.start
@@ -269,8 +267,7 @@ class Applet(pyglet.window.Window):
         dx *= speed
         dy *= speed
         dz *= speed
-        self.world.tracker.append(Asteroid(random.choice(self.asteroid_ids), (c.x, c.y - 3, c.z + 5),
-                                           direction=(dx, dy, dz)))
+        self.world.tracker.append(Asteroid((c.x, c.y - 3, c.z + 5), (dx, dy, dz)))
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.modifiers = modifiers
@@ -313,7 +310,7 @@ class Applet(pyglet.window.Window):
         if not self.loaded:
             return super(Applet, self).on_resize(width, height)
 
-        height = max(height, 1) # Prevent / by 0
+        height = max(height, 1)  # Prevent / by 0
         self.label.y = height - 20
         glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
@@ -402,77 +399,10 @@ class Applet(pyglet.window.Window):
         get_distance = entity_distance(x, y, z)
         if x != world.x or y != world.y or z != world.z:
             world.tracker.sort(key=get_distance, reverse=True)
-            world.tracker.sort(key=attrgetter('background'), reverse=True)
             world.x, world.y, world.z = x, y, z
 
         for entity in world.tracker:
-            x, y, z = entity.location
-            pitch, yaw, roll = entity.rotation
-
-            with glMatrix(), glRestore(GL_CURRENT_BIT):
-                if entity.background:
-                    glTranslatef(c.x, c.y, c.z)
-                else:
-                    glTranslatef(x, y, z)
-                glRotatef(pitch, 1, 0, 0)
-                glRotatef(yaw, 0, 1, 0)
-                glRotatef(roll, 0, 0, 1)
-                glCallList(entity.id)
-                if self.debug:
-                    with glMatrix(), glRestore(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT):
-                        glLineWidth(0.25)
-                        glPolygonOffset(1, 1)
-                        glDisable(GL_LIGHTING)
-                        glDisable(GL_TEXTURE_2D)
-                        glColor3f(0, 1, 0)
-                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-                        glCallList(entity.id)
-
-            has_corona = hasattr(entity, 'corona') and entity.corona
-            has_atmosphere = hasattr(entity, 'atmosphere') and entity.atmosphere
-            if self.atmosphere and (has_corona or has_atmosphere):
-                with glMatrix(), glRestore(GL_ENABLE_BIT):
-                    x0, y0, z0 = entity.location
-                    glTranslatef(x0, y0, z0)
-                    matrix = glMatrixBuffer()
-                    glGetFloatv(GL_MODELVIEW_MATRIX, matrix)
-                    matrix[0: 3] = [1, 0, 0]
-                    matrix[4: 7] = [0, 1, 0]
-                    matrix[8:11] = [0, 0, 1]
-                    glLoadMatrixf(matrix)
-                    glEnable(GL_BLEND)
-                    if has_atmosphere:
-                        glCallList(entity.atmosphere)
-                    if has_corona:
-                        x, y, z = c.direction()
-                        glTranslatef(-x, -y, -z)
-                        glCallList(entity.corona)
-
-            if self.cloud and hasattr(entity, 'cloudmap') and entity.cloudmap:
-                with glMatrix(), glRestore(GL_ENABLE_BIT):
-                    glEnable(GL_BLEND)
-                    glEnable(GL_ALPHA_TEST)
-                    glTranslatef(*entity.location)
-                    pitch, yaw, roll = entity.rotation
-                    glRotatef(pitch, 1, 0, 0)
-                    glRotatef(yaw, 0, 1, 0)
-                    glRotatef(roll, 0, 0, 1)
-                    glCallList(entity.cloudmap)
-
-            if self.orbit and hasattr(entity, 'get_orbit') and hasattr(entity, 'parent'):
-                parent = entity.parent
-                distance = get_distance(parent)
-                if distance < parent.orbit_show:
-                    with glMatrix(), glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
-                        glTranslatef(*entity.parent.location)
-                        glDisable(GL_LIGHTING)
-                        solid = distance < parent.orbit_opaque
-                        glColor4f(1, 1, 1, 1 if solid else
-                                  (1 - (distance - parent.orbit_opaque) / parent.orbit_blend))
-                        if not solid:
-                            glEnable(GL_BLEND)
-                        glLineWidth(1)
-                        glCallList(entity.get_orbit())
+            entity.draw(c, self)
 
         glColor4f(1, 1, 1, 1)
         glDisable(GL_TEXTURE_2D)

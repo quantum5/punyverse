@@ -1,20 +1,21 @@
 from __future__ import print_function
 
-from pyglet import image
-from pyglet.gl import *
-from ctypes import c_int, byref, c_uint
+import itertools
 import os.path
 import struct
-import itertools
+from ctypes import c_int, byref, c_uint
 from io import BytesIO
 
 import six
+from pyglet import image
+from pyglet.gl import *
 from six.moves import zip
 
 try:
     from punyverse._glgeom import bgr_to_rgb, flip_vertical
 except ImportError:
     import warnings
+
     warnings.warn('Compile _glgeom.c, or double the start up time.')
 
     # Use magick when _glgeom is not compiled (is actually slower)
@@ -27,6 +28,7 @@ except ImportError:
 
     from six.moves import range
 
+
     def bgr_to_rgb(source, width, height, alpha=False):
         length = len(source)
         depth = length // (width * height)
@@ -37,10 +39,11 @@ except ImportError:
             for x in range(width):
                 offset = y * row + x * depth
                 for i in range(depth2):
-                    result[offset+i] = source[offset+depth2-i-1]
+                    result[offset + i] = source[offset + depth2 - i - 1]
                 if alpha:
-                    result[offset+depth2] = source[offset+depth2]
+                    result[offset + depth2] = source[offset + depth2]
         return six.binary_type(result)
+
 
     def flip_vertical(source, width, height):
         length = len(source)
@@ -48,12 +51,12 @@ except ImportError:
         result = bytearray(length)
         for y1 in range(height):
             y2 = height - y1 - 1
-            result[y1*row:y1*row+row] = source[y2*row:y2*row+row]
+            result[y1 * row:y1 * row + row] = source[y2 * row:y2 * row + row]
         return six.binary_type(result)
 else:
     magick = False
 
-__all__ = ['load_texture', 'load_clouds', 'load_image', 'pil_load']
+__all__ = ['load_texture', 'load_clouds', 'load_image', 'get_best_texture']
 
 id = 0
 cache = {}
@@ -76,10 +79,11 @@ def init():
             import warnings
             warnings.warn('Please update your graphics drivers if possible')
 
-        #bgra = gl_info.have_extension('GL_EXT_bgra')
+            # bgra = gl_info.have_extension('GL_EXT_bgra')
 
     if power_of_two is None:
         power_of_two = gl_info.have_version(2) or gl_info.have_extension('GL_ARB_texture_non_power_of_two')
+
 
 is_power2 = lambda num: num != 0 and ((num & (num - 1)) == 0)
 
@@ -134,7 +138,7 @@ def image_info(data):
                     h, w = struct.unpack(">HH", jpeg.read(4))
                     break
                 else:
-                    jpeg.read(int(struct.unpack(">H", jpeg.read(2))[0])-2)
+                    jpeg.read(int(struct.unpack(">H", jpeg.read(2))[0]) - 2)
                 b = jpeg.read(1)
             width = int(w)
             height = int(h)
@@ -233,15 +237,8 @@ def load_texture(file):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
         gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
-
     cache[path] = id
-
     return id
-
-
-def pil_load(file):
-    from PIL import Image
-    return Image.open(os.path.join(os.path.dirname(__file__), 'assets', 'textures', file))
 
 
 def load_clouds(file):
@@ -275,3 +272,15 @@ def load_clouds(file):
     cache[path] = id
 
     return id
+
+
+def get_best_texture(info, loader=load_texture):
+    if isinstance(info, list):
+        for item in info:
+            try:
+                return loader(item)
+            except ValueError:
+                pass
+    else:
+        return loader(info)
+    raise ValueError('No texture found')

@@ -1,4 +1,4 @@
-from math import sin, cos, radians
+from math import sin, cos, radians, hypot
 
 
 class Camera(object):
@@ -39,3 +39,6 @@ class Camera(object):
         dx = cos(radians(self.yaw - 90)) * m
         dz = sin(radians(self.yaw - 90)) * m
         return dx, dy, dz
+
+    def distance(self, x, y, z):
+        return hypot(hypot(x - self.x, y - self.y), z - self.z)
