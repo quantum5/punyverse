@@ -21,6 +21,7 @@
       "yaw": 7.25,
       "mass": 1.9891e+30,
       "rotation": 2164320,
+      "light_source": true,
       "atmosphere": {
         "corona_texture": "sun_corona.png",
         "corona_size": 1500,

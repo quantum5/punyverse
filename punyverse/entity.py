@@ -246,6 +246,7 @@ class SphericalBody(Body):
 
         self.radius = world.evaluate(info.get('radius', world.length)) / world.length
         division = info.get('division', max(min(int(self.radius / 8), 60), 10))
+        self.light_source = info.get('light_source', False)
 
         texture = get_best_texture(info['texture'])
         self.sphere_id = compile(sphere, self.radius, division, division, texture)
@@ -291,7 +292,9 @@ class SphericalBody(Body):
                                    get_best_texture(info['ring'].get('texture', None)))
 
     def _draw_sphere(self):
-        with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT):
+        with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT | GL_ENABLE_BIT):
+            if self.light_source:
+                glDisable(GL_LIGHTING)
             glCallList(self.sphere_id)
 
     def _draw_atmosphere(self, cam, glMatrixBuffer=GLfloat * 16):
