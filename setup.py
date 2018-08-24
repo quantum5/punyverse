@@ -1,6 +1,7 @@
 from __future__ import print_function
-import sys
+
 import os
+import sys
 
 from setuptools import setup, Extension
 
@@ -55,11 +56,11 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'punyverse = punyverse.__main__:main',
+            'punyverse = punyverse.main:main',
             'punyverse_small_images = punyverse.small_images:main',
         ],
         'gui_scripts': [
-            'punyversew = punyverse.__main__:main'
+            'punyversew = punyverse.main:main'
         ]
 
     },

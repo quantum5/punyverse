@@ -1,17 +1,17 @@
 #!/usr/bin/python
-from operator import attrgetter
-from math import hypot
-from time import clock
-import time
 import os
+import time
+from math import hypot
+from operator import attrgetter
+from time import clock
 
 import six
 
-from punyverse.camera import Camera
-from punyverse.world import World
-from punyverse.glgeom import *
-from punyverse.entity import Asteroid
 from punyverse import texture
+from punyverse.camera import Camera
+from punyverse.entity import Asteroid
+from punyverse.glgeom import *
+from punyverse.world import World
 
 try:
     from punyverse._model import model_list, load_model
@@ -47,8 +47,6 @@ class Applet(pyglet.window.Window):
     asteroids = ['asteroids/01.obj', 'asteroids/02.obj', 'asteroids/03.obj']
 
     def __init__(self, *args, **kwargs):
-        self.world_options = kwargs.pop('world_options', {})
-
         super(Applet, self).__init__(*args, **kwargs)
         texture.init()
 
@@ -94,7 +92,7 @@ class Applet(pyglet.window.Window):
     def load(self, *args, **kwargs):
         start = clock()
         self.fps = 0
-        self.world = World('world.json', self._load_callback, self.world_options)
+        self.world = World('world.json', self._load_callback)
         self._load_callback('Initializing game...', '', 0)
         self.speed = INITIAL_SPEED
         self.keys = set()
@@ -227,7 +225,7 @@ class Applet(pyglet.window.Window):
     def screenshot(self):
         image = pyglet.image.get_buffer_manager().get_color_buffer()
         if hasattr(self, '_hwnd') and not self.modifiers & key.MOD_CTRL:
-            from ctypes import windll, cdll
+            from ctypes import windll
             from PIL import Image
             import tempfile
             CF_BITMAP = 2

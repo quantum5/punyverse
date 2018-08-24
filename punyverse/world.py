@@ -20,7 +20,7 @@ def load_world(file, callback=lambda message, completion: None):
 
 
 class World(object):
-    def __init__(self, file, callback, options=None):
+    def __init__(self, file, callback):
         self.tracker = []
         self.start = (0, 0, 0)
         self.direction = (0, 0, 0)
@@ -31,9 +31,8 @@ class World(object):
         self.tick = 0
 
         self.callback = callback
-        self.options = options or {}
         self._parse(file)
-        del self.callback # So it can't be used after loading finishes
+        del self.callback  # So it can't be used after loading finishes
 
     def evaluate(self, value):
         return eval(str(value), {'__builtins__': None}, self._context)
