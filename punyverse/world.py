@@ -1,15 +1,8 @@
-from __future__ import print_function
+from __future__ import division
 
+import json
 import os
 from collections import OrderedDict
-
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        raise SystemExit('No JSON module found')
 
 import six
 
@@ -39,7 +32,6 @@ class World(object):
 
         self.callback = callback
         self.options = options or {}
-        self._phase = 'Parsing configuration...'
         self._parse(file)
         del self.callback # So it can't be used after loading finishes
 
@@ -55,7 +47,7 @@ class World(object):
         return self._au
 
     def _parse(self, file):
-        self.callback(self._phase, 'Loading configuration file...', 0)
+        self.callback('Parsing configuration...', 'Loading configuration file...', 0)
         with open(os.path.join(os.path.dirname(__file__), file)) as f:
             root = json.load(f, object_pairs_hook=OrderedDict)
         self._au = root.get('au', 2000)
@@ -74,7 +66,6 @@ class World(object):
                 self._objects += 1
                 count_objects(body.get('satellites', {}))
         count_objects(root['bodies'])
-        print(self._objects, 'objects to be loaded...')
 
         if 'start' in root:
             info = root['start']
@@ -88,27 +79,20 @@ class World(object):
             self.direction = (pitch, yaw, roll)
 
         for planet, info in six.iteritems(root['bodies']):
-            message = 'Loading %s.' % planet
-            print(message)
             self.callback('Loading objects (%d of %d)...' % (self._current_object, self._objects),
-                          message, float(self._current_object) / self._objects)
+                          'Loading %s.' % planet, self._current_object / self._objects)
             self._body(planet, info)
             self._current_object += 1
 
         if 'belts' in root:
-            self._phase = 'Loading belts...'
-            self._current_object = 0
-            for name, info in six.iteritems(root['belts']):
-                message = 'Loading %s.' % name
-                print(message)
-                self.callback(self._phase, message, float(self._current_object) / len(root['belts']))
+            belt_count = len(root['belts'])
+            for i, (name, info) in enumerate(six.iteritems(root['belts']), 1):
+                self.callback('Loading belts (%d of %d)...' % (i, belt_count),
+                              'Loading %s.' % name, i / belt_count)
                 self.tracker.append(Belt(name, self, info))
 
         if 'sky' in root:
-            self._phase = 'Loading sky...'
-            message = 'Loading sky.'
-            print(message)
-            self.callback(self._phase, message, 0)
+            self.callback('Loading sky...', 'Loading sky.', 0)
             self.tracker.append(Sky(self, root['sky']))
 
     def _body(self, name, info, parent=None):
@@ -117,8 +101,7 @@ class World(object):
         elif 'model' in info:
             body = ModelBody(name, self, info, parent)
         else:
-            print('Nothing to load for %s.' % name)
-            return
+            raise ValueError('Nothing to load for %s.' % name)
 
         if parent:
             parent.satellites.append(body)
@@ -126,9 +109,7 @@ class World(object):
             self.tracker.append(body)
 
         for satellite, info in six.iteritems(info.get('satellites', {})):
-            message = 'Loading %s, satellite of %s.' % (satellite, name)
-            print(message)
             self.callback('Loading objects (%d of %d)...' % (self._current_object, self._objects),
-                          message, float(self._current_object) / self._objects)
+                          'Loading %s, satellite of %s.' % (satellite, name), self._current_object / self._objects)
             self._body(satellite, info, body)
             self._current_object += 1
