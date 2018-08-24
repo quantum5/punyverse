@@ -7,7 +7,6 @@ from punyverse.ui import Punyverse
 
 INITIAL_WIN_HEIGHT = 540
 INITIAL_WIN_WIDTH = 700
-WIN_TITLE = 'Punyverse'
 
 
 def main():
@@ -25,7 +24,8 @@ def main():
     args = parser.parse_args()
 
     pyglet.options['shadow_window'] = False
-    loader = LoaderWindow(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT)
+    loader = LoaderWindow(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
+                          caption='Punyverse is loading...')
 
     template = pyglet.gl.Config(depth_size=args.depth, double_buffer=True,
                                 sample_buffers=args.multisample > 1,
@@ -46,7 +46,7 @@ def main():
                 print('  %-22s %s' % (key + ':', getattr(config, key)))
 
     punyverse = Punyverse(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
-                          caption=WIN_TITLE, resizable=True, vsync=args.vsync,
+                          caption='Punyverse', resizable=True, vsync=args.vsync,
                           config=config, visible=False)
 
     loader.set_main_context(punyverse.context)
