@@ -1,15 +1,8 @@
 from __future__ import division
 
+import json
 import os
 from collections import OrderedDict
-
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        raise SystemExit('No JSON module found')
 
 import six
 
@@ -39,7 +32,6 @@ class World(object):
 
         self.callback = callback
         self.options = options or {}
-        self._phase = 'Parsing configuration...'
         self._parse(file)
         del self.callback # So it can't be used after loading finishes
 
@@ -55,7 +47,7 @@ class World(object):
         return self._au
 
     def _parse(self, file):
-        self.callback(self._phase, 'Loading configuration file...', 0)
+        self.callback('Parsing configuration...', 'Loading configuration file...', 0)
         with open(os.path.join(os.path.dirname(__file__), file)) as f:
             root = json.load(f, object_pairs_hook=OrderedDict)
         self._au = root.get('au', 2000)
