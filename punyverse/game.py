@@ -110,18 +110,19 @@ class Applet(pyglet.window.Window):
         self.moving = True
         self.info_precise = False
         self.atmosphere = True
-        self.cloud = not texture.badcard
+        self.cloud = True
 
         self.tick = self.world.tick_length
-        self.ticks = [1, 2, 5, 10, 20, 40, 60,  # Second range
-                      120, 300, 600, 1200, 1800, 2700, 3600,  # Minute range
-                      7200, 14400, 21600, 43200, 86400,  # Hour range
-                      172800, 432000, 604800,  # 2, 5, 7 days
-                      1209600, 2592000,  # 2 week, 1 month
-                      5270400, 7884000, 15768000, 31536000,  # 2, 3, 6, 12 months
-                      63072000, 157680000, 315360000,  # 2, 5, 10 years
-                      630720000, 1576800000, 3153600000,  # 20, 50, 100 years
-                      ]
+        self.ticks = [
+            1, 2, 5, 10, 20, 40, 60,  # Second range
+            120, 300, 600, 1200, 1800, 2700, 3600,  # Minute range
+            7200, 14400, 21600, 43200, 86400,  # Hour range
+            172800, 432000, 604800,  # 2, 5, 7 days
+            1209600, 2592000,  # 2 week, 1 month
+            5270400, 7884000, 15768000, 31536000,  # 2, 3, 6, 12 months
+            63072000, 157680000, 315360000,  # 2, 5, 10 years
+            630720000, 1576800000, 3153600000,  # 20, 50, 100 years
+        ]
         self.__time_per_second_cache = None
         self.__time_per_second_value = None
         self.__time_accumulate = 0

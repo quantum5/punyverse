@@ -9,25 +9,13 @@ from io import BytesIO
 import six
 from pyglet import image
 from pyglet.gl import *
-from six.moves import zip
+from six.moves import zip, range
 
 try:
-    from punyverse._glgeom import bgr_to_rgb, flip_vertical
+    from ._glgeom import bgr_to_rgb, flip_vertical
 except ImportError:
     import warnings
-
     warnings.warn('Compile _glgeom.c, or double the start up time.')
-
-    # Use magick when _glgeom is not compiled (is actually slower)
-    try:
-        from pgmagick import Blob, Image
-    except ImportError:
-        magick = False
-    else:
-        magick = True
-
-    from six.moves import range
-
 
     def bgr_to_rgb(source, width, height, alpha=False):
         length = len(source)
@@ -53,8 +41,6 @@ except ImportError:
             y2 = height - y1 - 1
             result[y1 * row:y1 * row + row] = source[y2 * row:y2 * row + row]
         return six.binary_type(result)
-else:
-    magick = False
 
 __all__ = ['load_texture', 'load_clouds', 'load_image', 'get_best_texture']
 
@@ -63,12 +49,11 @@ cache = {}
 
 max_texture = None
 power_of_two = None
-badcard = False
 bgra = False
 
 
 def init():
-    global max_texture, power_of_two, badcard, bgra, magick
+    global max_texture, power_of_two, bgra
 
     if max_texture is None:
         buf = c_int()
@@ -84,40 +69,38 @@ is_power2 = lambda num: num != 0 and ((num & (num - 1)) == 0)
 
 
 def image_info(data):
-    data = str(data)
+    data = six.binary_type(data)
     size = len(data)
     height = -1
     width = -1
     content_type = ''
 
     # handle GIFs
-    if (size >= 10) and data[:6] in ('GIF87a', 'GIF89a'):
+    if size >= 10 and data[:6] in (b'GIF87a', b'GIF89a'):
         # Check to see if content_type is correct
         content_type = 'image/gif'
-        w, h = struct.unpack("<HH", data[6:10])
+        w, h = struct.unpack('<HH', data[6:10])
         width = int(w)
         height = int(h)
 
     # See PNG 2. Edition spec (http://www.w3.org/TR/PNG/)
     # Bytes 0-7 are below, 4-byte chunk length, then 'IHDR'
     # and finally the 4-byte width, height
-    elif ((size >= 24) and data.startswith('\211PNG\r\n\032\n')
-          and (data[12:16] == 'IHDR')):
+    elif size >= 24 and data.startswith(b'\211PNG\r\n\032\n') and data[12:16] == b'IHDR':
         content_type = 'image/png'
-        w, h = struct.unpack(">LL", data[16:24])
+        w, h = struct.unpack('>LL', data[16:24])
         width = int(w)
         height = int(h)
 
     # Maybe this is for an older PNG version.
-    elif (size >= 16) and data.startswith('\211PNG\r\n\032\n'):
-        # Check to see if we have the right content type
+    elif size >= 16 and data.startswith(b'\211PNG\r\n\032\n'):
         content_type = 'image/png'
-        w, h = struct.unpack(">LL", data[8:16])
+        w, h = struct.unpack('>LL', data[8:16])
         width = int(w)
         height = int(h)
 
     # handle JPEGs
-    elif (size >= 2) and data.startswith('\377\330'):
+    elif size >= 2 and data.startswith(b'\377\330'):
         content_type = 'image/jpeg'
         jpeg = BytesIO(data)
         jpeg.read(2)
@@ -130,13 +113,11 @@ def image_info(data):
                     b = jpeg.read(1)
                 if 0xC0 <= ord(b) <= 0xC3:
                     jpeg.read(3)
-                    h, w = struct.unpack(">HH", jpeg.read(4))
+                    height, width = struct.unpack('>HH', jpeg.read(4))
                     break
                 else:
-                    jpeg.read(int(struct.unpack(">H", jpeg.read(2))[0]) - 2)
+                    jpeg.read(int(struct.unpack('>H', jpeg.read(2))[0]) - 2)
                 b = jpeg.read(1)
-            width = int(w)
-            height = int(h)
         except struct.error:
             pass
         except ValueError:
@@ -162,47 +143,38 @@ def load_image(file, path):
     try:
         file = open(path, 'rb')
     except IOError:
-        print('exists not')
-        raise ValueError('Texture exists not')
+        print('does not exist')
+        raise ValueError('Texture does not exist')
+
     type, width, height = image_info(file.read(65536))
     file.seek(0, 0)
     if type:
         check_size(width, height)
 
-    if magick:
-        file.close()
-        file = Image(path.encode('mbcs' if os.name == 'nt' else 'utf8'))
-        geo = file.size()
-        check_size(geo.width(), geo.height())
-        print()
-        blob = Blob()
-        file.flip()
-        file.write(blob, 'RGBA')
-        texture = blob.data
-        mode = GL_RGBA
-    else:
-        try:
-            raw = image.load(path, file=file)
-        except IOError:
-            print('exists not')
-            raise ValueError('Texture exists not')
+    try:
+        raw = image.load(path, file=file)
+    except Exception:
+        print('cannot be loaded')
+        raise ValueError('cannot be loaded')
 
-        width, height = raw.width, raw.height
-        check_size(width, height)
-        print()
+    width, height = raw.width, raw.height
+    check_size(width, height)
+    print()
 
-        mode = GL_RGBA if 'A' in raw.format else GL_RGB
-        # Flip from BGR to RGB
-        if raw.format in ('BGR', 'BGRA'):
-            if bgra:
-                mode = {GL_RGBA: GL_BGRA, GL_RGB: GL_BGR}[mode]
-                texture = raw.data
-            else:
-                texture = bgr_to_rgb(raw.data, width, height, 'A' in raw.format)
-        elif raw.format in ('RGB', 'RGBA'):
+    mode = GL_RGBA if 'A' in raw.format else GL_RGB
+
+    # Flip from BGR to RGB
+    if raw.format in ('BGR', 'BGRA'):
+        if bgra:
+            mode = GL_BGRA if 'A' in raw.format else GL_BGR
             texture = raw.data
         else:
-            texture = raw.get_data('RGBA', width * 4)
+            texture = bgr_to_rgb(raw.data, width, height, 'A' in raw.format)
+    elif raw.format in ('RGB', 'RGBA'):
+        texture = raw.data
+    else:
+        texture = raw.get_data('RGBA', width * 4)
+
     return path, width, height, len(raw.format), mode, flip_vertical(texture, width, height)
 
 
@@ -227,6 +199,7 @@ def load_texture(file):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
     gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
+
     cache[path] = id
     return id
 
@@ -260,7 +233,6 @@ def load_clouds(file):
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, six.binary_type(pixels))
 
     cache[path] = id
-
     return id
 
 
