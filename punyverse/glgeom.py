@@ -1,14 +1,26 @@
 from math import *
 from random import random, gauss, choice
 
+from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
-from pyglet.gl import *
 
 TWOPI = pi * 2
 
 __all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'belt',
            'flare', 'glSection', 'glMatrix', 'glRestore', 'progress_bar']
+
+
+class glContext(object):
+    def __init__(self, context):
+        self.new_context = context
+
+    def __enter__(self):
+        self.old_context = get_current_context()
+        self.new_context.set_current()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.old_context.set_current()
 
 
 class glSection(object):

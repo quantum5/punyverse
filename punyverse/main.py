@@ -2,7 +2,8 @@ import argparse
 
 import pyglet
 
-from punyverse import game
+from punyverse.loader import LoaderWindow
+from punyverse.ui import Punyverse
 
 INITIAL_WIN_HEIGHT = 540
 INITIAL_WIN_WIDTH = 700
@@ -24,10 +25,12 @@ def main():
     args = parser.parse_args()
 
     pyglet.options['shadow_window'] = False
+    loader = LoaderWindow(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT)
 
     template = pyglet.gl.Config(depth_size=args.depth, double_buffer=True,
                                 sample_buffers=args.multisample > 1,
-                                samples=args.multisample)
+                                samples=args.multisample,
+                                major_version=3)
 
     platform = pyglet.window.get_platform()
     display = platform.get_default_display()
@@ -42,9 +45,17 @@ def main():
             for key in config._attribute_names:
                 print('  %-22s %s' % (key + ':', getattr(config, key)))
 
-    game.Applet(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
-                caption=WIN_TITLE, resizable=True, vsync=args.vsync,
-                config=config)
+    punyverse = Punyverse(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
+                          caption=WIN_TITLE, resizable=True, vsync=args.vsync,
+                          config=config, visible=False)
+
+    loader.set_main_context(punyverse.context)
+    world = loader.load()
+    punyverse.context.set_current()
+    punyverse.initialize(world)
+    loader.close()
+    punyverse.set_visible(True)
+
     pyglet.app.run()
 
 

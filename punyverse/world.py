@@ -57,7 +57,7 @@ class World(object):
             root = json.load(f, object_pairs_hook=OrderedDict)
         self._au = root.get('au', 2000)
         self._length = root.get('length', 4320)
-        self._context = {'AU': self._au, 'TEXTURE': texture.max_texture, 'KM': 1.0 / self._length}
+        self._context = {'AU': self._au, 'TEXTURE': texture.max_texture_size(), 'KM': 1.0 / self._length}
 
         self.tick_length = root.get('tick', 4320)  # How many second is a tick?
 
