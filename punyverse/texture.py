@@ -17,6 +17,7 @@ except ImportError:
     import warnings
     warnings.warn('Compile _glgeom.c, or double the start up time.')
 
+
     def bgr_to_rgb(source, width, height, alpha=False):
         length = len(source)
         depth = length // (width * height)
@@ -47,25 +48,9 @@ __all__ = ['load_texture', 'load_clouds', 'load_image', 'get_best_texture']
 id = 0
 cache = {}
 
-max_texture = None
-power_of_two = None
-bgra = False
 
-
-def init():
-    global max_texture, power_of_two, bgra
-
-    if max_texture is None:
-        buf = c_int()
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, byref(buf))
-        max_texture = buf.value
-        bgra = gl_info.have_extension('GL_EXT_bgra')
-
-    if power_of_two is None:
-        power_of_two = gl_info.have_version(2) or gl_info.have_extension('GL_ARB_texture_non_power_of_two')
-
-
-is_power2 = lambda num: num != 0 and ((num & (num - 1)) == 0)
+def is_power2(num):
+    return num != 0 and ((num & (num - 1)) == 0)
 
 
 def image_info(data):
@@ -126,12 +111,19 @@ def image_info(data):
     return content_type, width, height
 
 
+def max_texture_size():
+    buf = c_int()
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, byref(buf))
+    return buf.value
+
+
 def check_size(width, height):
-    init()
+    max_texture = max_texture_size()
+
     if width > max_texture or height > max_texture:
         print('too large')
         raise ValueError('Texture too large')
-    elif not power_of_two:
+    elif not gl_info.have_version(2) and not gl_info.have_extension('GL_ARB_texture_non_power_of_two'):
         if not is_power2(width) or not is_power2(height):
             print('not power of two')
             raise ValueError('Texture not power of two')
@@ -165,7 +157,7 @@ def load_image(file, path):
 
     # Flip from BGR to RGB
     if raw.format in ('BGR', 'BGRA'):
-        if bgra:
+        if gl_info.have_extension('GL_EXT_bgra'):
             mode = GL_BGRA if 'A' in raw.format else GL_BGR
             texture = raw.data
         else:

@@ -3,28 +3,18 @@ import os
 import time
 from math import hypot
 from operator import attrgetter
-from time import clock
 
+import pyglet
 import six
+from pyglet.gl import *
+from pyglet.window import key, mouse
 
-from punyverse import texture
 from punyverse.glgeom import *
-from punyverse.world import World
 
 try:
     from punyverse._model import model_list, load_model
 except ImportError:
     from punyverse.model import model_list, load_model
-
-try:
-    from itertools import zip_longest
-except ImportError:
-    from itertools import izip_longest as zip_longest
-
-from pyglet.gl import *
-from pyglet.window import key, mouse
-
-import pyglet
 
 MOUSE_SENSITIVITY = 0.3  # Mouse sensitivity, 0..1, none...hyperspeed
 
@@ -40,55 +30,11 @@ def entity_distance(x0, y0, z0):
     return distance
 
 
-class Applet(pyglet.window.Window):
+class Punyverse(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
-        super(Applet, self).__init__(*args, **kwargs)
-        texture.init()
+        super(Punyverse, self).__init__(*args, **kwargs)
 
-        if hasattr(self.config, '_attribute_names'):
-            info = ['  %-22s %s' % (key + ':', value)
-                    for key, value in self.config.get_gl_attributes()]
-            info = ['%-30s %-30s' % group for group in
-                    zip_longest(info[::2], info[1::2], fillvalue='')]
-            info = 'OpenGL configuration:\n' + '\n'.join(info)
-        else:
-            info = 'Unknown OpenGL configuration'
-
-        info = '\n'.join([
-            'Graphics Vendor:   ' + gl_info.get_vendor(),
-            'Graphics Version:  ' + gl_info.get_version(),
-            'Graphics Renderer: ' + gl_info.get_renderer(),
-            ]) + '\n\n' + info
-
-        self.loaded = False
-        self._loading_phase = pyglet.text.Label(
-            font_name='Consolas', font_size=20, x=10, y=self.height - 50,
-            color=(255, 255, 255, 255), width=self.width - 20, align='center',
-            multiline=True, text='Punyverse is starting...'
-        )
-        self._loading_label = pyglet.text.Label(
-            font_name='Consolas', font_size=16, x=10, y=self.height - 120,
-            color=(255, 255, 255, 255), width=self.width - 20, align='center',
-            multiline=True
-        )
-        self._info_label = pyglet.text.Label(
-            font_name='Consolas', font_size=13, x=10, y=self.height - 220,
-            color=(255, 255, 255, 255), width=self.width - 20,
-            multiline=True, text=info
-        )
-        pyglet.clock.schedule_once(self.load, 0)
-
-    def _load_callback(self, phase, message, progress):
-        print(message)
-        self.draw_loading(phase, message, progress)
-        self.flip()
-        self.dispatch_events()
-
-    def load(self, *args, **kwargs):
-        start = clock()
         self.fps = 0
-        self.world = World('world.json', self._load_callback)
-        self._load_callback('Initializing game...', '', 0)
         self.info = True
         self.debug = False
         self.orbit = True
@@ -108,6 +54,19 @@ class Applet(pyglet.window.Window):
             63072000, 157680000, 315360000,  # 2, 5, 10 years
             630720000, 1576800000, 3153600000,  # 20, 50, 100 years
         ]
+
+        self.key_handler = {}
+        self.mouse_press_handler = {}
+
+        self.label = pyglet.text.Label('', font_name='Consolas', font_size=12, x=10, y=self.height - 20,
+                                       color=(255,) * 4, multiline=True, width=600)
+        self.exclusive = False
+        self.modifiers = 0
+
+        self.world = None
+
+    def initialize(self, world):
+        self.world = world
 
         def speed_incrementer(object, increment):
             def incrementer():
@@ -163,11 +122,6 @@ class Applet(pyglet.window.Window):
             mouse.RIGHT: attribute_toggler(self, 'moving'),
         }
 
-        self.label = pyglet.text.Label('', font_name='Consolas', font_size=12, x=10, y=self.height - 20,
-                                       color=(255,) * 4, multiline=True, width=600)
-
-        self.exclusive = False
-
         glClearColor(0, 0, 0, 1)
         glClearDepth(1.0)
 
@@ -193,8 +147,6 @@ class Applet(pyglet.window.Window):
         glLightfv(GL_LIGHT1, GL_DIFFUSE, fv4(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
 
-        print('Loaded in %s seconds.' % (clock() - start))
-        self.loaded = True
         pyglet.clock.schedule(self.update)
         self.on_resize(self.width, self.height)  # On resize handler does nothing unless it's loaded
 
@@ -225,13 +177,11 @@ class Applet(pyglet.window.Window):
             image.save(os.path.expanduser('~/punyverse.png'))
 
     def set_exclusive_mouse(self, exclusive):
-        super(Applet, self).set_exclusive_mouse(exclusive)
+        super(Punyverse, self).set_exclusive_mouse(exclusive)
         self.exclusive = exclusive
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.modifiers = modifiers
-        if not self.loaded:
-            return
 
         if not self.exclusive:
             self.set_exclusive_mouse(True)
@@ -240,9 +190,6 @@ class Applet(pyglet.window.Window):
                 self.mouse_press_handler[button]()
 
     def on_mouse_motion(self, x, y, dx, dy):
-        if not self.loaded:
-            return
-
         if self.exclusive:  # Only handle camera movement if mouse is grabbed
             self.world.cam.mouse_move(dx * MOUSE_SENSITIVITY, dy * MOUSE_SENSITIVITY)
 
@@ -250,8 +197,7 @@ class Applet(pyglet.window.Window):
         self.modifiers = modifiers
         if symbol == key.Q:
             self.screenshot()
-        if not self.loaded:
-            return
+
         if self.exclusive:  # Only handle keyboard input if mouse is grabbed
             if symbol in self.key_handler:
                 self.key_handler[symbol]()
@@ -261,18 +207,12 @@ class Applet(pyglet.window.Window):
                 self.world.cam.roll_right = True
 
     def on_key_release(self, symbol, modifiers):
-        if not self.loaded:
-            return
-
         if symbol == key.A:
             self.world.cam.roll_left = False
         elif symbol == key.S:
             self.world.cam.roll_right = False
 
     def on_resize(self, width, height):
-        if not self.loaded:
-            return super(Applet, self).on_resize(width, height)
-
         height = max(height, 1)  # Prevent / by 0
         self.label.y = height - 20
         glViewport(0, 0, width, height)
@@ -283,9 +223,6 @@ class Applet(pyglet.window.Window):
         glMatrixMode(GL_MODELVIEW)
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
-        if not self.loaded:
-            return
-
         self.world.cam.speed += scroll_y * 50 + scroll_x * 500
 
     def get_time_per_second(self):
@@ -302,23 +239,7 @@ class Applet(pyglet.window.Window):
     def update(self, dt):
         self.world.update(dt, move=self.exclusive and self.moving, tick=self.running)
 
-    def draw_loading(self, phase=None, message=None, progress=None):
-        glClear(GL_COLOR_BUFFER_BIT)
-        glLoadIdentity()
-        if phase is not None:
-            self._loading_phase.text = phase
-        if message is not None:
-            self._loading_label.text = message
-        self._loading_phase.draw()
-        self._loading_label.draw()
-        if progress is not None:
-            progress_bar(10, self.height - 140, self.width - 20, 50, progress)
-        self._info_label.draw()
-
     def on_draw(self):
-        if not self.loaded:
-            return self.draw_loading()
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
 
