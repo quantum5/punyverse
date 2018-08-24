@@ -4,12 +4,11 @@ from random import random, gauss, choice
 # noinspection PyUnresolvedReferences
 from six.moves import range
 from pyglet.gl import *
-from pyglet.gl.gl_info import have_extension
 
 TWOPI = pi * 2
 
-__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'torus', 'belt',
-           'flare', 'normal_sphere', 'glSection', 'glMatrix', 'glRestore', 'progress_bar']
+__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'belt',
+           'flare', 'glSection', 'glMatrix', 'glRestore', 'progress_bar']
 
 
 class glSection(object):
@@ -203,69 +202,6 @@ def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
         gluDeleteQuadric(sphere)
 
 
-def normal_sphere(r, divide, tex, normal, lighting=True, inside=False, fv4=GLfloat * 4):
-    if (not have_extension('GL_ARB_multitexture') or not
-            have_extension('GL_ARB_texture_env_combine') or not
-            have_extension('GL_EXT_texture_env_dot3')):
-        print('No hardware normal mapping support. No bumping for you.')
-        return sphere(r, divide, divide, tex, lighting, inside)
-
-    from .texture import load_texture
-    normal = load_texture(normal)
-
-    with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
-        glEnable(GL_CULL_FACE)
-        glCullFace(GL_FRONT if inside else GL_BACK)
-
-        glActiveTextureARB(GL_TEXTURE0_ARB)
-        glBindTexture(GL_TEXTURE_2D, normal)
-        glEnable(GL_TEXTURE_2D)
-
-        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB)
-        glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_DOT3_RGBA_ARB)
-
-        glActiveTextureARB(GL_TEXTURE1_ARB)
-        glBindTexture(GL_TEXTURE_2D, tex)
-        glEnable(GL_TEXTURE_2D)
-
-        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB)
-        glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE)
-
-        if lighting:
-            glDisable(GL_BLEND)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(1, 1, 1, 0))
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 0))
-            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
-        else:
-            glDisable(GL_LIGHTING)
-        glBindTexture(GL_TEXTURE_2D, tex)
-
-        twopi_divide = TWOPI / divide
-        pi_divide = pi / divide
-        with glSection(GL_TRIANGLE_STRIP):
-            for j in range(divide + 1):
-                phi1 = j * twopi_divide
-                phi2 = (j + 1) * twopi_divide
-
-                for i in range(divide + 1):
-                    theta = i * pi_divide
-
-                    s = phi2 / TWOPI
-                    t = theta / pi
-                    dx, dy, dz = sin(theta) * cos(phi2), sin(theta) * sin(phi2), cos(theta)
-                    glNormal3f(dx, dy, dz)
-                    glMultiTexCoord2fARB(GL_TEXTURE0_ARB, s, 1 - t)
-                    glMultiTexCoord2fARB(GL_TEXTURE1_ARB, s, 1 - t)
-                    glVertex3f(r * dx, r * dy, r * dz)
-
-                    s = phi1 / TWOPI    # x
-                    dx, dy = sin(theta) * cos(phi1), sin(theta) * sin(phi1)
-                    glNormal3f(dx, dy, dz)
-                    glMultiTexCoord2fARB(GL_TEXTURE0_ARB, s, 1 - t)
-                    glMultiTexCoord2fARB(GL_TEXTURE1_ARB, s, 1 - t)
-                    glVertex3f(r * dx, r * dy, r * dz)
-
-
 def belt(radius, cross, object, count):
     for i in range(count):
         theta = TWOPI * random()
@@ -279,47 +215,6 @@ def belt(radius, cross, object, count):
                 scale = 1
             glScalef(scale, scale, scale)
             glCallList(choice(object))
-
-
-try:
-    from _glgeom import torus
-except ImportError:
-    def torus(major_radius, minor_radius, n_major, n_minor, material, shininess=125, fv4=GLfloat * 4):
-        """
-            Torus function from the OpenGL red book.
-        """
-        with glRestore(GL_CURRENT_BIT):
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(*material))
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 1))
-            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess)
-
-            major_s = TWOPI / n_major
-            minor_s = TWOPI / n_minor
-
-            def n(x, y, z):
-                m = 1.0 / sqrt(x * x + y * y + z * z)
-                return x * m, y * m, z * m
-
-            for i in range(n_major):
-                a0 = i * major_s
-                a1 = a0 + major_s
-                x0 = cos(a0)
-                y0 = sin(a0)
-                x1 = cos(a1)
-                y1 = sin(a1)
-
-                with glSection(GL_TRIANGLE_STRIP):
-                    for j in range(n_minor + 1):
-                        b = j * minor_s
-                        c = cos(b)
-                        r = minor_radius * c + major_radius
-                        z = minor_radius * sin(b)
-
-                        glNormal3f(*n(x0 * c, y0 * c, z / minor_radius))
-                        glVertex3f(x0 * r, y0 * r, z)
-
-                        glNormal3f(*n(x1 * c, y1 * c, z / minor_radius))
-                        glVertex3f(x1 * r, y1 * r, z)
 
 
 def progress_bar(x, y, width, height, filled):

@@ -5,6 +5,7 @@ import bz2
 import zipfile
 
 import six
+# noinspection PyUnresolvedReferences
 from six.moves import range
 from pyglet.gl import *
 
@@ -136,7 +137,6 @@ class WavefrontObject(object):
         else:
             type = FACE_QUADS
 
-        current_value = -1
         texture_len = len(self.textures)
         vindices = []
         nindices = []
@@ -292,8 +292,6 @@ def model_list(model, sx=1, sy=1, sz=1, rotation=(0, 0, 0)):
                 kx, ky, kz = material.Ks
                 glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(kx, ky, kz, 1))
             glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, material.shininess)
-
-        type = -1
 
         def point(f, vertices, normals, textures, n):
             if f.norms:

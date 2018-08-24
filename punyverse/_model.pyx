@@ -1,15 +1,15 @@
-from libc.string cimport strcmp, strlen
-from libc.stdlib cimport malloc, free, atof
-from libc.stdio cimport fopen, fclose, fgets, FILE
-cimport cython
-
-from punyverse.texture import load_texture
-include "_cyopengl.pxi"
 from uuid import uuid4
 import os
 import gzip
 import bz2
 import zipfile
+
+from libc.string cimport strcmp, strlen
+cimport cython
+
+include "_cyopengl.pxi"
+from punyverse.texture import load_texture
+
 
 def zip_open(file):
     zip = zipfile.ZipFile(file)
@@ -265,6 +265,7 @@ cdef class WavefrontObject(object):
 
 model_base = None
 
+
 def load_model(path):
     global model_base
     if model_base is None:
@@ -274,6 +275,7 @@ def load_model(path):
     if not isinstance(path, unicode):
         path = path.decode('mbcs' if os.name == 'nt' else 'utf8')
     return WavefrontObject(path)
+
 
 @cython.nonecheck(False)
 cdef inline void point(Face f, WavefrontObject m, int tex_id, float sx, float sy, float sz, int n):
@@ -288,6 +290,7 @@ cdef inline void point(Face f, WavefrontObject m, int tex_id, float sx, float sy
 
     x, y, z = m.vertices[f.verts[n]]
     glVertex3f(x * sx, y * sy, z * sz)
+
 
 cpdef int model_list(WavefrontObject model, float sx=1, float sy=1, float sz=1, object rotation=(0, 0, 0)):
     for m, text in model.materials.iteritems():
