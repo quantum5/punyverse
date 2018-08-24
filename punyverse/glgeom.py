@@ -1,3 +1,5 @@
+from array import array
+from ctypes import c_int, c_float, byref, cast, POINTER, c_uint
 from math import *
 from random import random, gauss, choice
 
@@ -7,7 +9,7 @@ from six.moves import range
 
 TWOPI = pi * 2
 
-__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'sphere', 'colourball', 'belt',
+__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'Sphere', 'belt',
            'flare', 'glSection', 'glMatrix', 'glRestore', 'progress_bar']
 
 
@@ -43,6 +45,17 @@ class glRestore(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         glPopAttrib()
+
+
+class glRestoreClient(object):
+    def __init__(self, flags):
+        self.flags = flags
+
+    def __enter__(self):
+        glPushClientAttrib(self.flags)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        glPopClientAttrib()
 
 
 class glMatrix(object):
@@ -169,49 +182,57 @@ def flare(rinner, router, res, prob, tex):
                 last_y = y
 
 
-def sphere(r, lats, longs, tex, lighting=True, inside=False, fv4=GLfloat * 4):
-    with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
-        sphere = gluNewQuadric()
-        gluQuadricDrawStyle(sphere, GLU_FILL)
-        gluQuadricTexture(sphere, True)
-        if lighting:
-            gluQuadricNormals(sphere, GLU_SMOOTH)
-
-        glEnable(GL_CULL_FACE)
-        glCullFace(GL_FRONT if inside else GL_BACK)
-        glEnable(GL_TEXTURE_2D)
-        if lighting:
-            glDisable(GL_BLEND)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(1, 1, 1, 0))
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 0))
-            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
-        else:
-            glDisable(GL_LIGHTING)
-        glBindTexture(GL_TEXTURE_2D, tex)
-
-        gluSphere(sphere, r, lats, longs)
-
-        gluDeleteQuadric(sphere)
+def array_to_ctypes(arr):
+    return cast(arr.buffer_info()[0], POINTER({
+        'f': c_float,
+        'i': c_int,
+        'I': c_uint,
+    }[arr.typecode]))
 
 
-def colourball(r, lats, longs, colour, fv4=GLfloat * 4):
-    """
-        Sphere function from the OpenGL red book.
-    """
-    with glRestore(GL_ENABLE_BIT):
-        sphere = gluNewQuadric()
+class Sphere(object):
+    def __init__(self, r, lats, longs):
+        tau = pi * 2
+        phi_div = tau / longs
+        theta_div = pi / lats
 
-        glDisable(GL_BLEND)
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(*colour))
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 1))
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
-        glEnable(GL_CULL_FACE)
-        glCullFace(GL_BACK)
+        self.vertex_count = (lats + 1) * (longs + 1) * 2
+        buffer = self.vertex_count * 8 * [0]
+        index = 0
+        for i in range(longs + 1):
+            phi1, phi2 = i * phi_div, (i + 1) * phi_div
+            for j in range(lats + 1):
+                theta = j * theta_div
+                sine = sin(theta)
+                dz = cos(theta)
+                t = 1 - theta / pi
+                dx1 = sine * cos(phi2)
+                dy1 = sine * sin(phi2)
+                dx2 = sine * cos(phi1)
+                dy2 = sine * sin(phi1)
+                buffer[index:index + 16] = [r * dx1, r * dy1, r * dz, dx1, dy1, dz, phi2 / tau, t,
+                                            r * dx2, r * dy2, r * dz, dx2, dy2, dz, phi1 / tau, t]
+                index += 16
 
-        gluSphere(sphere, r, lats, longs)
+        vbo = c_uint()
+        glGenBuffers(1, byref(vbo))
+        self.vbo = vbo.value
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        buffer = array('f', buffer)
+        glBufferData(GL_ARRAY_BUFFER, buffer.itemsize * len(buffer), array_to_ctypes(buffer),  GL_STATIC_DRAW)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-        glEnable(GL_BLEND)
-        gluDeleteQuadric(sphere)
+    def draw(self):
+        with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):
+            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_NORMAL_ARRAY)
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+            glVertexPointer(3, GL_FLOAT, 32, 0)
+            glNormalPointer(GL_FLOAT, 32, 3 * 4)
+            glTexCoordPointer(3, GL_FLOAT, 32, 6 * 4)
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.vertex_count)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
 def belt(radius, cross, object, count):

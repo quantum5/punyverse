@@ -5,7 +5,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, sphere, flare, disk, glMatrix, glRestore, belt
+from punyverse.glgeom import compile, flare, disk, glMatrix, glRestore, belt, Sphere
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
 
@@ -118,15 +118,20 @@ class Sky(Entity):
         super(Sky, self).__init__('Sky', (0, 0, 0), (pitch, yaw, roll))
         self.world = world
 
-        texture = get_best_texture(info['texture'])
+        self.texture = get_best_texture(info['texture'])
         division = info.get('division', 30)
-        self.sky_id = compile(sphere, info.get('radius', 1000000), division, division, texture,
-                              inside=True, lighting=False)
+        self.sphere = Sphere(info.get('radius', 1000000), division, division)
 
     def draw(self, options):
         cam = self.world.cam
-        with glMatrix((-cam.x, -cam.y, -cam.z), self.rotation), glRestore(GL_CURRENT_BIT):
-            glCallList(self.sky_id)
+        with glMatrix((-cam.x, -cam.y, -cam.z), self.rotation), glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
+            glEnable(GL_CULL_FACE)
+            glEnable(GL_TEXTURE_2D)
+            glDisable(GL_LIGHTING)
+
+            glCullFace(GL_FRONT)
+            glBindTexture(GL_TEXTURE_2D, self.texture)
+            self.sphere.draw()
 
 
 class Body(Entity):
@@ -258,11 +263,11 @@ class SphericalBody(Body):
         division = info.get('division', max(min(int(self.radius / 8), 60), 10))
         self.light_source = info.get('light_source', False)
 
-        texture = get_best_texture(info['texture'])
-        self.sphere_id = compile(sphere, self.radius, division, division, texture)
+        self.texture = get_best_texture(info['texture'])
+        self.sphere = Sphere(self.radius, division, division)
 
         self.atmosphere_id = 0
-        self.cloudmap_id = 0
+        self.clouds = None
         self.corona_id = 0
         self.ring_id = 0
 
@@ -273,8 +278,8 @@ class SphericalBody(Body):
             cloud_texture = atmosphere_data.get('cloud_texture', None)
             corona_texture = atmosphere_data.get('corona_texture', None)
             if cloud_texture is not None:
-                cloud_texture = get_best_texture(cloud_texture, loader=load_clouds)
-                self.cloudmap_id = compile(sphere, self.radius + 2, division, division, cloud_texture, lighting=False)
+                self.cloud_texture = get_best_texture(cloud_texture, loader=load_clouds)
+                self.clouds = Sphere(self.radius + 2, division, division)
 
             if corona_texture is not None:
                 corona = get_best_texture(corona_texture, clamp=True)
@@ -301,11 +306,23 @@ class SphericalBody(Body):
             self.ring_id = compile(disk, distance, distance + size, 30,
                                    get_best_texture(info['ring'].get('texture', None), clamp=True))
 
-    def _draw_sphere(self):
-        with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT | GL_ENABLE_BIT):
+    def _draw_sphere(self, fv4=GLfloat * 4):
+        with glMatrix(self.location, self.rotation), glRestore(GL_LIGHTING_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT):
+            glEnable(GL_CULL_FACE)
+            glCullFace(GL_BACK)
+
+            glEnable(GL_TEXTURE_2D)
+            glBindTexture(GL_TEXTURE_2D, self.texture)
+
             if self.light_source:
                 glDisable(GL_LIGHTING)
-            glCallList(self.sphere_id)
+            else:
+                glDisable(GL_BLEND)
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(1, 1, 1, 0))
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 0))
+                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
+
+            self.sphere.draw()
 
     def _draw_atmosphere(self, glMatrixBuffer=GLfloat * 16):
         with glMatrix(self.location), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT):
@@ -326,10 +343,16 @@ class SphericalBody(Body):
                 glCallList(self.corona_id)
 
     def _draw_clouds(self):
-        with glMatrix(self.location, self.rotation), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT):
+        with glMatrix(self.location, self.rotation), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
             glEnable(GL_BLEND)
             glEnable(GL_ALPHA_TEST)
-            glCallList(self.cloudmap_id)
+            glEnable(GL_CULL_FACE)
+            glDisable(GL_LIGHTING)
+            glEnable(GL_TEXTURE_2D)
+
+            glCullFace(GL_BACK)
+            glBindTexture(GL_TEXTURE_2D, self.cloud_texture)
+            self.clouds.draw()
 
     def _draw_rings(self):
         with glMatrix(self.location, self.ring_rotation), glRestore(GL_CURRENT_BIT):
@@ -341,7 +364,7 @@ class SphericalBody(Body):
         if options.atmosphere and (self.atmosphere_id or self.corona_id):
             self._draw_atmosphere()
 
-        if options.cloud and self.cloudmap_id:
+        if options.cloud and self.clouds:
             self._draw_clouds()
 
         if self.ring_id:
