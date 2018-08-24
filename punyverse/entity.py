@@ -277,7 +277,7 @@ class SphericalBody(Body):
                 self.cloudmap_id = compile(sphere, self.radius + 2, division, division, cloud_texture, lighting=False)
 
             if corona_texture is not None:
-                corona = get_best_texture(corona_texture)
+                corona = get_best_texture(corona_texture, clamp=True)
                 corona_size = atmosphere_data.get('corona_size', self.radius / 2)
                 corona_division = atmosphere_data.get('corona_division', 100)
                 corona_ratio = atmosphere_data.get('corona_ratio', 0.5)
@@ -285,7 +285,7 @@ class SphericalBody(Body):
                                          corona_ratio, corona)
 
             if atm_texture is not None:
-                atm_texture = get_best_texture(atm_texture)
+                atm_texture = get_best_texture(atm_texture, clamp=True)
                 self.atmosphere_id = compile(disk, self.radius, self.radius + atm_size, 30, atm_texture)
 
         if 'ring' in info:
@@ -299,7 +299,7 @@ class SphericalBody(Body):
             self.ring_rotation = pitch, yaw, roll
 
             self.ring_id = compile(disk, distance, distance + size, 30,
-                                   get_best_texture(info['ring'].get('texture', None)))
+                                   get_best_texture(info['ring'].get('texture', None), clamp=True))
 
     def _draw_sphere(self):
         with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT | GL_ENABLE_BIT):

@@ -170,7 +170,7 @@ def load_image(file, path):
     return path, width, height, len(raw.format), mode, flip_vertical(texture, width, height)
 
 
-def load_texture(file):
+def load_texture(file, clamp=False):
     if os.path.isabs(file):
         path = file
         file = os.path.basename(path)
@@ -188,9 +188,23 @@ def load_texture(file):
 
     glBindTexture(GL_TEXTURE_2D, id)
 
+    if gl_info.have_version(3) or gl_info.have_extension('GL_ARB_framebuffer_object'):
+        glTexImage2D(GL_TEXTURE_2D, 0, {
+            GL_RGB: GL_RGB8,
+            GL_BGR: GL_RGB8,
+            GL_RGBA: GL_RGBA8,
+            GL_BGRA: GL_RGBA8,
+        }[mode], width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
+        glGenerateMipmap(GL_TEXTURE_2D)
+    else:
+        gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-    gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
+
+    if clamp:
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
     cache[path] = id
     return id
@@ -228,11 +242,11 @@ def load_clouds(file):
     return id
 
 
-def get_best_texture(info, loader=load_texture):
+def get_best_texture(info, loader=load_texture, **kwargs):
     if isinstance(info, list):
         for item in info:
             try:
-                return loader(item)
+                return loader(item, **kwargs)
             except ValueError:
                 pass
     else:
