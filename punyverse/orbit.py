@@ -66,10 +66,11 @@ class KeplerOrbit(object):
         self.__cos_argument = cos(self._argument)
 
     def eccentric_anomaly(self, mean_anomaly):
-        e1 = mean_anomaly
-        e2 = mean_anomaly + self.eccentricity * sin(e1)
+        e1 = 0
+        e2 = mean_anomaly
         while abs(e1 - e2) > 0.000001:
-            e1, e2 = e2, mean_anomaly + self.eccentricity * sin(e2)
+            e1, e2 = e2, e2 - ((e2 - mean_anomaly - self.eccentricity * sin(e2)) /
+                               (1 - self.eccentricity * cos(e2)))
         return e2
 
     def true_anomaly(self, mean_anomaly):
