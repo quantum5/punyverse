@@ -31,7 +31,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
 
 setup(
     name='punyverse',
-    version='0.4',
+    version='0.5',
     packages=['punyverse'],
     package_data={
         'punyverse': [
