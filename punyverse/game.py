@@ -406,6 +406,7 @@ class Applet(pyglet.window.Window):
         get_distance = entity_distance(x, y, z)
         if x != world.x or y != world.y or z != world.z:
             world.tracker.sort(key=get_distance, reverse=True)
+            world.tracker.sort(key=attrgetter('background'), reverse=True)
             world.x, world.y, world.z = x, y, z
 
         for entity in world.tracker:

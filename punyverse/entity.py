@@ -18,6 +18,8 @@ G = 6.67384e-11  # Gravitation Constant
 
 
 class Entity(object):
+    background = False
+
     def __init__(self, name, location, rotation=(0, 0, 0), direction=(0, 0, 0)):
         self.name = name
         self.location = location
@@ -97,6 +99,8 @@ class Belt(Entity):
 
 
 class Sky(Entity):
+    background = True
+
     def __init__(self, world, info):
         pitch = world.evaluate(info.get('pitch', 0))
         yaw = world.evaluate(info.get('yaw', 0))
@@ -291,7 +295,7 @@ class SphericalBody(Body):
             glCallList(self.sphere_id)
 
     def _draw_atmosphere(self, cam, glMatrixBuffer=GLfloat * 16):
-        with glMatrix(self.location), glRestore(GL_ENABLE_BIT):
+        with glMatrix(self.location), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT):
             matrix = glMatrixBuffer()
             glGetFloatv(GL_MODELVIEW_MATRIX, matrix)
             matrix[0: 3] = [1, 0, 0]
@@ -299,17 +303,17 @@ class SphericalBody(Body):
             matrix[8:11] = [0, 0, 1]
             glLoadMatrixf(matrix)
 
-            glEnable(GL_BLEND)
             if self.atmosphere_id:
                 glCallList(self.atmosphere_id)
 
             if self.corona_id:
                 x, y, z = cam.direction()
                 glTranslatef(-x, -y, -z)
+                glEnable(GL_BLEND)
                 glCallList(self.corona_id)
 
     def _draw_clouds(self):
-        with glMatrix(self.location, self.rotation), glRestore(GL_ENABLE_BIT):
+        with glMatrix(self.location, self.rotation), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT):
             glEnable(GL_BLEND)
             glEnable(GL_ALPHA_TEST)
             glCallList(self.cloudmap_id)
