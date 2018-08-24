@@ -44,6 +44,8 @@ def entity_distance(x0, y0, z0):
 
 
 class Applet(pyglet.window.Window):
+    asteroids = ['asteroids/01.obj', 'asteroids/02.obj', 'asteroids/03.obj']
+
     def __init__(self, *args, **kwargs):
         self.world_options = kwargs.pop('world_options', {})
 
@@ -66,7 +68,6 @@ class Applet(pyglet.window.Window):
             ]) + '\n\n' + info
 
         self.loaded = False
-        self.__load_started = False
         self._loading_phase = pyglet.text.Label(
             font_name='Consolas', font_size=20, x=10, y=self.height - 50,
             color=(255, 255, 255, 255), width=self.width - 20, align='center',
@@ -84,23 +85,17 @@ class Applet(pyglet.window.Window):
         )
         pyglet.clock.schedule_once(self.load, 0)
 
+    def _load_callback(self, phase, message, progress):
+        print(message)
+        self.draw_loading(phase, message, progress)
+        self.flip()
+        self.dispatch_events()
+
     def load(self, *args, **kwargs):
-        if self.loaded or self.__load_started:
-            return
-
-        self.__load_started = True
-
-        def callback(phase, message, progress):
-            self.draw_loading(phase, message, progress)
-            self.flip()
-            self.dispatch_events()
-
         start = clock()
         self.fps = 0
-        self.world = World('world.json', callback, self.world_options)
-        phase = 'Initializing game...'
-        print(phase)
-        callback(phase, '', 0)
+        self.world = World('world.json', self._load_callback, self.world_options)
+        self._load_callback('Initializing game...', '', 0)
         self.speed = INITIAL_SPEED
         self.keys = set()
         self.info = True
@@ -212,23 +207,15 @@ class Applet(pyglet.window.Window):
         glLightfv(GL_LIGHT1, GL_DIFFUSE, fv4(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
 
-        phase = 'Loading asteroids...'
-        print(phase)
-
-        def load_asteroids(files):
-            for id, file in enumerate(files):
-                callback(phase, 'Loading %s...' % file, float(id) / len(files))
-                Asteroid.load_asteroid(file)
-
-        load_asteroids(['asteroids/01.obj', 'asteroids/02.obj', 'asteroids/03.obj'])
+        for id, file in enumerate(self.asteroids):
+            self._load_callback('Loading asteroids...', 'Loading %s...' % file, float(id) / len(self.asteroids))
+            Asteroid.load_asteroid(file)
 
         c = self.cam
         c.x, c.y, c.z = self.world.start
         c.pitch, c.yaw, c.roll = self.world.direction
 
-        phase = 'Updating entities...'
-        print(phase)
-        callback(phase, '', 0)
+        self._load_callback('Updating entities...', '', 0)
         for entity in self.world.tracker:
             entity.update()
 
@@ -386,7 +373,7 @@ class Applet(pyglet.window.Window):
             progress_bar(10, self.height - 140, self.width - 20, 50, progress)
         self._info_label.draw()
 
-    def on_draw(self, glMatrixBuffer=GLfloat * 16):
+    def on_draw(self):
         if not self.loaded:
             return self.draw_loading()
 
