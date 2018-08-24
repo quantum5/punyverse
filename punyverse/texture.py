@@ -111,10 +111,14 @@ def image_info(data):
     return content_type, width, height
 
 
-def max_texture_size():
+def glGetInteger(index):
     buf = c_int()
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, byref(buf))
+    glGetIntegerv(index, byref(buf))
     return buf.value
+
+
+def max_texture_size():
+    return glGetInteger(GL_MAX_TEXTURE_SIZE)
 
 
 def check_size(width, height):
@@ -205,6 +209,9 @@ def load_texture(file, clamp=False):
     if clamp:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+
+    if gl_info.have_extension('GL_EXT_texture_filter_anisotropic'):
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glGetInteger(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT))
 
     cache[path] = id
     return id
