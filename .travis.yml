@@ -1,6 +1,7 @@
 branches:
   only:
     - master
+    - /^v\d+\./
 matrix:
   include:
   - sudo: required
