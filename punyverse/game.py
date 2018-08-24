@@ -124,12 +124,12 @@ class Applet(pyglet.window.Window):
             return toggler
 
         def increment_tick():
-            index = self.ticks.index(self.tick) + 1
+            index = self.ticks.index(self.world.tick_length) + 1
             if index < len(self.ticks):
                 self.world.tick_length = self.ticks[index]
 
         def decrement_tick():
-            index = self.ticks.index(self.tick) - 1
+            index = self.ticks.index(self.world.tick_length) - 1
             if index >= 0:
                 self.world.tick_length = self.ticks[index]
 
