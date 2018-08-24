@@ -8,8 +8,6 @@ from time import clock
 import six
 
 from punyverse import texture
-from punyverse.camera import Camera
-from punyverse.entity import Asteroid
 from punyverse.glgeom import *
 from punyverse.world import World
 
@@ -28,7 +26,6 @@ from pyglet.window import key, mouse
 
 import pyglet
 
-INITIAL_SPEED = 0  # The initial speed of the player
 MOUSE_SENSITIVITY = 0.3  # Mouse sensitivity, 0..1, none...hyperspeed
 
 MAX_DELTA = 5
@@ -44,8 +41,6 @@ def entity_distance(x0, y0, z0):
 
 
 class Applet(pyglet.window.Window):
-    asteroids = ['asteroids/01.obj', 'asteroids/02.obj', 'asteroids/03.obj']
-
     def __init__(self, *args, **kwargs):
         super(Applet, self).__init__(*args, **kwargs)
         texture.init()
@@ -94,8 +89,6 @@ class Applet(pyglet.window.Window):
         self.fps = 0
         self.world = World('world.json', self._load_callback)
         self._load_callback('Initializing game...', '', 0)
-        self.speed = INITIAL_SPEED
-        self.keys = set()
         self.info = True
         self.debug = False
         self.orbit = True
@@ -105,7 +98,6 @@ class Applet(pyglet.window.Window):
         self.atmosphere = True
         self.cloud = True
 
-        self.tick = self.world.tick_length
         self.ticks = [
             1, 2, 5, 10, 20, 40, 60,  # Second range
             120, 300, 600, 1200, 1800, 2700, 3600,  # Minute range
@@ -116,9 +108,6 @@ class Applet(pyglet.window.Window):
             63072000, 157680000, 315360000,  # 2, 5, 10 years
             630720000, 1576800000, 3153600000,  # 20, 50, 100 years
         ]
-        self.__time_per_second_cache = None
-        self.__time_per_second_value = None
-        self.__time_accumulate = 0
 
         def speed_incrementer(object, increment):
             def incrementer():
@@ -135,26 +124,26 @@ class Applet(pyglet.window.Window):
             return toggler
 
         def increment_tick():
-            index = self.ticks.index(self.tick) + 1
+            index = self.ticks.index(self.world.tick_length) + 1
             if index < len(self.ticks):
-                self.tick = self.ticks[index]
+                self.world.tick_length = self.ticks[index]
 
         def decrement_tick():
-            index = self.ticks.index(self.tick) - 1
+            index = self.ticks.index(self.world.tick_length) - 1
             if index >= 0:
-                self.tick = self.ticks[index]
+                self.world.tick_length = self.ticks[index]
 
         self.key_handler = {
             key.ESCAPE: pyglet.app.exit,
-            key.NUM_ADD: speed_incrementer(self, 1),
-            key.NUM_SUBTRACT: speed_incrementer(self, -1),
-            key.NUM_MULTIPLY: speed_incrementer(self, 10),
-            key.NUM_DIVIDE: speed_incrementer(self, -10),
-            key.PAGEUP: speed_incrementer(self, 100),
-            key.PAGEDOWN: speed_incrementer(self, -100),
-            key.HOME: speed_incrementer(self, 1000),
-            key.END: speed_incrementer(self, -1000),
-            key.R: lambda: setattr(self.cam, 'roll', 0),
+            key.NUM_ADD: speed_incrementer(self.world.cam, 1),
+            key.NUM_SUBTRACT: speed_incrementer(self.world.cam, -1),
+            key.NUM_MULTIPLY: speed_incrementer(self.world.cam, 10),
+            key.NUM_DIVIDE: speed_incrementer(self.world.cam, -10),
+            key.PAGEUP: speed_incrementer(self.world.cam, 100),
+            key.PAGEDOWN: speed_incrementer(self.world.cam, -100),
+            key.HOME: speed_incrementer(self.world.cam, 1000),
+            key.END: speed_incrementer(self.world.cam, -1000),
+            key.R: self.world.cam.reset_roll,
             key.I: attribute_toggler(self, 'info'),
             key.D: attribute_toggler(self, 'debug'),
             key.O: attribute_toggler(self, 'orbit'),
@@ -164,19 +153,18 @@ class Applet(pyglet.window.Window):
             key.ENTER: attribute_toggler(self, 'running'),
             key.INSERT: increment_tick,
             key.DELETE: decrement_tick,
-            key.SPACE: self.launch_meteor,
+            key.SPACE: self.world.spawn_asteroid,
             key.E: lambda: self.set_exclusive_mouse(False),
             key.F: lambda: self.set_fullscreen(not self.fullscreen),
         }
 
         self.mouse_press_handler = {
-            mouse.LEFT: self.launch_meteor,
+            mouse.LEFT: self.world.spawn_asteroid,
             mouse.RIGHT: attribute_toggler(self, 'moving'),
         }
 
         self.label = pyglet.text.Label('', font_name='Consolas', font_size=12, x=10, y=self.height - 20,
                                        color=(255,) * 4, multiline=True, width=600)
-        self.cam = Camera()
 
         self.exclusive = False
 
@@ -204,18 +192,6 @@ class Applet(pyglet.window.Window):
         glLightfv(GL_LIGHT1, GL_POSITION, fv4(1, 0, .5, 0))
         glLightfv(GL_LIGHT1, GL_DIFFUSE, fv4(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
-
-        for id, file in enumerate(self.asteroids):
-            self._load_callback('Loading asteroids...', 'Loading %s...' % file, float(id) / len(self.asteroids))
-            Asteroid.load_asteroid(file)
-
-        c = self.cam
-        c.x, c.y, c.z = self.world.start
-        c.pitch, c.yaw, c.roll = self.world.direction
-
-        self._load_callback('Updating entities...', '', 0)
-        for entity in self.world.tracker:
-            entity.update()
 
         print('Loaded in %s seconds.' % (clock() - start))
         self.loaded = True
@@ -252,15 +228,6 @@ class Applet(pyglet.window.Window):
         super(Applet, self).set_exclusive_mouse(exclusive)
         self.exclusive = exclusive
 
-    def launch_meteor(self):
-        c = self.cam
-        dx, dy, dz = c.direction()
-        speed = abs(self.speed) * 1.1 + 5
-        dx *= speed
-        dy *= speed
-        dz *= speed
-        self.world.tracker.append(Asteroid((c.x, c.y - 3, c.z + 5), (dx, dy, dz)))
-
     def on_mouse_press(self, x, y, button, modifiers):
         self.modifiers = modifiers
         if not self.loaded:
@@ -277,7 +244,7 @@ class Applet(pyglet.window.Window):
             return
 
         if self.exclusive:  # Only handle camera movement if mouse is grabbed
-            self.cam.mouse_move(dx * MOUSE_SENSITIVITY, dy * MOUSE_SENSITIVITY)
+            self.world.cam.mouse_move(dx * MOUSE_SENSITIVITY, dy * MOUSE_SENSITIVITY)
 
     def on_key_press(self, symbol, modifiers):
         self.modifiers = modifiers
@@ -288,15 +255,19 @@ class Applet(pyglet.window.Window):
         if self.exclusive:  # Only handle keyboard input if mouse is grabbed
             if symbol in self.key_handler:
                 self.key_handler[symbol]()
-            else:
-                self.keys.add(symbol)
+            elif symbol == key.A:
+                self.world.cam.roll_left = True
+            elif symbol == key.S:
+                self.world.cam.roll_right = True
 
     def on_key_release(self, symbol, modifiers):
         if not self.loaded:
             return
 
-        if symbol in self.keys:
-            self.keys.remove(symbol)
+        if symbol == key.A:
+            self.world.cam.roll_left = False
+        elif symbol == key.S:
+            self.world.cam.roll_right = False
 
     def on_resize(self, width, height):
         if not self.loaded:
@@ -315,12 +286,10 @@ class Applet(pyglet.window.Window):
         if not self.loaded:
             return
 
-        self.speed += scroll_y * 50 + scroll_x * 500
+        self.world.cam.speed += scroll_y * 50 + scroll_x * 500
 
     def get_time_per_second(self):
-        if self.__time_per_second_cache == self.tick:
-            return self.__time_per_second_value
-        time = self.tick + .0
+        time = self.world.tick_length
         unit = 'seconds'
         for size, name in ((60, 'minutes'), (60, 'hours'), (24, 'days'), (365, 'years')):
             if time < size:
@@ -328,35 +297,10 @@ class Applet(pyglet.window.Window):
             time /= size
             unit = name
         result = '%s %s' % (round(time, 1), unit)
-        self.__time_per_second_cache = self.tick
-        self.__time_per_second_value = result
         return result
 
     def update(self, dt):
-        c = self.cam
-
-        if self.exclusive:
-            if key.A in self.keys:
-                c.roll += 4 * dt * 10
-            if key.S in self.keys:
-                c.roll -= 4 * dt * 10
-            if self.moving:
-                c.move(self.speed * 10 * dt)
-
-        if self.running:
-            delta = self.tick * dt
-            update = int(delta + self.__time_accumulate + 0.5)
-            if update:
-                self.__time_accumulate = 0
-                self.world.tick += update
-                for entity in self.world.tracker:
-                    entity.update()
-                    collision = entity.collides(c.x, c.y, c.z)
-                    if collision:
-                        self.speed *= -1
-                        c.move(self.speed * 12 * dt)
-            else:
-                self.__time_accumulate += delta
+        self.world.update(dt, move=self.exclusive and self.moving, tick=self.running)
 
     def draw_loading(self, phase=None, message=None, progress=None):
         glClear(GL_COLOR_BUFFER_BIT)
@@ -378,8 +322,7 @@ class Applet(pyglet.window.Window):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
 
-        c = self.cam
-
+        c = self.world.cam
         x, y, z = c.x, c.y, c.z
         glRotatef(c.pitch, 1, 0, 0)
         glRotatef(c.yaw, 0, 1, 0)
@@ -395,7 +338,7 @@ class Applet(pyglet.window.Window):
             world.x, world.y, world.z = x, y, z
 
         for entity in world.tracker:
-            entity.draw(c, self)
+            entity.draw(self)
 
         glColor4f(1, 1, 1, 1)
         glDisable(GL_TEXTURE_2D)
@@ -407,11 +350,11 @@ class Applet(pyglet.window.Window):
             if self.info_precise:
                 info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n'
                         'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)\nTick: %d' %
-                        (pyglet.clock.get_fps(), c.x, c.y, c.z, self.speed, self.get_time_per_second(),
+                        (pyglet.clock.get_fps(), c.x, c.y, c.z, self.world.cam.speed, self.get_time_per_second(),
                          c.pitch, c.yaw, c.roll, self.world.tick))
             else:
                 info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n' %
-                        (pyglet.clock.get_fps(), c.x, c.y, c.z, self.speed, self.get_time_per_second()))
+                        (pyglet.clock.get_fps(), c.x, c.y, c.z, self.world.cam.speed, self.get_time_per_second()))
             self.label.text = info
             self.label.draw()
             with glRestore(GL_CURRENT_BIT | GL_LINE_BIT):

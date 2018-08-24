@@ -10,6 +10,10 @@ class Camera(object):
         self.yaw = yaw
         self.roll = roll
 
+        self.speed = 0
+        self.roll_left = False
+        self.roll_right = False
+
     def move(self, speed):
         dx, dy, dz = self.direction()
         self.x += dx * speed
@@ -39,6 +43,17 @@ class Camera(object):
         dx = cos(radians(self.yaw - 90)) * m
         dz = sin(radians(self.yaw - 90)) * m
         return dx, dy, dz
+
+    def update(self, dt, move):
+        if self.roll_left:
+            self.roll += 4 * dt * 10
+        if self.roll:
+            self.roll -= 4 * dt * 10
+        if move:
+            self.move(self.speed * 10 * dt)
+
+    def reset_roll(self):
+        self.roll = 0
 
     def distance(self, x, y, z):
         return hypot(hypot(x - self.x, y - self.y), z - self.z)

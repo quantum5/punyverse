@@ -34,20 +34,14 @@ class Entity(object):
     def collides(self, x, y, z):
         return False
 
-    def draw(self, cam, options):
+    def draw(self, options):
         raise NotImplementedError()
 
 
 class Asteroid(Entity):
-    asteroid_ids = []
-
-    @classmethod
-    def load_asteroid(cls, file):
-        cls.asteroid_ids.append(model_list(load_model(file), 5, 5, 5, (0, 0, 0)))
-
-    def __init__(self, location, direction):
+    def __init__(self, asteroid_id, location, direction):
         super(Asteroid, self).__init__('Asteroid', location, direction=direction)
-        self.asteroid_id = random.choice(self.asteroid_ids)
+        self.asteroid_id = asteroid_id
 
     def update(self):
         super(Asteroid, self).update()
@@ -56,9 +50,24 @@ class Asteroid(Entity):
         # Increment all axis to 'spin' 
         self.rotation = rx + 1, ry + 1, rz + 1
 
-    def draw(self, cam, options):
+    def draw(self, options):
         with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT):
             glCallList(self.asteroid_id)
+
+
+class AsteroidManager(object):
+    def __init__(self):
+        self.asteroids = []
+
+    def __bool__(self):
+        return bool(self.asteroids)
+    __nonzero__ = __bool__
+
+    def load(self, file):
+        self.asteroids.append(model_list(load_model(file), 5, 5, 5, (0, 0, 0)))
+
+    def new(self, location, direction):
+        return Asteroid(random.choice(self.asteroids), location, direction)
 
 
 class Belt(Entity):
@@ -93,7 +102,7 @@ class Belt(Entity):
         pitch, yaw, roll = self.rotation
         self.rotation = pitch, self.world.tick * self.rotation_angle % 360, roll
 
-    def draw(self, cam, options):
+    def draw(self, options):
         with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT):
             glCallList(self.belt_id)
 
@@ -114,7 +123,8 @@ class Sky(Entity):
         self.sky_id = compile(sphere, info.get('radius', 1000000), division, division, texture,
                               inside=True, lighting=False)
 
-    def draw(self, cam, options):
+    def draw(self, options):
+        cam = self.world.cam
         with glMatrix((-cam.x, -cam.y, -cam.z), self.rotation), glRestore(GL_CURRENT_BIT):
             glCallList(self.sky_id)
 
@@ -219,18 +229,18 @@ class Body(Entity):
             glLineWidth(1)
             glCallList(self.get_orbit())
 
-    def draw(self, cam, options):
-        self._draw(cam, options)
+    def draw(self, options):
+        self._draw(options)
 
         if options.orbit and self.orbit:
-            dist = cam.distance(*self.parent.location)
+            dist = self.world.cam.distance(*self.parent.location)
             if dist < self.parent.orbit_show:
                 self._draw_orbits(dist)
 
         for satellite in self.satellites:
-            satellite.draw(cam, options)
+            satellite.draw(options)
 
-    def _draw(self, cam, options):
+    def _draw(self, options):
         raise NotImplementedError()
 
     def collides(self, x, y, z):
@@ -297,7 +307,7 @@ class SphericalBody(Body):
                 glDisable(GL_LIGHTING)
             glCallList(self.sphere_id)
 
-    def _draw_atmosphere(self, cam, glMatrixBuffer=GLfloat * 16):
+    def _draw_atmosphere(self, glMatrixBuffer=GLfloat * 16):
         with glMatrix(self.location), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT):
             matrix = glMatrixBuffer()
             glGetFloatv(GL_MODELVIEW_MATRIX, matrix)
@@ -310,7 +320,7 @@ class SphericalBody(Body):
                 glCallList(self.atmosphere_id)
 
             if self.corona_id:
-                x, y, z = cam.direction()
+                x, y, z = self.world.cam.direction()
                 glTranslatef(-x, -y, -z)
                 glEnable(GL_BLEND)
                 glCallList(self.corona_id)
@@ -325,11 +335,11 @@ class SphericalBody(Body):
         with glMatrix(self.location, self.ring_rotation), glRestore(GL_CURRENT_BIT):
             glCallList(self.ring_id)
 
-    def _draw(self, cam, options):
+    def _draw(self, options):
         self._draw_sphere()
 
         if options.atmosphere and (self.atmosphere_id or self.corona_id):
-            self._draw_atmosphere(cam)
+            self._draw_atmosphere()
 
         if options.cloud and self.cloudmap_id:
             self._draw_clouds()
@@ -352,6 +362,6 @@ class ModelBody(Body):
         self.object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
                                info.get('sz', scale), (0, 0, 0))
 
-    def _draw(self, cam, options):
+    def _draw(self, options):
         with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT):
             glCallList(self.object_id)

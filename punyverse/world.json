@@ -308,6 +308,7 @@
     "yaw": 30,
     "roll": 180
   },
+  "asteroids": ["asteroids/01.obj", "asteroids/02.obj", "asteroids/03.obj"],
   "start": {
     "z": "AU - 400",
     "yaw": 180
