@@ -9,7 +9,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range, zip
 
-from punyverse.glgeom import array_to_gl_buffer, glRestoreClient, glMatrix, glRestore
+from punyverse.glgeom import array_to_gl_buffer, glRestoreClient, glRestore
 from punyverse.texture import load_texture
 
 
@@ -221,10 +221,9 @@ class ModelVBO(object):
 
 
 class WavefrontVBO(object):
-    def __init__(self, model, sx=1, sy=1, sz=1, rotation=(0, 0, 0)):
+    def __init__(self, model, sx=1, sy=1, sz=1):
         self._tex_cache = {}
         self.vbos = []
-        self.rotation = rotation
         self.scale = (sx, sy, sz)
 
         for m, material in six.iteritems(model.materials):
@@ -239,7 +238,7 @@ class WavefrontVBO(object):
             self.vbos.append((group.material, self.process_group(group, vertices, normals, textures)))
 
     def draw(self, fv4=GLfloat * 4):
-        with glMatrix(rotation=self.rotation), glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
+        with glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
             for mat, vbo in self.vbos:
                 tex_id = self._tex_cache[mat.texture] if mat and mat.texture else 0
 

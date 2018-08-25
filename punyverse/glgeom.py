@@ -99,6 +99,59 @@ def array_to_gl_buffer(buffer, array_type='f'):
     return vbo.value
 
 
+class Matrix4f(object):
+    def __init__(self, matrix):
+        self.matrix = array('f', matrix)
+        assert len(self.matrix) == 16
+
+    @classmethod
+    def from_angles(cls, location=(0, 0, 0), rotation=(0, 0, 0), view=False):
+        m = [0] * 16
+        x, y, z = location
+        pitch, yaw, roll = rotation
+        sp, sy, sr = sin(radians(pitch)), sin(radians(yaw)), sin(radians(roll))
+        cp, cy, cr = cos(radians(pitch)), cos(radians(yaw)), cos(radians(roll))
+
+        m[0x0] = cy * cr
+        m[0x1] = sp * sy * cr + cp * sr
+        m[0x2] = sp * sr - cp * sy * cr
+        m[0x3] = 0
+        m[0x4] = -cy * sr
+        m[0x5] = cp * cr - sp * sy * sr
+        m[0x6] = cp * sy * sr + sp * cr
+        m[0x7] = 0
+        m[0x8] = sy
+        m[0x9] = -sp * cy
+        m[0xA] = cp * cy
+        m[0xB] = 0
+        if view:
+            m[0xC] = m[0x0] * -x + m[0x4] * -y + m[0x8] * -z
+            m[0xD] = m[0x1] * -x + m[0x5] * -y + m[0x9] * -z
+            m[0xE] = m[0x2] * -x + m[0x6] * -y + m[0xA] * -z
+        else:
+            m[0xC] = x
+            m[0xD] = y
+            m[0xE] = z
+        m[0xF] = 1
+        return cls(m)
+
+    def as_gl(self):
+        return array_to_ctypes(self.matrix)
+
+    @property
+    def bytes(self):
+        return self.matrix.itemsize * 16
+
+    def __mul__(self, other):
+        if not isinstance(other, Matrix4f):
+            return NotImplemented
+
+        rows = ((0, 4, 8, 12), (1, 5, 9, 13), (2, 6, 10, 14), (3, 7, 11, 15))
+        cols = ((0, 1, 2, 3), (4, 5, 6, 7), (8, 9, 10, 11), (12, 13, 14, 15))
+        a, b = self.matrix, other.matrix
+        return type(self)(sum(a[i] * b[j] for i, j in zip(r, c)) for c in cols for r in rows)
+
+
 def compile(pointer, *args, **kwargs):
     display = glGenLists(1)
     glNewList(display, GL_COMPILE)

@@ -5,10 +5,11 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, glMatrix, glRestore, belt, Sphere, Disk, OrbitVBO
+from punyverse.glgeom import compile, glMatrix, glRestore, belt, Sphere, Disk, OrbitVBO, Matrix4f
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
+from punyverse.utils import cached_property
 
 G = 6.67384e-11  # Gravitation Constant
 
@@ -16,13 +17,19 @@ G = 6.67384e-11  # Gravitation Constant
 class Entity(object):
     background = False
 
-    def __init__(self, name, location, rotation=(0, 0, 0), direction=(0, 0, 0)):
+    def __init__(self, world, name, location, rotation=(0, 0, 0), direction=(0, 0, 0)):
+        self.world = world
         self.name = name
         self.location = location
         self.rotation = rotation
         self.direction = direction
 
+    @cached_property
+    def mv_matrix(self):
+        return self.world.view_matrix() * Matrix4f.from_angles(self.location, self.rotation)
+
     def update(self):
+        self.mv_matrix = None
         x, y, z = self.location
         dx, dy, dz = self.direction
         self.location = x + dx, y + dy, z + dz
@@ -35,24 +42,25 @@ class Entity(object):
 
 
 class Asteroid(Entity):
-    def __init__(self, model, location, direction):
-        super(Asteroid, self).__init__('Asteroid', location, direction=direction)
+    def __init__(self, world, model, location, direction):
+        super(Asteroid, self).__init__(world, 'Asteroid', location, direction=direction)
         self.model = model
 
     def update(self):
         super(Asteroid, self).update()
-
         rx, ry, rz = self.rotation
         # Increment all axis to 'spin' 
         self.rotation = rx + 1, ry + 1, rz + 1
 
     def draw(self, options):
-        with glMatrix(self.location, self.rotation):
+        with glMatrix():
+            glLoadMatrixf(self.mv_matrix.as_gl())
             self.model.draw()
 
 
 class AsteroidManager(object):
-    def __init__(self):
+    def __init__(self, world):
+        self.world = world
         self.asteroids = []
 
     def __bool__(self):
@@ -60,16 +68,14 @@ class AsteroidManager(object):
     __nonzero__ = __bool__
 
     def load(self, file):
-        self.asteroids.append(WavefrontVBO(load_model(file), 5, 5, 5, (0, 0, 0)))
+        self.asteroids.append(WavefrontVBO(load_model(file), 5, 5, 5))
 
     def new(self, location, direction):
-        return Asteroid(random.choice(self.asteroids), location, direction)
+        return Asteroid(self.world, random.choice(self.asteroids), location, direction)
 
 
 class Belt(Entity):
     def __init__(self, name, world, info):
-        self.world = world
-
         x = world.evaluate(info.get('x', 0))
         y = world.evaluate(info.get('y', 0))
         z = world.evaluate(info.get('z', 0))
@@ -86,12 +92,12 @@ class Belt(Entity):
             models = [models]
 
         objects = [WavefrontVBO(load_model(model), info.get('sx', scale), info.get('sy', scale),
-                                info.get('sz', scale), (0, 0, 0)) for model in models]
+                                info.get('sz', scale)) for model in models]
 
         self.belt_id = compile(belt, radius, cross, objects, count)
         self.rotation_angle = 360.0 / rotation if rotation else 0
 
-        super(Belt, self).__init__(name, (x, y, z), (inclination, longitude, argument))
+        super(Belt, self).__init__(world, name, (x, y, z), (inclination, longitude, argument))
 
     def update(self):
         super(Belt, self).update()
@@ -99,7 +105,8 @@ class Belt(Entity):
         self.rotation = pitch, self.world.tick * self.rotation_angle % 360, roll
 
     def draw(self, options):
-        with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT):
+        with glMatrix(), glRestore(GL_CURRENT_BIT):
+            glLoadMatrixf(self.mv_matrix.as_gl())
             glCallList(self.belt_id)
 
 
@@ -111,8 +118,7 @@ class Sky(Entity):
         yaw = world.evaluate(info.get('yaw', 0))
         roll = world.evaluate(info.get('roll', 0))
 
-        super(Sky, self).__init__('Sky', (0, 0, 0), (pitch, yaw, roll))
-        self.world = world
+        super(Sky, self).__init__(world, 'Sky', (0, 0, 0), (pitch, yaw, roll))
 
         self.texture = get_best_texture(info['texture'])
         division = info.get('division', 30)
@@ -120,7 +126,9 @@ class Sky(Entity):
 
     def draw(self, options):
         cam = self.world.cam
-        with glMatrix((-cam.x, -cam.y, -cam.z), self.rotation), glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
+        with glMatrix(), glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
+            matrix = self.world.view_matrix() * Matrix4f.from_angles((-cam.x, -cam.y, -cam.z), self.rotation)
+            glLoadMatrixf(matrix.as_gl())
             glEnable(GL_CULL_FACE)
             glEnable(GL_TEXTURE_2D)
             glDisable(GL_LIGHTING)
@@ -132,7 +140,6 @@ class Sky(Entity):
 
 class Body(Entity):
     def __init__(self, name, world, info, parent=None):
-        self.world = world
         self.parent = parent
         self.satellites = []
 
@@ -151,7 +158,7 @@ class Body(Entity):
         self.orbit_blend = orbit_distance / 4
         self.orbit_opaque = orbit_distance
 
-        super(Body, self).__init__(name, (x, y, z), (pitch, yaw, roll))
+        super(Body, self).__init__(world, name, (x, y, z), (pitch, yaw, roll))
         self.initial_roll = roll
 
         self.orbit = None
@@ -180,17 +187,23 @@ class Body(Entity):
         self.orbit_vbo = None
         self.orbit_cache = None
 
+    @cached_property
+    def orbit_matrix(self):
+        return self.world.view_matrix() * Matrix4f.from_angles(self.location)
+
     def update(self):
         super(Body, self).update()
 
-        pitch, yaw, roll = self.rotation
-        roll = (self.initial_roll + self.world.tick * self.rotation_angle) % 360
-        self.rotation = pitch, yaw, roll
+        if self.rotation_angle:
+            pitch, yaw, roll = self.rotation
+            roll = (self.initial_roll + self.world.tick * self.rotation_angle) % 360
+            self.rotation = pitch, yaw, roll
 
         if self.orbit:
             px, py, pz = self.parent.location
             x, z, y = self.orbit.orbit(self.world.tick * self.orbit_speed % 360)
             self.location = (x + px, y + py, z + pz)
+            self.orbit_matrix = None
 
         for satellite in self.satellites:
             satellite.update()
@@ -212,7 +225,9 @@ class Body(Entity):
         return self.orbit_vbo
 
     def _draw_orbits(self, distance):
-        with glMatrix(self.parent.location), glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
+        with glMatrix(), glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
+            glLoadMatrixf(self.parent.orbit_matrix.as_gl())
+
             glDisable(GL_LIGHTING)
             solid = distance < self.parent.orbit_opaque
             glColor4f(1, 1, 1, 1 if solid else (1 - (distance - self.parent.orbit_opaque) / self.parent.orbit_blend))
@@ -284,7 +299,8 @@ class SphericalBody(Body):
             self.ring = Disk(distance, distance + size, 30)
 
     def _draw_sphere(self, fv4=GLfloat * 4):
-        with glMatrix(self.location, self.rotation), glRestore(GL_LIGHTING_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT):
+        with glMatrix(), glRestore(GL_LIGHTING_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT):
+            glLoadMatrixf(self.mv_matrix.as_gl())
             glEnable(GL_CULL_FACE)
             glCullFace(GL_BACK)
 
@@ -301,14 +317,11 @@ class SphericalBody(Body):
 
             self.sphere.draw()
 
-    def _draw_atmosphere(self, glMatrixBuffer=GLfloat * 16):
-        with glMatrix(self.location), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):
-            matrix = glMatrixBuffer()
-            glGetFloatv(GL_MODELVIEW_MATRIX, matrix)
-            matrix[0: 3] = [1, 0, 0]
-            matrix[4: 7] = [0, 1, 0]
-            matrix[8:11] = [0, 0, 1]
-            glLoadMatrixf(matrix)
+    def _draw_atmosphere(self):
+        with glMatrix(), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):
+            mv = self.mv_matrix.matrix
+            matrix = Matrix4f([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, mv[12], mv[13], mv[14], 1])
+            glLoadMatrixf(matrix.as_gl())
 
             glDisable(GL_LIGHTING)
             glEnable(GL_TEXTURE_2D)
@@ -319,7 +332,8 @@ class SphericalBody(Body):
             self.atmosphere.draw()
 
     def _draw_clouds(self):
-        with glMatrix(self.location, self.rotation), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+        with glMatrix(), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+            glLoadMatrixf(self.mv_matrix.as_gl())
             glEnable(GL_BLEND)
             glEnable(GL_ALPHA_TEST)
             glEnable(GL_CULL_FACE)
@@ -331,7 +345,8 @@ class SphericalBody(Body):
             self.clouds.draw()
 
     def _draw_rings(self):
-        with glMatrix(self.location, self.ring_rotation), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+        with glMatrix(), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+            glLoadMatrixf(self.mv_matrix.as_gl())
             glDisable(GL_LIGHTING)
             glEnable(GL_TEXTURE_2D)
             glEnable(GL_BLEND)
@@ -365,8 +380,9 @@ class ModelBody(Body):
 
         scale = info.get('scale', 1)
         self.vbo = WavefrontVBO(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
-                                info.get('sz', scale), (0, 0, 0))
+                                info.get('sz', scale))
 
     def _draw(self, options):
-        with glMatrix(self.location, self.rotation):
+        with glMatrix():
+            glLoadMatrixf(self.mv_matrix.as_gl())
             self.vbo.draw()
