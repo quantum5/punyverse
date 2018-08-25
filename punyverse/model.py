@@ -1,13 +1,13 @@
-from uuid import uuid4
-import os
-import gzip
 import bz2
+import gzip
+import os
 import zipfile
+from uuid import uuid4
 
 import six
-# noinspection PyUnresolvedReferences
-from six.moves import range
 from pyglet.gl import *
+# noinspection PyUnresolvedReferences
+from six.moves import range, zip
 
 from punyverse.texture import load_texture
 
@@ -23,22 +23,19 @@ openers = {
 }
 
 
-FACE_TRIANGLES = 0
-FACE_QUADS = 1
-
-
 class Face(object):
-    def __init__(self, type, verts, norms, texs, vertices, normals, textures):
-        self.type = type
+    __slots__ = ('verts', 'norms', 'texs', 'size')
+
+    def __init__(self, verts, norms, texs):
         self.verts = verts
         self.norms = norms
         self.texs = texs
-        self.vertices = vertices
-        self.normals = normals
-        self.textures = textures
+        self.size = len(verts)
 
 
 class Material(object):
+    __slots__ = ('name', 'texture', 'Ka', 'Kd', 'Ks', 'shininess')
+
     def __init__(self, name, texture=None, Ka=(0, 0, 0), Kd=(0, 0, 0), Ks=(0, 0, 0), shininess=0.0):
         self.name = name
         self.texture = texture
@@ -49,28 +46,15 @@ class Material(object):
 
 
 class Group(object):
+    __slots__ = ('name', 'material', 'faces')
+
     def __init__(self, name=None):
         if name is None:
             self.name = str(uuid4())
         else:
             self.name = name
-        self.min = ()
         self.material = None
         self.faces = []
-        self.indices = []
-        self.vertices = []
-        self.normals = []
-        self.textures = []
-        self.idx_count = 0
-
-    def pack(self):
-        min_x, min_y, min_z = 0, 0, 0
-        for face in self.faces:
-            for x, y, z in face.vertices:
-                min_x = max(min_x, abs(x))
-                min_y = max(min_y, abs(y))
-                min_z = max(min_x, abs(z))
-        self.min = (min_x, min_y, min_z)
 
 
 class WavefrontObject(object):
@@ -126,18 +110,8 @@ class WavefrontObject(object):
 
     def face(self, words):
         l = len(words)
-        type = -1
         vertex_count = l - 1
-        face_vertices = []
-        face_normals = []
-        face_textures = []
 
-        if vertex_count == 3:
-            type = FACE_TRIANGLES
-        else:
-            type = FACE_QUADS
-
-        texture_len = len(self.textures)
         vindices = []
         nindices = []
         tindices = []
@@ -146,21 +120,17 @@ class WavefrontObject(object):
             raw_faces = words[i].split(b'/')
             l = len(raw_faces)
 
-            current_value = int(raw_faces[0])
-            vindices.append(current_value - 1)
-            face_vertices.append(self.vertices[current_value - 1])
+            vindices.append(int(raw_faces[0]) - 1)
 
-            if l == 1:
-                continue
             if l >= 2 and raw_faces[1]:
-                current_value = int(raw_faces[1])
-                if current_value <= texture_len:
-                    tindices.append(current_value - 1)
-                    face_textures.append(self.textures[current_value - 1])
+                tindices.append(int(raw_faces[1]) - 1)
+            else:
+                tindices.append(None)
+
             if l >= 3 and raw_faces[2]:
-                current_value = int(raw_faces[2])
-                nindices.append(current_value - 1)
-                face_normals.append(self.normals[current_value - 1])
+                nindices.append(int(raw_faces[2]) - 1)
+            else:
+                nindices.append(None)
 
         if self.current_group is None:
             self.current_group = group = Group()
@@ -168,14 +138,7 @@ class WavefrontObject(object):
         else:
             group = self.current_group
 
-        group.vertices += face_vertices
-        group.normals += face_normals
-        group.textures += face_textures
-        idx_count = group.idx_count
-        group.indices += (idx_count + 1, idx_count + 2, idx_count + 3)
-        group.idx_count += 3
-
-        group.faces.append(Face(type, vindices, nindices, tindices, face_vertices, face_normals, face_textures))
+        group.faces.append(Face(vindices, nindices, tindices))
 
     def material(self, words):
         self.perform_io(os.path.join(self.root, words[1].decode('utf-8')))
@@ -190,11 +153,7 @@ class WavefrontObject(object):
             print("Warning: no group")
 
     def group(self, words):
-        name = words[1].decode('utf-8')
-        group = Group(name)
-
-        if self.groups:
-            self.current_group.pack()
+        group = Group(words[1].decode('utf-8'))
         self.groups.append(group)
         self.current_group = group
 
@@ -230,11 +189,8 @@ class WavefrontObject(object):
                 dispatcher.get(type, default)(words)
         return True
 
-import sys
-if hasattr(sys, 'frozen'):
-    model_base = os.path.dirname(sys.executable)
-else:
-    model_base = os.path.join(os.path.dirname(__file__), 'assets', 'models')
+
+model_base = os.path.join(os.path.dirname(__file__), 'assets', 'models')
 
 
 def load_model(path):
@@ -293,25 +249,22 @@ def model_list(model, sx=1, sy=1, sz=1, rotation=(0, 0, 0)):
                 glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(kx, ky, kz, 1))
             glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, material.shininess)
 
-        def point(f, vertices, normals, textures, n):
-            if f.norms:
-                glNormal3f(*normals[f.norms[n]])
-            if tex_id:
-                glTexCoord2f(*textures[f.texs[n]][:2])
-
+        def point(f, n, max_texture=len(textures)):
+            normal = f.norms[n]
+            if normal is not None:
+                glNormal3f(*normals[normal])
+            texture = f.texs[n]
+            if texture is not None and texture < max_texture:
+                glTexCoord2f(*textures[texture][:2])
             x, y, z = vertices[f.verts[n]]
             glVertex3f(x * sx, y * sy, z * sz)
 
         glBegin(GL_TRIANGLES)
         for f in g.faces:
-            point(f, vertices, normals, textures, 0)
-            point(f, vertices, normals, textures, 1)
-            point(f, vertices, normals, textures, 2)
-
-            if f.type == FACE_QUADS:
-                point(f, vertices, normals, textures, 2)
-                point(f, vertices, normals, textures, 3)
-                point(f, vertices, normals, textures, 0)
+            for a, b in zip(range(1, f.size), range(2, f.size)):
+                point(f, 0)
+                point(f, a)
+                point(f, b)
         glEnd()
 
         if tex_id:
