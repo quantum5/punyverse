@@ -149,7 +149,7 @@ class Disk(object):
         delta = 2 * pi / res
         self.vertex_count = (res + 1) * 2
         # Need padding to make the last vertex render correctly... why?
-        buffer = (self.vertex_count * 3 + 2) * [0]
+        buffer = self.vertex_count * 3 * [0]
         for i in range(res):
             theta = delta * i
             x, y = cos(theta), sin(theta)
@@ -163,7 +163,7 @@ class Disk(object):
             glEnableClientState(GL_VERTEX_ARRAY)
             glEnableClientState(GL_TEXTURE_COORD_ARRAY)
             glVertexPointer(3, GL_FLOAT, 12, 0)
-            glTexCoordPointer(3, GL_FLOAT, 12, 8)
+            glTexCoordPointer(1, GL_FLOAT, 12, 8)
             glDrawArrays(GL_TRIANGLE_STRIP, 0, self.vertex_count)
             glBindBuffer(GL_ARRAY_BUFFER, 0)
 
