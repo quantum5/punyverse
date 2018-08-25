@@ -1,4 +1,4 @@
-from math import sin, cos, radians, hypot
+from math import sin, cos, radians, hypot, tan
 
 from punyverse.glgeom import Matrix4f
 from punyverse.utils import cached_property
@@ -12,6 +12,11 @@ class Camera(object):
         self.pitch = pitch
         self.yaw = yaw
         self.roll = roll
+
+        self.fov = radians(45)
+        self.aspect = 1
+        self.znear = 1
+        self.zfar = 50000000
 
         self.speed = 0
         self.roll_left = False
@@ -71,3 +76,12 @@ class Camera(object):
     @cached_property
     def view_matrix(self):
         return Matrix4f.from_angles((self.x, self.y, self.z), (self.pitch, self.yaw, self.roll), view=True)
+
+    def projection_matrix(self):
+        scale_y = 1 / tan(self.fov / 2)
+        scale_x = scale_y / self.aspect
+        frustrum = self.znear - self.zfar
+        return Matrix4f([scale_x, 0, 0, 0,
+                         0, scale_y, 0, 0,
+                         0, 0, (self.znear + self.zfar) / frustrum, -1,
+                         0, 0, (2 * self.znear * self.zfar) / frustrum, 0])

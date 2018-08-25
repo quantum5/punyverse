@@ -208,13 +208,12 @@ class Punyverse(pyglet.window.Window):
             self.world.cam.roll_right = False
 
     def on_resize(self, width, height):
-        height = max(height, 1)  # Prevent / by 0
         self.label.y = height - 20
         glViewport(0, 0, width, height)
+
         glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        # A field of view of 45
-        gluPerspective(45.0, width / float(height), 1, 50000000.0)
+        self.world.resize(width, height)
+        glLoadMatrixf(self.world.projection_matrix().as_gl())
         glMatrixMode(GL_MODELVIEW)
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
