@@ -1,5 +1,5 @@
 from array import array
-from ctypes import c_int, c_float, byref, cast, POINTER, c_uint
+from ctypes import c_int, c_float, byref, cast, POINTER, c_uint, c_short, c_ushort
 from math import *
 from random import random, gauss, choice
 
@@ -84,6 +84,8 @@ def array_to_ctypes(arr):
         'f': c_float,
         'i': c_int,
         'I': c_uint,
+        'h': c_short,
+        'H': c_ushort,
     }[arr.typecode]))
 
 
@@ -219,7 +221,7 @@ def belt(radius, cross, object, count):
             if scale < 0:
                 scale = 1
             glScalef(scale, scale, scale)
-            glCallList(choice(object))
+            choice(object).draw()
 
 
 def progress_bar(x, y, width, height, filled):
