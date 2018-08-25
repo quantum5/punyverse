@@ -209,6 +209,33 @@ class Sphere(object):
             glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
+class OrbitVBO(object):
+    def __init__(self, orbit):
+        buffer = 360 * 3 * [0]
+        for theta in range(360):
+            x, z, y = orbit.orbit(theta)
+            buffer[3*theta:3*theta+3] = [x, y, z]
+
+        self.vbo = array_to_gl_buffer(buffer)
+
+    def draw(self):
+        with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):
+            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glVertexPointer(3, GL_FLOAT, 12, 0)
+            glDrawArrays(GL_LINE_LOOP, 0, 360)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+    def close(self):
+        if self.vbo is not None:
+            vbo = c_uint(self.vbo)
+            glDeleteBuffers(1, byref(vbo))
+            self.vbo = None
+
+    def __del__(self):
+        self.close()
+
+
 def belt(radius, cross, object, count):
     for i in range(count):
         theta = TWOPI * random()
