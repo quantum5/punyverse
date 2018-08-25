@@ -6,7 +6,7 @@ from pyglet.gl import *
 from six.moves import range
 
 from punyverse.glgeom import compile, glMatrix, glRestore, belt, Sphere, Disk
-from punyverse.model import model_list, load_model
+from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
 
@@ -35,9 +35,9 @@ class Entity(object):
 
 
 class Asteroid(Entity):
-    def __init__(self, asteroid_id, location, direction):
+    def __init__(self, model, location, direction):
         super(Asteroid, self).__init__('Asteroid', location, direction=direction)
-        self.asteroid_id = asteroid_id
+        self.model = model
 
     def update(self):
         super(Asteroid, self).update()
@@ -47,8 +47,8 @@ class Asteroid(Entity):
         self.rotation = rx + 1, ry + 1, rz + 1
 
     def draw(self, options):
-        with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT):
-            glCallList(self.asteroid_id)
+        with glMatrix(self.location, self.rotation):
+            self.model.draw()
 
 
 class AsteroidManager(object):
@@ -60,7 +60,7 @@ class AsteroidManager(object):
     __nonzero__ = __bool__
 
     def load(self, file):
-        self.asteroids.append(model_list(load_model(file), 5, 5, 5, (0, 0, 0)))
+        self.asteroids.append(WavefrontVBO(load_model(file), 5, 5, 5, (0, 0, 0)))
 
     def new(self, location, direction):
         return Asteroid(random.choice(self.asteroids), location, direction)
@@ -85,8 +85,8 @@ class Belt(Entity):
         if not isinstance(models, list):
             models = [models]
 
-        objects = [model_list(load_model(model), info.get('sx', scale), info.get('sy', scale),
-                              info.get('sz', scale), (0, 0, 0)) for model in models]
+        objects = [WavefrontVBO(load_model(model), info.get('sx', scale), info.get('sy', scale),
+                                info.get('sz', scale), (0, 0, 0)) for model in models]
 
         self.belt_id = compile(belt, radius, cross, objects, count)
         self.rotation_angle = 360.0 / rotation if rotation else 0
@@ -373,9 +373,9 @@ class ModelBody(Body):
         super(ModelBody, self).__init__(name, world, info, parent)
 
         scale = info.get('scale', 1)
-        self.object_id = model_list(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
-                               info.get('sz', scale), (0, 0, 0))
+        self.vbo = WavefrontVBO(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
+                                info.get('sz', scale), (0, 0, 0))
 
     def _draw(self, options):
-        with glMatrix(self.location, self.rotation), glRestore(GL_CURRENT_BIT):
-            glCallList(self.object_id)
+        with glMatrix(self.location, self.rotation):
+            self.vbo.draw()

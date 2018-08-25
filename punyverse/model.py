@@ -2,13 +2,14 @@ import bz2
 import gzip
 import os
 import zipfile
-from uuid import uuid4
+from collections import defaultdict
 
 import six
 from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range, zip
 
+from punyverse.glgeom import array_to_gl_buffer, glRestoreClient, glMatrix, glRestore
 from punyverse.texture import load_texture
 
 
@@ -46,15 +47,11 @@ class Material(object):
 
 
 class Group(object):
-    __slots__ = ('name', 'material', 'faces')
+    __slots__ = ('material', 'faces')
 
-    def __init__(self, name=None):
-        if name is None:
-            self.name = str(uuid4())
-        else:
-            self.name = name
-        self.material = None
-        self.faces = []
+    def __init__(self, material=None, faces=None):
+        self.material = material
+        self.faces = faces or []
 
 
 class WavefrontObject(object):
@@ -98,15 +95,13 @@ class WavefrontObject(object):
 
     def texture(self, words):
         l = len(words)
-        x, y, z = 0, 0, 0
+        u, v = 0, 0
         if l >= 2:
-            x = float(words[1])
+            u = float(words[1])
         if l >= 3:
             # OBJ origin is at upper left, OpenGL origin is at lower left
-            y = 1 - float(words[2])
-        if l >= 4:
-            z = float(words[3])
-        self.textures.append((x, y, z))
+            v = 1 - float(words[2])
+        self.textures.append((u, v))
 
     def face(self, words):
         l = len(words)
@@ -153,7 +148,7 @@ class WavefrontObject(object):
             print("Warning: no group")
 
     def group(self, words):
-        group = Group(words[1].decode('utf-8'))
+        group = Group()
         self.groups.append(group)
         self.current_group = group
 
@@ -201,78 +196,128 @@ def load_model(path):
     return WavefrontObject(path)
 
 
-def model_list(model, sx=1, sy=1, sz=1, rotation=(0, 0, 0)):
-    for m, text in six.iteritems(model.materials):
-        if text.texture:
-            load_texture(os.path.join(model.root, text.texture))
+class ModelVBO(object):
+    __slots__ = ('has_normal', 'has_texture', 'data_buf', 'index_buf', 'offset_type', 'vertex_count')
 
-    display = glGenLists(1)
+    def draw(self):
+        with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):
+            stride = (3 + self.has_normal * 3 + self.has_texture * 2) * 4
 
-    glNewList(display, GL_COMPILE)
-    glPushMatrix()
-    glPushAttrib(GL_CURRENT_BIT)
+            glBindBuffer(GL_ARRAY_BUFFER, self.data_buf)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.index_buf)
 
-    pitch, yaw, roll = rotation
-    glPushAttrib(GL_TRANSFORM_BIT)
-    glRotatef(pitch, 1, 0, 0)
-    glRotatef(yaw, 0, 1, 0)
-    glRotatef(roll, 0, 0, 1)
-    glPopAttrib()
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glVertexPointer(3, GL_FLOAT, stride, 0)
+            if self.has_normal:
+                glEnableClientState(GL_NORMAL_ARRAY)
+                glNormalPointer(GL_FLOAT, stride, 3 * 4)
+            if self.has_texture:
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+                glTexCoordPointer(3, GL_FLOAT, stride, (6 if self.has_normal else 3) * 4)
 
-    vertices = model.vertices
-    textures = model.textures
-    normals = model.normals
+            glDrawElements(GL_TRIANGLES, self.vertex_count, self.offset_type, 0)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
-    for g in model.groups:
-        material = g.material
 
-        tex_id = load_texture(os.path.join(model.root, material.texture)) if (material and material.texture) else 0
+class WavefrontVBO(object):
+    def __init__(self, model, sx=1, sy=1, sz=1, rotation=(0, 0, 0)):
+        self._tex_cache = {}
+        self.vbos = []
+        self.rotation = rotation
+        self.scale = (sx, sy, sz)
 
-        if tex_id:
-            glEnable(GL_TEXTURE_2D)
-            glBindTexture(GL_TEXTURE_2D, tex_id)
-        else:
-            glBindTexture(GL_TEXTURE_2D, 0)
-            glDisable(GL_TEXTURE_2D)
+        for m, material in six.iteritems(model.materials):
+            if material.texture and material.texture not in self._tex_cache:
+                self._tex_cache[material.texture] = load_texture(os.path.join(model.root, material.texture))
 
-        if material:
-            fv4 = GLfloat * 4
+        vertices = model.vertices
+        textures = model.textures
+        normals = model.normals
 
-            if material.Ka:
-                kx, ky, kz = material.Ka
-                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, fv4(kx, ky, kz, 1))
-            if material.Kd:
-                kx, ky, kz = material.Kd
-                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, fv4(kx, ky, kz, 1))
-            if material.Ks:
-                kx, ky, kz = material.Ks
-                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(kx, ky, kz, 1))
-            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, material.shininess)
+        for group in self.merge_groups(model):
+            self.vbos.append((group.material, self.process_group(group, vertices, normals, textures)))
 
-        def point(f, n, max_texture=len(textures)):
-            normal = f.norms[n]
-            if normal is not None:
-                glNormal3f(*normals[normal])
-            texture = f.texs[n]
-            if texture is not None and texture < max_texture:
-                glTexCoord2f(*textures[texture][:2])
-            x, y, z = vertices[f.verts[n]]
-            glVertex3f(x * sx, y * sy, z * sz)
+    def draw(self, fv4=GLfloat * 4):
+        with glMatrix(rotation=self.rotation), glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
+            for mat, vbo in self.vbos:
+                tex_id = self._tex_cache[mat.texture] if mat and mat.texture else 0
 
-        glBegin(GL_TRIANGLES)
-        for f in g.faces:
-            for a, b in zip(range(1, f.size), range(2, f.size)):
-                point(f, 0)
-                point(f, a)
-                point(f, b)
-        glEnd()
+                if tex_id:
+                    glEnable(GL_TEXTURE_2D)
+                    glBindTexture(GL_TEXTURE_2D, tex_id)
+                else:
+                    glBindTexture(GL_TEXTURE_2D, 0)
+                    glDisable(GL_TEXTURE_2D)
 
-        if tex_id:
-            glBindTexture(GL_TEXTURE_2D, 0)
-            glDisable(GL_TEXTURE_2D)
+                if mat:
+                    if mat.Ka:
+                        kx, ky, kz = mat.Ka
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, fv4(kx, ky, kz, 1))
+                    if mat.Kd:
+                        kx, ky, kz = mat.Kd
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, fv4(kx, ky, kz, 1))
+                    if mat.Ks:
+                        kx, ky, kz = mat.Ks
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(kx, ky, kz, 1))
+                    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mat.shininess)
 
-    glPopAttrib()
-    glPopMatrix()
+                vbo.draw()
 
-    glEndList()
-    return display
+    def merge_groups(self, model):
+        by_mat = defaultdict(list)
+        for g in model.groups:
+            if g.faces:
+                by_mat[g.material].append(g)
+
+        groups = []
+        for mat, gs in six.iteritems(by_mat):
+            faces = []
+            for g in gs:
+                faces += g.faces
+            groups.append(Group(mat, faces))
+        return groups
+
+    def process_group(self, group, vertices, normals, textures):
+        sx, sy, sz = self.scale
+        max_texture = len(textures)
+        has_texture = bool(textures) and any(any(n is not None for n in f.texs) for f in group.faces)
+        has_normal = bool(normals) and any(any(n is not None for n in f.norms) for f in group.faces)
+        buffer = []
+        indices = []
+        offsets = {}
+
+        for f in group.faces:
+            verts = []
+            for v, n, t in zip(f.verts, f.norms, f.texs):
+                # Blender defines texture coordinates on faces even without textures.
+                if t is not None and t >= max_texture:
+                    t = None
+                if (v, n, t) in offsets:
+                    verts.append(offsets[v, n, t])
+                else:
+                    index = len(offsets)
+                    verts.append(index)
+                    x, y, z = vertices[v]
+                    item = [sx * x, sy * y, sz * z]
+                    if has_normal:
+                        item += [0, 0, 0] if n is None else list(normals[n])
+                    if has_texture:
+                        item += [0, 0] if t is None else list(textures[t])
+                    offsets[v, n, t] = index
+                    buffer += item
+
+            for a, b in zip(verts[1:], verts[2:]):
+                indices += [verts[0], a, b]
+
+        result = ModelVBO()
+        result.has_normal = has_normal
+        result.has_texture = has_texture
+        result.offset_type = GL_UNSIGNED_SHORT if len(offsets) < 65536 else GL_UNSIGNED_INT
+        result.data_buf = array_to_gl_buffer(buffer, 'f')
+        result.index_buf = array_to_gl_buffer(indices, {
+            GL_UNSIGNED_SHORT: 'H',
+            GL_UNSIGNED_INT: 'I',
+        }[result.offset_type])
+        result.vertex_count = len(indices)
+        return result
