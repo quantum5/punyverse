@@ -5,7 +5,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, glMatrix, glRestore, belt, Sphere, Disk
+from punyverse.glgeom import compile, glMatrix, glRestore, belt, Sphere, Disk, OrbitVBO
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
@@ -177,7 +177,7 @@ class Body(Entity):
         self.rotation_angle = 360.0 / rotation if rotation else 0
 
         # Orbit calculation
-        self.orbit_id = None
+        self.orbit_vbo = None
         self.orbit_cache = None
 
     def update(self):
@@ -202,23 +202,14 @@ class Body(Entity):
         # Cache key is the three orbital plane parameters and eccentricity
         cache = (self.orbit.eccentricity, self.orbit.longitude, self.orbit.inclination, self.orbit.argument)
         if self.orbit_cache == cache:
-            return self.orbit_id
+            return self.orbit_vbo
 
-        if self.orbit_id is not None:
-            glDeleteLists(self.orbit_id, 1)
+        if self.orbit_vbo is not None:
+            self.orbit_vbo.close()
 
-        id = glGenLists(1)
-        glNewList(id, GL_COMPILE)
-        glBegin(GL_LINE_LOOP)
-        for theta in range(360):
-            x, z, y = self.orbit.orbit(theta)
-            glVertex3f(x, y, z)
-        glEnd()
-        glEndList()
-
-        self.orbit_id = id
+        self.orbit_vbo = OrbitVBO(self.orbit)
         self.orbit_cache = cache
-        return id
+        return self.orbit_vbo
 
     def _draw_orbits(self, distance):
         with glMatrix(self.parent.location), glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
@@ -228,7 +219,7 @@ class Body(Entity):
             if not solid:
                 glEnable(GL_BLEND)
             glLineWidth(1)
-            glCallList(self.get_orbit())
+            self.get_orbit().draw()
 
     def draw(self, options):
         self._draw(options)
