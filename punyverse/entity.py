@@ -5,7 +5,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, flare, disk, glMatrix, glRestore, belt, Sphere
+from punyverse.glgeom import compile, glMatrix, glRestore, belt, Sphere, Disk
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
 
@@ -266,32 +266,22 @@ class SphericalBody(Body):
         self.texture = get_best_texture(info['texture'])
         self.sphere = Sphere(self.radius, division, division)
 
-        self.atmosphere_id = 0
+        self.atmosphere = None
         self.clouds = None
-        self.corona_id = 0
-        self.ring_id = 0
+        self.ring = 0
 
         if 'atmosphere' in info:
             atmosphere_data = info['atmosphere']
             atm_size = world.evaluate(atmosphere_data.get('diffuse_size', None))
             atm_texture = atmosphere_data.get('diffuse_texture', None)
             cloud_texture = atmosphere_data.get('cloud_texture', None)
-            corona_texture = atmosphere_data.get('corona_texture', None)
             if cloud_texture is not None:
                 self.cloud_texture = get_best_texture(cloud_texture, loader=load_clouds)
                 self.clouds = Sphere(self.radius + 2, division, division)
 
-            if corona_texture is not None:
-                corona = get_best_texture(corona_texture, clamp=True)
-                corona_size = atmosphere_data.get('corona_size', self.radius / 2)
-                corona_division = atmosphere_data.get('corona_division', 100)
-                corona_ratio = atmosphere_data.get('corona_ratio', 0.5)
-                self.corona_id = compile(flare, self.radius, self.radius + corona_size, corona_division,
-                                         corona_ratio, corona)
-
             if atm_texture is not None:
-                atm_texture = get_best_texture(atm_texture, clamp=True)
-                self.atmosphere_id = compile(disk, self.radius, self.radius + atm_size, 30, atm_texture)
+                self.atm_texture = get_best_texture(atm_texture, clamp=True)
+                self.atmosphere = Disk(self.radius, self.radius + atm_size, 30)
 
         if 'ring' in info:
             distance = world.evaluate(info['ring'].get('distance', self.radius * 1.2))
@@ -303,8 +293,8 @@ class SphericalBody(Body):
             roll = world.evaluate(info['ring'].get('roll', roll))
             self.ring_rotation = pitch, yaw, roll
 
-            self.ring_id = compile(disk, distance, distance + size, 30,
-                                   get_best_texture(info['ring'].get('texture', None), clamp=True))
+            self.ring_texture = get_best_texture(info['ring'].get('texture', None), clamp=True)
+            self.ring = Disk(distance, distance + size, 30)
 
     def _draw_sphere(self, fv4=GLfloat * 4):
         with glMatrix(self.location, self.rotation), glRestore(GL_LIGHTING_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT):
@@ -325,7 +315,7 @@ class SphericalBody(Body):
             self.sphere.draw()
 
     def _draw_atmosphere(self, glMatrixBuffer=GLfloat * 16):
-        with glMatrix(self.location), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT):
+        with glMatrix(self.location), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):
             matrix = glMatrixBuffer()
             glGetFloatv(GL_MODELVIEW_MATRIX, matrix)
             matrix[0: 3] = [1, 0, 0]
@@ -333,14 +323,13 @@ class SphericalBody(Body):
             matrix[8:11] = [0, 0, 1]
             glLoadMatrixf(matrix)
 
-            if self.atmosphere_id:
-                glCallList(self.atmosphere_id)
+            glDisable(GL_LIGHTING)
+            glEnable(GL_TEXTURE_2D)
+            glEnable(GL_BLEND)
+            glDisable(GL_CULL_FACE)
 
-            if self.corona_id:
-                x, y, z = self.world.cam.direction()
-                glTranslatef(-x, -y, -z)
-                glEnable(GL_BLEND)
-                glCallList(self.corona_id)
+            glBindTexture(GL_TEXTURE_2D, self.atm_texture)
+            self.atmosphere.draw()
 
     def _draw_clouds(self):
         with glMatrix(self.location, self.rotation), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
@@ -355,19 +344,25 @@ class SphericalBody(Body):
             self.clouds.draw()
 
     def _draw_rings(self):
-        with glMatrix(self.location, self.ring_rotation), glRestore(GL_CURRENT_BIT):
-            glCallList(self.ring_id)
+        with glMatrix(self.location, self.ring_rotation), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+            glDisable(GL_LIGHTING)
+            glEnable(GL_TEXTURE_2D)
+            glEnable(GL_BLEND)
+            glDisable(GL_CULL_FACE)
+
+            glBindTexture(GL_TEXTURE_2D, self.ring_texture)
+            self.ring.draw()
 
     def _draw(self, options):
         self._draw_sphere()
 
-        if options.atmosphere and (self.atmosphere_id or self.corona_id):
+        if options.atmosphere and self.atmosphere:
             self._draw_atmosphere()
 
         if options.cloud and self.clouds:
             self._draw_clouds()
 
-        if self.ring_id:
+        if self.ring:
             self._draw_rings()
 
     def _collides(self, x, y, z):

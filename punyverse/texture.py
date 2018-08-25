@@ -257,5 +257,5 @@ def get_best_texture(info, loader=load_texture, **kwargs):
             except ValueError:
                 pass
     else:
-        return loader(info)
+        return loader(info, **kwargs)
     raise ValueError('No texture found')
