@@ -5,7 +5,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, glMatrix, glRestore, belt, Sphere, Disk, OrbitVBO, Matrix4f
+from punyverse.glgeom import compile, glRestore, belt, Sphere, Disk, OrbitVBO, Matrix4f
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
@@ -53,9 +53,8 @@ class Asteroid(Entity):
         self.rotation = rx + 1, ry + 1, rz + 1
 
     def draw(self, options):
-        with glMatrix():
-            glLoadMatrixf(self.mv_matrix.as_gl())
-            self.model.draw()
+        glLoadMatrixf(self.mv_matrix.as_gl())
+        self.model.draw()
 
 
 class AsteroidManager(object):
@@ -105,9 +104,8 @@ class Belt(Entity):
         self.rotation = pitch, self.world.tick * self.rotation_angle % 360, roll
 
     def draw(self, options):
-        with glMatrix(), glRestore(GL_CURRENT_BIT):
-            glLoadMatrixf(self.mv_matrix.as_gl())
-            glCallList(self.belt_id)
+        glLoadMatrixf(self.mv_matrix.as_gl())
+        glCallList(self.belt_id)
 
 
 class Sky(Entity):
@@ -126,7 +124,7 @@ class Sky(Entity):
 
     def draw(self, options):
         cam = self.world.cam
-        with glMatrix(), glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
+        with glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
             matrix = self.world.view_matrix() * Matrix4f.from_angles((-cam.x, -cam.y, -cam.z), self.rotation)
             glLoadMatrixf(matrix.as_gl())
             glEnable(GL_CULL_FACE)
@@ -225,7 +223,7 @@ class Body(Entity):
         return self.orbit_vbo
 
     def _draw_orbits(self, distance):
-        with glMatrix(), glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
+        with glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
             glLoadMatrixf(self.parent.orbit_matrix.as_gl())
 
             glDisable(GL_LIGHTING)
@@ -299,7 +297,7 @@ class SphericalBody(Body):
             self.ring = Disk(distance, distance + size, 30)
 
     def _draw_sphere(self, fv4=GLfloat * 4):
-        with glMatrix(), glRestore(GL_LIGHTING_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT):
+        with glRestore(GL_LIGHTING_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT):
             glLoadMatrixf(self.mv_matrix.as_gl())
             glEnable(GL_CULL_FACE)
             glCullFace(GL_BACK)
@@ -318,7 +316,7 @@ class SphericalBody(Body):
             self.sphere.draw()
 
     def _draw_atmosphere(self):
-        with glMatrix(), glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):
+        with glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):
             mv = self.mv_matrix.matrix
             matrix = Matrix4f([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, mv[12], mv[13], mv[14], 1])
             glLoadMatrixf(matrix.as_gl())
@@ -332,7 +330,7 @@ class SphericalBody(Body):
             self.atmosphere.draw()
 
     def _draw_clouds(self):
-        with glMatrix(), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+        with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
             glLoadMatrixf(self.mv_matrix.as_gl())
             glEnable(GL_BLEND)
             glEnable(GL_ALPHA_TEST)
@@ -345,7 +343,7 @@ class SphericalBody(Body):
             self.clouds.draw()
 
     def _draw_rings(self):
-        with glMatrix(), glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
+        with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
             glLoadMatrixf(self.mv_matrix.as_gl())
             glDisable(GL_LIGHTING)
             glEnable(GL_TEXTURE_2D)
@@ -383,6 +381,5 @@ class ModelBody(Body):
                                 info.get('sz', scale))
 
     def _draw(self, options):
-        with glMatrix():
-            glLoadMatrixf(self.mv_matrix.as_gl())
-            self.vbo.draw()
+        glLoadMatrixf(self.mv_matrix.as_gl())
+        self.vbo.draw()
