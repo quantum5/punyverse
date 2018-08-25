@@ -23,7 +23,7 @@ class World(object):
         self.z = None
         self.tick_length = 0
         self.tick = 0
-        self.asteroids = AsteroidManager()
+        self.asteroids = AsteroidManager(self)
         self.cam = Camera()
 
         self.callback = callback
@@ -143,3 +143,6 @@ class World(object):
                         c.move(c.speed * 12 * dt)
             else:
                 self._time_accumulate += delta
+
+    def view_matrix(self):
+        return self.cam.view_matrix

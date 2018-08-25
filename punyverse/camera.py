@@ -1,5 +1,8 @@
 from math import sin, cos, radians, hypot
 
+from punyverse.glgeom import Matrix4f
+from punyverse.utils import cached_property
+
 
 class Camera(object):
     def __init__(self, x=0, y=0, z=0, pitch=0, yaw=0, roll=0):
@@ -20,6 +23,8 @@ class Camera(object):
         self.y += dy * speed
         self.z += dz * speed
 
+        self.view_matrix = None
+
     def mouse_move(self, dx, dy):
         if self.pitch > 90 or self.pitch < -90:
             dx = -dx
@@ -36,6 +41,8 @@ class Camera(object):
         elif self.pitch > 180:
             self.pitch -= 360
 
+        self.view_matrix = None
+
     def direction(self):
         m = cos(radians(self.pitch))
 
@@ -46,14 +53,21 @@ class Camera(object):
 
     def update(self, dt, move):
         if self.roll_left:
-            self.roll += 4 * dt * 10
-        if self.roll:
             self.roll -= 4 * dt * 10
+            self.view_matrix = None
+        if self.roll_right:
+            self.roll += 4 * dt * 10
+            self.view_matrix = None
         if move:
             self.move(self.speed * 10 * dt)
 
     def reset_roll(self):
         self.roll = 0
+        self.view_matrix = None
 
     def distance(self, x, y, z):
         return hypot(hypot(x - self.x, y - self.y), z - self.z)
+
+    @cached_property
+    def view_matrix(self):
+        return Matrix4f.from_angles((self.x, self.y, self.z), (self.pitch, self.yaw, self.roll), view=True)

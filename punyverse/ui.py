@@ -236,14 +236,10 @@ class Punyverse(pyglet.window.Window):
 
     def on_draw(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glLoadIdentity()
+        glLoadMatrixf(self.world.view_matrix().as_gl())
 
         c = self.world.cam
         x, y, z = c.x, c.y, c.z
-        glRotatef(c.pitch, 1, 0, 0)
-        glRotatef(c.yaw, 0, 1, 0)
-        glRotatef(c.roll, 0, 0, 1)
-        glTranslatef(-x, -y, -z)
 
         glEnable(GL_LIGHTING)
         world = self.world
