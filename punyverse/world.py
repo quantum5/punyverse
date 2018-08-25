@@ -31,6 +31,7 @@ class World(object):
         del self.callback  # So it can't be used after loading finishes
 
         self._time_accumulate = 0
+        self._projection_matrix = self.cam.projection_matrix()
 
         for entity in self.tracker:
             entity.update()
@@ -146,3 +147,10 @@ class World(object):
 
     def view_matrix(self):
         return self.cam.view_matrix
+
+    def projection_matrix(self):
+        return self._projection_matrix
+
+    def resize(self, width, height):
+        self.cam.aspect = width / max(height, 1)
+        self._projection_matrix = self.cam.projection_matrix()
