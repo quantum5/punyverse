@@ -207,6 +207,7 @@ def load_texture(file, clamp=False):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
 
     if clamp:
+        print('Clamped')
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
@@ -257,5 +258,5 @@ def get_best_texture(info, loader=load_texture, **kwargs):
             except ValueError:
                 pass
     else:
-        return loader(info)
+        return loader(info, **kwargs)
     raise ValueError('No texture found')

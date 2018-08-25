@@ -9,8 +9,8 @@ from six.moves import range
 
 TWOPI = pi * 2
 
-__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'disk', 'Sphere', 'belt',
-           'flare', 'glSection', 'glMatrix', 'glRestore', 'progress_bar']
+__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'Sphere', 'belt',
+           'glSection', 'glMatrix', 'glRestore', 'progress_bar']
 
 
 class glContext(object):
@@ -79,6 +79,24 @@ class glMatrix(object):
         glPopMatrix()
 
 
+def array_to_ctypes(arr):
+    return cast(arr.buffer_info()[0], POINTER({
+        'f': c_float,
+        'i': c_int,
+        'I': c_uint,
+    }[arr.typecode]))
+
+
+def array_to_gl_buffer(buffer, array_type='f'):
+    vbo = c_uint()
+    glGenBuffers(1, byref(vbo))
+    glBindBuffer(GL_ARRAY_BUFFER, vbo.value)
+    buffer = array(array_type, buffer)
+    glBufferData(GL_ARRAY_BUFFER, buffer.itemsize * len(buffer), array_to_ctypes(buffer), GL_STATIC_DRAW)
+    glBindBuffer(GL_ARRAY_BUFFER, 0)
+    return vbo.value
+
+
 def compile(pointer, *args, **kwargs):
     display = glGenLists(1)
     glNewList(display, GL_COMPILE)
@@ -125,69 +143,29 @@ def circle(r, seg, coords):
             glVertex2f(cx + cos(theta) * r, cy + sin(theta) * r)
 
 
-def disk(rinner, router, segs, tex):
-    with glRestore(GL_ENABLE_BIT):
-        glEnable(GL_TEXTURE_2D)
-        glEnable(GL_BLEND)
-        glDisable(GL_LIGHTING)
-        glDisable(GL_CULL_FACE)
-        glBindTexture(GL_TEXTURE_2D, tex)
+class Disk(object):
+    def __init__(self, rinner, router, segs):
         res = segs * 5
+        delta = 2 * pi / res
+        self.vertex_count = (res + 1) * 2
+        # Need padding to make the last vertex render correctly... why?
+        buffer = (self.vertex_count * 3 + 2) * [0]
+        for i in range(res):
+            theta = delta * i
+            x, y = cos(theta), sin(theta)
+            buffer[6*i:6*i+6] = [rinner * x, rinner * y, 0, router * x, router * y, 1]
+        buffer[6*res:6*res+6] = buffer[:6]
+        self.vbo = array_to_gl_buffer(buffer)
 
-        with glSection(GL_TRIANGLE_STRIP):
-            factor = TWOPI / res
-            theta = 0
-            for n in range(res + 1):
-                theta += factor
-                x = cos(theta)
-                y = sin(theta)
-                glTexCoord2f(0, 0)
-                glVertex2f(rinner * x, rinner * y)
-                glTexCoord2f(1, 0)
-                glVertex2f(router * x, router * y)
-
-
-def flare(rinner, router, res, prob, tex):
-    with glRestore(GL_ENABLE_BIT):
-        glEnable(GL_TEXTURE_2D)
-        glDisable(GL_CULL_FACE)
-        glDisable(GL_LIGHTING)
-        glBindTexture(GL_TEXTURE_2D, tex)
-        last_x = 1
-        last_y = 0
-        last_theta = 0
-        factor = TWOPI / res
-        rdelta = (router - rinner)
-        with glSection(GL_QUADS):
-            for i in range(res + 1):
-                theta = last_theta + factor
-                x = cos(theta)
-                y = sin(theta)
-                if random() > prob:
-                    distance = rinner + rdelta * random()
-                    avg_theta = (last_theta + theta) / 2
-                    x0, y0 = rinner * last_x, rinner * last_y
-                    x1, y1 = rinner * x, rinner * y
-                    x2, y2 = distance * cos(avg_theta), distance * sin(avg_theta)
-                    glTexCoord2f(0, 0)
-                    glVertex2f(x0, y0)
-                    glTexCoord2f(0, 1)
-                    glVertex2f(x1, y1)
-                    glTexCoord2f(1, 0)
-                    glVertex2f(x2, y2)
-                    glTexCoord2f(1, 1)
-                    glVertex2f(x2, y2)
-                last_theta = theta
-                last_x = x
-                last_y = y
-
-
-def array_to_ctypes(arr):
-    return cast(arr.buffer_info()[0], POINTER({
-        'f': c_float,
-        'i': c_int,
-        'I': c_uint,
-    }[arr.typecode]))
+    def draw(self):
+        with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):
+            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+            glVertexPointer(3, GL_FLOAT, 12, 0)
+            glTexCoordPointer(3, GL_FLOAT, 12, 8)
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.vertex_count)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
 class Sphere(object):
@@ -214,13 +192,7 @@ class Sphere(object):
                                             r * dx2, r * dy2, r * dz, dx2, dy2, dz, phi1 / tau, t]
                 index += 16
 
-        vbo = c_uint()
-        glGenBuffers(1, byref(vbo))
-        self.vbo = vbo.value
-        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-        buffer = array('f', buffer)
-        glBufferData(GL_ARRAY_BUFFER, buffer.itemsize * len(buffer), array_to_ctypes(buffer),  GL_STATIC_DRAW)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        self.vbo = array_to_gl_buffer(buffer)
 
     def draw(self):
         with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):

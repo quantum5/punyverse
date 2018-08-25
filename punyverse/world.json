@@ -23,10 +23,6 @@
       "rotation": 2164320,
       "light_source": true,
       "atmosphere": {
-        "corona_texture": "sun_corona.png",
-        "corona_size": 1500,
-        "corona_division": 100,
-        "corona_prob": 0.5,
         "diffuse_texture": "sun_diffuse.png",
         "diffuse_size": 300
       }
