@@ -6,13 +6,9 @@ from pyglet.gl import *
 from six.moves import range
 
 from punyverse.glgeom import compile, glMatrix, glRestore, belt, Sphere, Disk
+from punyverse.model import model_list, load_model
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
-
-try:
-    from punyverse._model import model_list, load_model
-except ImportError:
-    from punyverse.model import model_list, load_model
 
 G = 6.67384e-11  # Gravitation Constant
 

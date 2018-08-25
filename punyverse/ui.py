@@ -11,11 +11,6 @@ from pyglet.window import key, mouse
 
 from punyverse.glgeom import *
 
-try:
-    from punyverse._model import model_list, load_model
-except ImportError:
-    from punyverse.model import model_list, load_model
-
 MOUSE_SENSITIVITY = 0.3  # Mouse sensitivity, 0..1, none...hyperspeed
 
 MAX_DELTA = 5

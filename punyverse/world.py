@@ -10,11 +10,6 @@ from punyverse import texture
 from punyverse.camera import Camera
 from punyverse.entity import *
 
-try:
-    from punyverse._model import model_list, load_model
-except ImportError:
-    from punyverse.model import model_list, load_model
-
 
 def load_world(file, callback=lambda message, completion: None):
     return World(file, callback)
