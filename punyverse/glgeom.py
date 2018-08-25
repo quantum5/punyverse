@@ -10,7 +10,7 @@ from six.moves import range
 TWOPI = pi * 2
 
 __all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'Sphere', 'belt',
-           'glSection', 'glMatrix', 'glRestore', 'progress_bar']
+           'glSection', 'glRestore', 'progress_bar']
 
 
 class glContext(object):
@@ -56,27 +56,6 @@ class glRestoreClient(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         glPopClientAttrib()
-
-
-class glMatrix(object):
-    def __init__(self, location=None, rotation=None):
-        self.location = location
-        self.rotation = rotation
-
-    def __enter__(self):
-        glPushMatrix()
-
-        if self.location:
-            glTranslatef(*self.location)
-
-        if self.rotation:
-            pitch, yaw, roll = self.rotation
-            glRotatef(pitch, 1, 0, 0)
-            glRotatef(yaw, 0, 1, 0)
-            glRotatef(roll, 0, 0, 1)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        glPopMatrix()
 
 
 def array_to_ctypes(arr):
@@ -295,13 +274,14 @@ def belt(radius, cross, object, count):
         r = gauss(radius, cross)
         x, y, z = cos(theta) * r, gauss(0, cross), sin(theta) * r
 
-        with glMatrix():
-            glTranslatef(x, y, z)
-            scale = gauss(1, 0.5)
-            if scale < 0:
-                scale = 1
-            glScalef(scale, scale, scale)
-            choice(object).draw()
+        glPushMatrix()
+        glTranslatef(x, y, z)
+        scale = gauss(1, 0.5)
+        if scale < 0:
+            scale = 1
+        glScalef(scale, scale, scale)
+        choice(object).draw()
+        glPopMatrix()
 
 
 def progress_bar(x, y, width, height, filled):
