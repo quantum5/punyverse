@@ -58,7 +58,7 @@ class Asteroid(Entity):
         self.rotation = rx + 1, ry + 1, rz + 1
 
     def draw(self, options):
-        glLoadMatrixf(self.mv_matrix.as_gl())
+        glLoadMatrixf(self.mv_matrix)
         self.model.draw()
 
 
@@ -109,7 +109,7 @@ class Belt(Entity):
         self.rotation = pitch, self.world.tick * self.rotation_angle % 360, roll
 
     def draw(self, options):
-        glLoadMatrixf(self.mv_matrix.as_gl())
+        glLoadMatrixf(self.mv_matrix)
         glCallList(self.belt_id)
 
 
@@ -239,7 +239,7 @@ class Body(Entity):
 
     def _draw_orbits(self, distance):
         with glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
-            glLoadMatrixf(self.parent.orbit_matrix.as_gl())
+            glLoadMatrixf(self.parent.orbit_matrix)
 
             glDisable(GL_LIGHTING)
             solid = distance < self.parent.orbit_opaque
@@ -425,7 +425,7 @@ class SphericalBody(Body):
         with glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):
             mv = self.mv_matrix.matrix
             matrix = Matrix4f([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, mv[12], mv[13], mv[14], 1])
-            glLoadMatrixf(matrix.as_gl())
+            glLoadMatrixf(matrix)
 
             glDisable(GL_LIGHTING)
             glEnable(GL_TEXTURE_2D)
@@ -437,7 +437,7 @@ class SphericalBody(Body):
 
     def _draw_clouds(self):
         with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
-            glLoadMatrixf(self.mv_matrix.as_gl())
+            glLoadMatrixf(self.mv_matrix)
             glEnable(GL_BLEND)
             glEnable(GL_ALPHA_TEST)
             glEnable(GL_CULL_FACE)
@@ -450,7 +450,7 @@ class SphericalBody(Body):
 
     def _draw_rings(self):
         with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
-            glLoadMatrixf(self.mv_matrix.as_gl())
+            glLoadMatrixf(self.mv_matrix)
             glDisable(GL_LIGHTING)
             glEnable(GL_TEXTURE_2D)
             glEnable(GL_BLEND)
@@ -487,5 +487,5 @@ class ModelBody(Body):
                                 info.get('sz', scale))
 
     def _draw(self, options):
-        glLoadMatrixf(self.mv_matrix.as_gl())
+        glLoadMatrixf(self.mv_matrix)
         self.vbo.draw()
