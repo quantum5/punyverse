@@ -5,7 +5,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, glRestore, belt, Sphere, Disk, OrbitVBO, Matrix4f, SimpleSphere
+from punyverse.glgeom import compile, glRestore, belt, Sphere, Disk, OrbitVBO, Matrix4f, SimpleSphere, TangentSphere
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
@@ -25,10 +25,15 @@ class Entity(object):
         self.direction = direction
 
     @cached_property
+    def model_matrix(self):
+        return Matrix4f.from_angles(self.location, self.rotation)
+
+    @cached_property
     def mv_matrix(self):
-        return self.world.view_matrix() * Matrix4f.from_angles(self.location, self.rotation)
+        return self.world.view_matrix() * self.model_matrix
 
     def update(self):
+        self.model_matrix = None
         self.mv_matrix = None
         x, y, z = self.location
         dx, dy, dz = self.direction
@@ -266,15 +271,27 @@ class Body(Entity):
 
 
 class SphericalBody(Body):
+    _sphere_cache = {}
+
+    @classmethod
+    def _get_sphere(cls, division):
+        if division in cls._sphere_cache:
+            return cls._sphere_cache[division]
+        cls._sphere_cache[division] = sphere = TangentSphere(division, division)
+        return sphere
+
     def __init__(self, name, world, info, parent=None):
         super(SphericalBody, self).__init__(name, world, info, parent)
 
         self.radius = world.evaluate(info.get('radius', world.length)) / world.length
         division = info.get('division', max(min(int(self.radius / 8), 60), 10))
-        self.light_source = info.get('light_source', False)
 
-        self.texture = get_best_texture(info['texture'])
-        self.sphere = Sphere(self.radius, division, division)
+        self.light_source = info.get('light_source', False)
+        self.shininess = info.get('shininess', 0)
+        self.type = info.get('type', 'planet')
+
+        self.diffuse_texture = get_best_texture(info['texture'])
+        self.sphere = self._get_sphere(division)
 
         self.atmosphere = None
         self.clouds = None
@@ -306,24 +323,47 @@ class SphericalBody(Body):
             self.ring_texture = get_best_texture(info['ring'].get('texture', None), clamp=True)
             self.ring = Disk(distance, distance + size, 30)
 
-    def _draw_sphere(self, fv4=GLfloat * 4):
-        with glRestore(GL_LIGHTING_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT):
-            glLoadMatrixf(self.mv_matrix.as_gl())
-            glEnable(GL_CULL_FACE)
-            glCullFace(GL_BACK)
+    def _draw_planet(self):
+        shader = self.world.activate_shader('planet')
+        shader.uniform_float('u_radius', self.radius)
+        shader.uniform_mat4('u_modelMatrix', self.model_matrix)
+        shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
+        shader.uniform_mat4('u_mvpMatrix', self.world.vp_matrix * self.model_matrix)
 
-            glEnable(GL_TEXTURE_2D)
-            glBindTexture(GL_TEXTURE_2D, self.texture)
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.diffuse_texture)
+        shader.uniform_bool('u_planet.hasDiffuse', True)
+        shader.uniform_texture('u_planet.diffuseMap', 0)
 
-            if self.light_source:
-                glDisable(GL_LIGHTING)
-            else:
-                glDisable(GL_BLEND)
-                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, fv4(1, 1, 1, 0))
-                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(1, 1, 1, 0))
-                glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 125)
+        shader.uniform_bool('u_planet.hasNormal', False)
+        shader.uniform_bool('u_planet.hasSpecular', False)
+        shader.uniform_bool('u_planet.hasEmission', False)
 
-            self.sphere.draw()
+        shader.uniform_vec3('u_planet.ambient', 1, 1, 1)
+        shader.uniform_vec3('u_planet.diffuse', 1, 1, 1)
+        shader.uniform_vec3('u_planet.specular', 0, 0, 0)
+        shader.uniform_vec3('u_planet.emission', 0, 0, 0)
+
+        shader.uniform_float('u_planet.shininess', 0)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
+        shader.vertex_attribute('a_normal', self.sphere.direction_size, self.sphere.type, GL_FALSE,
+                                self.sphere.stride, self.sphere.direction_offset)
+        shader.vertex_attribute('a_tangent', self.sphere.tangent_size, self.sphere.type, GL_FALSE,
+                                self.sphere.stride, self.sphere.tangent_offset)
+        shader.vertex_attribute('a_uv', self.sphere.uv_size, self.sphere.type, GL_FALSE,
+                                self.sphere.stride, self.sphere.uv_offset)
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
+
+        shader.deactivate_attributes()
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        self.world.activate_shader(None)
+        glActiveTexture(GL_TEXTURE0)
+
+    def _draw_sphere(self):
+        if self.type == 'planet':
+            self._draw_planet()
 
     def _draw_atmosphere(self):
         with glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):

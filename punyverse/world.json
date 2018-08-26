@@ -22,6 +22,7 @@
       "mass": 1.9891e+30,
       "rotation": 2164320,
       "light_source": true,
+      "type": "star",
       "atmosphere": {
         "diffuse_texture": "sun_diffuse.png",
         "diffuse_size": 300
