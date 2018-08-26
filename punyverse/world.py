@@ -19,7 +19,8 @@ def load_world(file, callback=lambda message, completion: None):
 class World(object):
     PROGRAMS = {
         'sky': ('sky.vertex.glsl', 'sky.fragment.glsl'),
-        'planet': ('sphere.vertex.glsl', 'sphere.planet.fragment.glsl'),
+        'planet': ('planet.vertex.glsl', 'planet.fragment.glsl'),
+        'star': ('star.vertex.glsl', 'star.fragment.glsl'),
     }
 
     def __init__(self, file, callback):
