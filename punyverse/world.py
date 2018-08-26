@@ -49,7 +49,7 @@ class World(object):
         shader = self.activate_shader('planet')
         shader.uniform_vec3('u_sun.ambient', 0.1, 0.1, 0.1)
         shader.uniform_vec3('u_sun.diffuse', 1, 1, 1)
-        shader.uniform_vec3('u_sun.specular', 1, 1, 1)
+        shader.uniform_vec3('u_sun.specular', 0.5, 0.5, 0.5)
         shader.uniform_vec3('u_sun.position', 0, 0, 0)
         shader.uniform_float('u_sun.intensity', 1)
         self.activate_shader(None)

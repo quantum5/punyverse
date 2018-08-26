@@ -356,10 +356,10 @@ class SphericalBody(Body):
         shader.uniform_bool('u_planet.hasSpecular', self.specular_texture)
         if self.specular_texture:
             glActiveTexture(GL_TEXTURE2)
-            glBindTexture(GL_TEXTURE_2D, self.emission_texture)
+            glBindTexture(GL_TEXTURE_2D, self.specular_texture)
             shader.uniform_texture('u_planet.specularMap', 2)
-            shader.uniform_vec3('u_planet.specular', 2, 2, 2)
-            shader.uniform_float('u_planet.shininess', 5)
+            shader.uniform_vec3('u_planet.specular', 1, 1, 1)
+            shader.uniform_float('u_planet.shininess', 10)
         else:
             shader.uniform_vec3('u_planet.specular', 0, 0, 0)
             shader.uniform_float('u_planet.shininess', 0)

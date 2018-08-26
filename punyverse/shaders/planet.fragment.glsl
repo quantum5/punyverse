@@ -47,7 +47,7 @@ void main() {
     vec3 ambient = u_planet.ambient * u_sun.ambient * diffuse;
     diffuse *= u_planet.diffuse * u_sun.diffuse * diffuseIntensity;
     emission *= u_planet.emission * (1 - min(diffuseIntensity * 2, 1));
-    specular *= u_planet.specular * u_sun.specular * max(shininess, 0);
+    specular *= u_planet.specular * u_sun.specular * max(shininess, 0) * diffuseIntensity;
 
     gl_FragColor = vec4((ambient + diffuse + emission + specular) * u_sun.intensity, 1);
 }
