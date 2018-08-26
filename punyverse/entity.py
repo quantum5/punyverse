@@ -5,7 +5,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, glRestore, belt, Sphere, Disk, OrbitVBO, Matrix4f, SimpleSphere, TangentSphere
+from punyverse.glgeom import compile, glRestore, belt, Disk, OrbitVBO, Matrix4f, SimpleSphere, TangentSphere
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
@@ -32,9 +32,14 @@ class Entity(object):
     def mv_matrix(self):
         return self.world.view_matrix() * self.model_matrix
 
+    @cached_property
+    def mvp_matrix(self):
+        return self.world.vp_matrix * self.model_matrix
+
     def update(self):
         self.model_matrix = None
         self.mv_matrix = None
+        self.mvp_matrix = None
         x, y, z = self.location
         dx, dy, dz = self.direction
         self.location = x + dx, y + dy, z + dz
@@ -316,8 +321,9 @@ class SphericalBody(Body):
             atm_texture = atmosphere_data.get('diffuse_texture', None)
             cloud_texture = atmosphere_data.get('cloud_texture', None)
             if cloud_texture is not None:
-                self.cloud_texture = get_best_texture(cloud_texture, loader=load_clouds)
-                self.clouds = Sphere(self.radius + 2, division, division)
+                self.cloud_transparency = get_best_texture(cloud_texture, loader=load_clouds)
+                self.cloud_radius = self.radius + 2
+                self.clouds = self._get_sphere(division, tangent=False)
 
             if atm_texture is not None:
                 self.atm_texture = get_best_texture(atm_texture, clamp=True)
@@ -341,7 +347,7 @@ class SphericalBody(Body):
         shader.uniform_float('u_radius', self.radius)
         shader.uniform_mat4('u_modelMatrix', self.model_matrix)
         shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
-        shader.uniform_mat4('u_mvpMatrix', self.world.vp_matrix * self.model_matrix)
+        shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
 
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture)
@@ -395,7 +401,7 @@ class SphericalBody(Body):
     def _draw_star(self):
         shader = self.world.activate_shader('star')
         shader.uniform_float('u_radius', self.radius)
-        shader.uniform_mat4('u_mvpMatrix', self.world.vp_matrix * self.model_matrix)
+        shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
 
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture)
@@ -436,17 +442,30 @@ class SphericalBody(Body):
             self.atmosphere.draw()
 
     def _draw_clouds(self):
-        with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
-            glLoadMatrixf(self.mv_matrix)
-            glEnable(GL_BLEND)
-            glEnable(GL_ALPHA_TEST)
-            glEnable(GL_CULL_FACE)
-            glDisable(GL_LIGHTING)
-            glEnable(GL_TEXTURE_2D)
+        glEnable(GL_BLEND)
+        shader = self.world.activate_shader('clouds')
+        shader.uniform_float('u_radius', self.cloud_radius)
+        shader.uniform_mat4('u_modelMatrix', self.model_matrix)
+        shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
 
-            glCullFace(GL_BACK)
-            glBindTexture(GL_TEXTURE_2D, self.cloud_texture)
-            self.clouds.draw()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.cloud_transparency)
+        shader.uniform_texture('u_transparency', 0)
+        shader.uniform_vec3('u_diffuse', 1, 1, 1)
+        shader.uniform_vec3('u_ambient', 0.1, 0.1, 0.1)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.clouds.vbo)
+        shader.vertex_attribute('a_normal', self.clouds.direction_size, self.clouds.type, GL_FALSE,
+                                self.clouds.stride, self.clouds.direction_offset)
+        shader.vertex_attribute('a_uv', self.clouds.uv_size, self.clouds.type, GL_FALSE,
+                                self.clouds.stride, self.clouds.uv_offset)
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.clouds.vertex_count)
+
+        shader.deactivate_attributes()
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        self.world.activate_shader(None)
+        glDisable(GL_BLEND)
 
     def _draw_rings(self):
         with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):

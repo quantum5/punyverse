@@ -6,6 +6,8 @@ in vec3 v_position;
 in vec3 v_camDirection;
 in mat3 v_TBN;
 
+out vec4 o_fragColor;
+
 struct Surface {
     sampler2D diffuseMap;
     bool hasNormal;
@@ -49,5 +51,5 @@ void main() {
     emission *= u_planet.emission * (1 - min(diffuseIntensity * 2, 1));
     specular *= u_planet.specular * u_sun.specular * max(shininess, 0) * diffuseIntensity;
 
-    gl_FragColor = vec4((ambient + diffuse + emission + specular) * u_sun.intensity, 1);
+    o_fragColor = vec4((ambient + diffuse + emission + specular) * u_sun.intensity, 1);
 }

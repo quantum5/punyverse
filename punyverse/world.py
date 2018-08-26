@@ -20,6 +20,7 @@ class World(object):
     PROGRAMS = {
         'sky': ('sky.vertex.glsl', 'sky.fragment.glsl'),
         'planet': ('planet.vertex.glsl', 'planet.fragment.glsl'),
+        'clouds': ('clouds.vertex.glsl', 'clouds.fragment.glsl'),
         'star': ('star.vertex.glsl', 'star.fragment.glsl'),
     }
 
@@ -52,6 +53,9 @@ class World(object):
         shader.uniform_vec3('u_sun.specular', 0.5, 0.5, 0.5)
         shader.uniform_vec3('u_sun.position', 0, 0, 0)
         shader.uniform_float('u_sun.intensity', 1)
+
+        shader = self.activate_shader('clouds')
+        shader.uniform_vec3('u_sun', 0, 0, 0)
         self.activate_shader(None)
 
     def _load_programs(self):
