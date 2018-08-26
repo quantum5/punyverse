@@ -2,11 +2,9 @@ import argparse
 
 import pyglet
 
-from punyverse.loader import LoaderWindow
-from punyverse.ui import Punyverse
-
 INITIAL_WIN_HEIGHT = 540
 INITIAL_WIN_WIDTH = 700
+DEBUG = False
 
 
 def main():
@@ -23,7 +21,11 @@ def main():
                         action='store_true')
     args = parser.parse_args()
 
+    pyglet.options['debug_gl'] = DEBUG
     pyglet.options['shadow_window'] = False
+
+    from punyverse.loader import LoaderWindow
+    from punyverse.ui import Punyverse
     loader = LoaderWindow(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
                           caption='Punyverse is loading...')
 
