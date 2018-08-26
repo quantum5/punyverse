@@ -39,18 +39,15 @@ void main() {
     vec3 emission = u_planet.hasEmission ? texture2D(u_planet.emissionMap, v_uv).rgb : vec3(1);
 
     vec3 incident = normalize(u_sun.position - v_position);
-    vec3 reflected = normalize(-reflect(incident, normal));
+    vec3 reflected = normalize(reflect(-incident, normal));
 
     float diffuseIntensity = max(dot(normal, incident), 0.0);
-    float shininess = pow(clamp(dot(normalize(v_camDirection), reflected), 0.0, 1.0), u_planet.shininess);
+    float shininess = pow(max(dot(normalize(v_camDirection), reflected), 0), u_planet.shininess);
 
     vec3 ambient = u_planet.ambient * u_sun.ambient * diffuse;
     diffuse *= u_planet.diffuse * u_sun.diffuse * diffuseIntensity;
     emission *= u_planet.emission * (1 - min(diffuseIntensity * 2, 1));
-    if (u_planet.shininess > 0)
-        specular *= u_planet.specular * u_sun.specular * clamp(shininess, 0, 1);
-    else
-        specular = vec3(0);
+    specular *= u_planet.specular * u_sun.specular * max(shininess, 0);
 
     gl_FragColor = vec4((ambient + diffuse + emission + specular) * u_sun.intensity, 1);
 }
