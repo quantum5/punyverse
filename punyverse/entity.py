@@ -293,6 +293,7 @@ class SphericalBody(Body):
 
         self.texture = get_best_texture(info['texture'])
         self.normal_texture = None
+        self.specular_texture = None
         self.emission_texture = None
         self.sphere = self._get_sphere(division, tangent=self.type == 'planet')
 
@@ -302,6 +303,9 @@ class SphericalBody(Body):
 
         if 'normal_map' in info:
             self.normal_texture = get_best_texture(info['normal_map'])
+
+        if 'specular_map' in info:
+            self.specular_texture = get_best_texture(info['specular_map'])
 
         if 'emission_map' in info:
             self.emission_texture = get_best_texture(info['emission_map'])
@@ -349,7 +353,16 @@ class SphericalBody(Body):
             glBindTexture(GL_TEXTURE_2D, self.normal_texture)
             shader.uniform_texture('u_planet.normalMap', 1)
 
-        shader.uniform_bool('u_planet.hasSpecular', False)
+        shader.uniform_bool('u_planet.hasSpecular', self.specular_texture)
+        if self.specular_texture:
+            glActiveTexture(GL_TEXTURE2)
+            glBindTexture(GL_TEXTURE_2D, self.specular_texture)
+            shader.uniform_texture('u_planet.specularMap', 2)
+            shader.uniform_vec3('u_planet.specular', 1, 1, 1)
+            shader.uniform_float('u_planet.shininess', 10)
+        else:
+            shader.uniform_vec3('u_planet.specular', 0, 0, 0)
+            shader.uniform_float('u_planet.shininess', 0)
 
         shader.uniform_bool('u_planet.hasEmission', self.emission_texture)
         if self.emission_texture:
@@ -363,9 +376,6 @@ class SphericalBody(Body):
             shader.uniform_vec3('u_planet.emission', 0, 0, 0)
 
         shader.uniform_vec3('u_planet.diffuse', 1, 1, 1)
-        shader.uniform_vec3('u_planet.specular', 0, 0, 0)
-
-        shader.uniform_float('u_planet.shininess', 0)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
         shader.vertex_attribute('a_normal', self.sphere.direction_size, self.sphere.type, GL_FALSE,
