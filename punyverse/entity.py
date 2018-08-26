@@ -292,11 +292,15 @@ class SphericalBody(Body):
         self.type = info.get('type', 'planet')
 
         self.texture = get_best_texture(info['texture'])
+        self.normal_texture = None
         self.sphere = self._get_sphere(division, tangent=self.type == 'planet')
 
         self.atmosphere = None
         self.clouds = None
         self.ring = 0
+
+        if 'normal_map' in info:
+            self.normal_texture = get_best_texture(info['normal_map'])
 
         if 'atmosphere' in info:
             atmosphere_data = info['atmosphere']
@@ -333,10 +337,14 @@ class SphericalBody(Body):
 
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture)
-        shader.uniform_bool('u_planet.hasDiffuse', True)
         shader.uniform_texture('u_planet.diffuseMap', 0)
 
-        shader.uniform_bool('u_planet.hasNormal', False)
+        shader.uniform_bool('u_planet.hasNormal', self.normal_texture)
+        if self.normal_texture:
+            glActiveTexture(GL_TEXTURE1)
+            glBindTexture(GL_TEXTURE_2D, self.normal_texture)
+            shader.uniform_texture('u_planet.normalMap', 1)
+
         shader.uniform_bool('u_planet.hasSpecular', False)
         shader.uniform_bool('u_planet.hasEmission', False)
 
