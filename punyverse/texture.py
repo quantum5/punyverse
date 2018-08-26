@@ -249,7 +249,7 @@ def load_clouds(file):
     return id
 
 
-def get_best_texture(info, loader=load_texture, **kwargs):
+def get_best_texture(info, loader=load_texture, optional=False, **kwargs):
     if isinstance(info, list):
         for item in info:
             try:
@@ -258,4 +258,5 @@ def get_best_texture(info, loader=load_texture, **kwargs):
                 pass
     else:
         return loader(info, **kwargs)
-    raise ValueError('No texture found')
+    if not optional:
+        raise ValueError('No texture found')

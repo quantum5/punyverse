@@ -7,7 +7,6 @@ in vec3 v_camDirection;
 in mat3 v_TBN;
 
 struct Surface {
-    bool hasDiffuse;
     sampler2D diffuseMap;
     bool hasNormal;
     sampler2D normalMap;
@@ -35,7 +34,7 @@ uniform Surface u_planet;
 
 void main() {
     vec3 normal = u_planet.hasNormal ? normalize(v_TBN * texture2D(u_planet.normalMap, v_uv).rgb * 2 - 1) : v_normal;
-    vec3 diffuse = u_planet.hasDiffuse ? texture2D(u_planet.diffuseMap, v_uv).rgb : vec3(1);
+    vec3 diffuse = texture2D(u_planet.diffuseMap, v_uv).rgb;
     vec3 specular = u_planet.hasSpecular ? texture2D(u_planet.specularMap, v_uv).rgb : vec3(1);
     vec3 emission = u_planet.hasEmission ? texture2D(u_planet.emissionMap, v_uv).rgb : vec3(1);
 
