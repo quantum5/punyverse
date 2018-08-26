@@ -1,4 +1,5 @@
 import os
+import sys
 from ctypes import pointer, byref, create_string_buffer, POINTER, cast
 
 from pyglet.gl import *
@@ -39,11 +40,15 @@ class Program(object):
         succeeded = GLint()
         log_length = GLint()
         glGetShaderiv(shader, GL_COMPILE_STATUS, byref(succeeded))
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, byref(log_length))
+        buffer = create_string_buffer(log_length.value + 1)
+        glGetShaderInfoLog(shader, log_length.value, None, buffer)
+
         if not succeeded:
-            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, byref(log_length))
-            buffer = create_string_buffer(log_length.value + 1)
-            glGetShaderInfoLog(shader, log_length.value, None, buffer)
-            raise CompileError(buffer.value)
+            raise CompileError(buffer.value.decode('utf-8'))
+        elif log_length.value:
+            print('Warning:', file=sys.stderr)
+            print(buffer.value.decode('utf-8'), file=sys.stderr)
 
     def __init__(self, vertex_file, fragment_file):
         with glShader(GL_VERTEX_SHADER) as vertex_shader, glShader(GL_FRAGMENT_SHADER) as fragment_shader:

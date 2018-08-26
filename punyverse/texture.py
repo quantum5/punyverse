@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import itertools
 import os.path
 import struct
 from ctypes import c_int, byref, c_uint
@@ -9,7 +8,7 @@ from io import BytesIO
 import six
 from pyglet import image
 from pyglet.gl import *
-from six.moves import zip, range
+from six.moves import range
 
 try:
     from ._glgeom import bgr_to_rgb, flip_vertical
@@ -229,21 +228,26 @@ def load_clouds(file):
 
     path, width, height, depth, mode, texture = load_image(file, path)
 
+    if depth != 1:
+        texture = texture[::depth]
+
     buffer = c_uint()
     glGenTextures(1, byref(buffer))
     id = buffer.value
 
-    pixels = bytearray(len(texture) * 4)
-    white = b'\xff'[0]
-    pixels[:] = itertools.chain.from_iterable(zip(itertools.repeat(white), itertools.repeat(white),
-                                                  itertools.repeat(white),
-                                                  itertools.islice(texture, 0, None, depth)))
-
     glBindTexture(GL_TEXTURE_2D, id)
 
+    if gl_info.have_version(3) or gl_info.have_extension('GL_ARB_framebuffer_object'):
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture)
+        glGenerateMipmap(GL_TEXTURE_2D)
+    else:
+        gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_RED, GL_UNSIGNED_BYTE, texture)
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, six.binary_type(pixels))
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+
+    if gl_info.have_extension('GL_EXT_texture_filter_anisotropic'):
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glGetInteger(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT))
 
     cache[path] = id
     return id
