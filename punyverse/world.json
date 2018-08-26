@@ -57,6 +57,7 @@
       "rotation": 86400,
       "division": 90,
       "normal_map": ["earth_normal.jpg", "earth_normal_small.jpg"],
+      "emission_map": ["earth_emission.jpg", "earth_emission_medium.jpg", "earth_emission_small.jpg"],
       "atmosphere": {
         "cloud_texture": ["cloudmap.jpg", "cloudmap_small.jpg"],
         "diffuse_texture": "atmosphere_earth.png",

@@ -3,6 +3,8 @@
 
 mercury.jpg
 earth.jpg
+earth_normal.jpg
+earth_emission.jpg
 cloudmap.jpg
 moon.jpg
 mars.jpg
