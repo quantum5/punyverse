@@ -236,6 +236,45 @@ class SimpleSphere(object):
         self.vbo = array_to_gl_buffer(buffer)
 
 
+class TangentSphere(object):
+    type = GL_FLOAT
+    stride = 7 * 4
+    direction_offset = 0
+    direction_size = 3
+    tangent_offset = direction_size * 4
+    tangent_size = 2
+    uv_offset = tangent_offset + tangent_size * 4
+    uv_size = 2
+
+    def __init__(self, lats, longs):
+        tau = pi * 2
+        phi_div = tau / longs
+        theta_div = pi / lats
+
+        self.vertex_count = (lats + 1) * (longs + 1) * 2
+        buffer = self.vertex_count * 8 * [0]
+        index = 0
+        reverse = False
+        for i in range(longs + 1):
+            phi1, phi2 = i * phi_div, (i + 1) * phi_div
+            for j in range(lats + 1):
+                theta = j * theta_div
+                if reverse:
+                    theta = pi - theta
+                sine = sin(theta)
+                dz = cos(theta)
+                t = 1 - theta / pi
+                sphi2, cphi2 = sin(phi2), cos(phi2)
+                sphi1, cphi1 = sin(phi1), cos(phi1)
+                buffer[index:index + 14] = [
+                    sine * cphi2, sine * sphi2, dz, sine * -sphi2, sine * cphi2, phi2 / tau, t,
+                    sine * cphi1, sine * sphi1, dz, sine * -sphi1, sine * cphi1, phi1 / tau, t,
+                ]
+                index += 14
+            reverse ^= True
+        self.vbo = array_to_gl_buffer(buffer)
+
+
 class Sphere(object):
     def __init__(self, r, lats, longs):
         tau = pi * 2

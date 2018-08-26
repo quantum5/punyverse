@@ -90,6 +90,15 @@ class Program(object):
     def uniform_texture(self, name, index):
         glUniform1i(self.uniforms[name], index)
 
+    def uniform_float(self, name, value):
+        glUniform1f(self.uniforms[name], value)
+
+    def uniform_bool(self, name, value):
+        glUniform1i(self.uniforms[name], bool(value))
+
+    def uniform_vec3(self, name, a, b, c):
+        glUniform3f(self.uniforms[name], a, b, c)
+
     def _variable_locations(self, count_type, get_func, loc_func):
         variables = {}
         count = GLint()
