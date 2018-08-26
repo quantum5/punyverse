@@ -114,7 +114,8 @@ class Matrix4f(object):
         m[0xF] = 1
         return cls(m)
 
-    def as_gl(self):
+    @property
+    def _as_parameter_(self):
         return array_to_ctypes(self.matrix)
 
     @property

@@ -213,7 +213,7 @@ class Punyverse(pyglet.window.Window):
 
         glMatrixMode(GL_PROJECTION)
         self.world.resize(width, height)
-        glLoadMatrixf(self.world.projection_matrix().as_gl())
+        glLoadMatrixf(self.world.projection_matrix())
         glMatrixMode(GL_MODELVIEW)
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
@@ -235,7 +235,7 @@ class Punyverse(pyglet.window.Window):
 
     def on_draw(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glLoadMatrixf(self.world.view_matrix().as_gl())
+        glLoadMatrixf(self.world.view_matrix())
 
         c = self.world.cam
         x, y, z = c.x, c.y, c.z

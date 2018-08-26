@@ -85,7 +85,7 @@ class Program(object):
         self.active_attributes.clear()
 
     def uniform_mat4(self, name, matrix):
-        glUniformMatrix4fv(self.uniforms[name], 1, GL_FALSE, matrix.as_gl())
+        glUniformMatrix4fv(self.uniforms[name], 1, GL_FALSE, matrix)
 
     def uniform_texture(self, name, index):
         glUniform1i(self.uniforms[name], index)
