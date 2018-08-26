@@ -274,10 +274,11 @@ class SphericalBody(Body):
     _sphere_cache = {}
 
     @classmethod
-    def _get_sphere(cls, division):
-        if division in cls._sphere_cache:
-            return cls._sphere_cache[division]
-        cls._sphere_cache[division] = sphere = TangentSphere(division, division)
+    def _get_sphere(cls, division, tangent=True):
+        if (division, tangent) in cls._sphere_cache:
+            return cls._sphere_cache[division, tangent]
+        cls._sphere_cache[division, tangent] = sphere = \
+            (TangentSphere if tangent else SimpleSphere)(division, division)
         return sphere
 
     def __init__(self, name, world, info, parent=None):
@@ -290,8 +291,8 @@ class SphericalBody(Body):
         self.shininess = info.get('shininess', 0)
         self.type = info.get('type', 'planet')
 
-        self.diffuse_texture = get_best_texture(info['texture'])
-        self.sphere = self._get_sphere(division)
+        self.texture = get_best_texture(info['texture'])
+        self.sphere = self._get_sphere(division, tangent=self.type == 'planet')
 
         self.atmosphere = None
         self.clouds = None
@@ -331,7 +332,7 @@ class SphericalBody(Body):
         shader.uniform_mat4('u_mvpMatrix', self.world.vp_matrix * self.model_matrix)
 
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.diffuse_texture)
+        glBindTexture(GL_TEXTURE_2D, self.texture)
         shader.uniform_bool('u_planet.hasDiffuse', True)
         shader.uniform_texture('u_planet.diffuseMap', 0)
 
@@ -361,9 +362,34 @@ class SphericalBody(Body):
         self.world.activate_shader(None)
         glActiveTexture(GL_TEXTURE0)
 
+    def _draw_star(self):
+        shader = self.world.activate_shader('star')
+        shader.uniform_float('u_radius', self.radius)
+        shader.uniform_mat4('u_mvpMatrix', self.world.vp_matrix * self.model_matrix)
+
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.texture)
+        shader.uniform_texture('u_emission', 0)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
+        shader.vertex_attribute('a_normal', self.sphere.direction_size, self.sphere.type, GL_FALSE,
+                                self.sphere.stride, self.sphere.direction_offset)
+        shader.vertex_attribute('a_uv', self.sphere.uv_size, self.sphere.type, GL_FALSE,
+                                self.sphere.stride, self.sphere.uv_offset)
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
+
+        shader.deactivate_attributes()
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        self.world.activate_shader(None)
+
     def _draw_sphere(self):
         if self.type == 'planet':
             self._draw_planet()
+        elif self.type == 'star':
+            self._draw_star()
+        else:
+            raise ValueError('Invalid type: %s' % self.type)
 
     def _draw_atmosphere(self):
         with glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):
