@@ -16,7 +16,7 @@ class Camera(object):
         self.fov = radians(45)
         self.aspect = 1
         self.znear = 1
-        self.zfar = 50000000
+        self.zfar = 3000000
 
         self.speed = 0
         self.roll_left = False

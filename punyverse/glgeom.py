@@ -202,6 +202,40 @@ class Disk(object):
             glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
+class SimpleSphere(object):
+    type = GL_FLOAT
+    stride = 5 * 4
+    direction_offset = 0
+    direction_size = 3
+    uv_offset = direction_size * 4
+    uv_size = 2
+
+    def __init__(self, lats, longs):
+        tau = pi * 2
+        phi_div = tau / longs
+        theta_div = pi / lats
+
+        self.vertex_count = (lats + 1) * (longs + 1) * 2
+        buffer = self.vertex_count * 5 * [0]
+        index = 0
+        reverse = False
+        for i in range(longs + 1):
+            phi1, phi2 = i * phi_div, (i + 1) * phi_div
+            for j in range(lats + 1):
+                theta = j * theta_div
+                if reverse:
+                    theta = pi - theta
+                sine = sin(theta)
+                dz = cos(theta)
+                t = 1 - theta / pi
+                buffer[index:index + 10] = [sine * cos(phi2), sine * sin(phi2), dz, phi2 / tau, t,
+                                            sine * cos(phi1), sine * sin(phi1), dz, phi1 / tau, t]
+                index += 10
+            reverse ^= True
+
+        self.vbo = array_to_gl_buffer(buffer)
+
+
 class Sphere(object):
     def __init__(self, r, lats, longs):
         tau = pi * 2

@@ -5,7 +5,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, glRestore, belt, Sphere, Disk, OrbitVBO, Matrix4f
+from punyverse.glgeom import compile, glRestore, belt, Sphere, Disk, OrbitVBO, Matrix4f, SimpleSphere
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
 from punyverse.texture import get_best_texture, load_clouds
@@ -120,20 +120,30 @@ class Sky(Entity):
 
         self.texture = get_best_texture(info['texture'])
         division = info.get('division', 30)
-        self.sphere = Sphere(info.get('radius', 1000000), division, division)
+        self.sphere = SimpleSphere(division, division)
 
     def draw(self, options):
         cam = self.world.cam
-        with glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
-            matrix = self.world.view_matrix() * Matrix4f.from_angles((-cam.x, -cam.y, -cam.z), self.rotation)
-            glLoadMatrixf(matrix.as_gl())
-            glEnable(GL_CULL_FACE)
-            glEnable(GL_TEXTURE_2D)
-            glDisable(GL_LIGHTING)
+        shader = self.world.activate_shader('sky')
+        shader.uniform_mat4('u_mvpMatrix', self.world.projection_matrix() *
+                            Matrix4f.from_angles(rotation=(cam.pitch, cam.yaw, cam.roll)) *
+                            Matrix4f.from_angles(rotation=self.rotation))
 
-            glCullFace(GL_FRONT)
-            glBindTexture(GL_TEXTURE_2D, self.texture)
-            self.sphere.draw()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.texture)
+        shader.uniform_texture('u_skysphere', 0)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
+        shader.vertex_attribute('a_direction', self.sphere.direction_size, self.sphere.type, GL_FALSE,
+                                self.sphere.stride, self.sphere.direction_offset)
+        shader.vertex_attribute('a_uv', self.sphere.uv_size, self.sphere.type, GL_FALSE,
+                                self.sphere.stride, self.sphere.uv_offset)
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
+
+        shader.deactivate_attributes()
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        self.world.activate_shader(None)
 
 
 class Body(Entity):

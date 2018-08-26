@@ -9,6 +9,7 @@ import six
 from punyverse import texture
 from punyverse.camera import Camera
 from punyverse.entity import *
+from punyverse.shader import Program
 
 
 def load_world(file, callback=lambda message, completion: None):
@@ -16,6 +17,10 @@ def load_world(file, callback=lambda message, completion: None):
 
 
 class World(object):
+    PROGRAMS = {
+        'sky': ('sky.vertex.glsl', 'sky.fragment.glsl'),
+    }
+
     def __init__(self, file, callback):
         self.tracker = []
         self.x = None
@@ -28,6 +33,9 @@ class World(object):
 
         self.callback = callback
         self._parse(file)
+
+        self._program = None
+        self.programs = self._load_programs()
         del self.callback  # So it can't be used after loading finishes
 
         self._time_accumulate = 0
@@ -35,6 +43,15 @@ class World(object):
 
         for entity in self.tracker:
             entity.update()
+
+    def _load_programs(self):
+        programs = {}
+        count = len(self.PROGRAMS)
+        for i, (name, (vertex, fragment)) in enumerate(six.iteritems(self.PROGRAMS)):
+            self.callback('Loading shaders (%d of %d)...' % (i, count),
+                          'Loading shader "%s" (%s, %s).' % (name, vertex, fragment), i / count)
+            programs[name] = Program(vertex, fragment)
+        return programs
 
     def evaluate(self, value):
         return eval(str(value), {'__builtins__': None}, self._context)
@@ -128,6 +145,7 @@ class World(object):
     def update(self, dt, move, tick):
         c = self.cam
         c.update(dt, move)
+        self.vp_matrix = None
 
         if tick:
             delta = self.tick_length * dt
@@ -151,6 +169,24 @@ class World(object):
     def projection_matrix(self):
         return self._projection_matrix
 
+    @cached_property
+    def vp_matrix(self):
+        return self._projection_matrix * self.cam.view_matrix
+
     def resize(self, width, height):
         self.cam.aspect = width / max(height, 1)
         self._projection_matrix = self.cam.projection_matrix()
+        self.vp_matrix = None
+
+    def activate_shader(self, name):
+        program = None
+        if self._program != name:
+            if name is None:
+                glUseProgram(0)
+            else:
+                program = self.programs[name]
+                glUseProgram(program.program)
+            self._program = name
+        elif self._program is not None:
+            program = self.programs[self._program]
+        return program
