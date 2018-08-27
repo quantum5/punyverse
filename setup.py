@@ -56,6 +56,14 @@ if os.name == 'nt':
             build_temp, target_lang
         )
 
+    def make_manifest_get_embed_info(old_func):
+        def manifest_get_embed_info(self, target_desc, ld_args):
+            temp_manifest, mfid = old_func(target_desc, ld_args)
+            if not os.path.exists(temp_manifest):
+                return None
+            return temp_manifest, mfid
+        return manifest_get_embed_info.__get__(old_func.__self__)
+
 
     class build_ext_exe(build_ext, object):
         def get_ext_filename(self, fullname):
@@ -73,8 +81,11 @@ if os.name == 'nt':
             if isinstance(ext, SimpleExecutable):
                 old = self.shlib_compiler.link_shared_object
                 self.shlib_compiler.link_shared_object = link_shared_object.__get__(self.shlib_compiler)
+                self.shlib_compiler.manifest_get_embed_info = \
+                    make_manifest_get_embed_info(self.shlib_compiler.manifest_get_embed_info)
                 super(build_ext_exe, self).build_extension(ext)
                 self.shlib_compiler.link_shared_object = old
+                del self.shlib_compiler.manifest_get_embed_info
             else:
                 super(build_ext_exe, self).build_extension(ext)
 

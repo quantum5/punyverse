@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <Windows.h>
 #include <Python.h>
 
@@ -10,8 +11,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 int main()
 #endif
 {
-	int argc;
-	LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    int argc = __argc;
+#if PY_MAJOR_VERSION >= 3
+    LPWSTR *argv = __wargv;
+#else
+    char **argv = __argv;
+#endif
 
 	Py_SetProgramName(argv[0]);
 	Py_Initialize();
