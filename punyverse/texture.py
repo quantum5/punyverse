@@ -42,7 +42,7 @@ except ImportError:
             result[y1 * row:y1 * row + row] = source[y2 * row:y2 * row + row]
         return six.binary_type(result)
 
-__all__ = ['load_texture', 'load_clouds', 'load_image', 'get_best_texture']
+__all__ = ['load_texture', 'load_clouds', 'load_image', 'get_best_texture', 'max_texture_size']
 
 id = 0
 cache = {}
@@ -117,7 +117,11 @@ def glGetInteger(index):
 
 
 def max_texture_size():
-    return glGetInteger(GL_MAX_TEXTURE_SIZE)
+    size = glGetInteger(GL_MAX_TEXTURE_SIZE)
+    if gl_info.get_vendor() == 'Intel':
+        # Intel can't seem to handle more than 4096
+        size = min(size, 4096)
+    return size
 
 
 def check_size(width, height):

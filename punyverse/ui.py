@@ -208,6 +208,9 @@ class Punyverse(pyglet.window.Window):
             self.world.cam.roll_right = False
 
     def on_resize(self, width, height):
+        if not width or not height:
+            # Sometimes this happen for no reason?
+            return
         self.label.y = height - 20
         glViewport(0, 0, width, height)
 

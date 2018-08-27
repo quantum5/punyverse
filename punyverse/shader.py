@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 from ctypes import pointer, byref, create_string_buffer, POINTER, cast
