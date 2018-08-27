@@ -4,7 +4,7 @@ import pyglet
 
 INITIAL_WIN_HEIGHT = 540
 INITIAL_WIN_WIDTH = 700
-DEBUG = True
+DEBUG = False
 
 
 def main():

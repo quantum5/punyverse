@@ -11,10 +11,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 int main()
 #endif
 {
-    int argc = __argc;
 #if PY_MAJOR_VERSION >= 3
-    LPWSTR *argv = __wargv;
+	int argc;
+	LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 #else
+    int argc = __argc;
     char **argv = __argv;
 #endif
 
