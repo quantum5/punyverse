@@ -468,15 +468,31 @@ class SphericalBody(Body):
         glDisable(GL_BLEND)
 
     def _draw_rings(self):
-        with glRestore(GL_ENABLE_BIT | GL_TEXTURE_BIT):
-            glLoadMatrixf(self.mv_matrix)
-            glDisable(GL_LIGHTING)
-            glEnable(GL_TEXTURE_2D)
-            glEnable(GL_BLEND)
-            glDisable(GL_CULL_FACE)
+        glEnable(GL_BLEND)
+        shader = self.world.activate_shader('ring')
+        shader.uniform_mat4('u_modelMatrix', self.model_matrix)
+        shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
+        shader.uniform_vec3('u_planet', *self.location)
+        shader.uniform_vec3('u_sun', 0, 0, 0)
+        shader.uniform_float('u_planetRadius', self.radius)
+        shader.uniform_float('u_ambient', 0.1)
 
-            glBindTexture(GL_TEXTURE_2D, self.ring_texture)
-            self.ring.draw()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.ring_texture)
+        shader.uniform_texture('u_texture', 0)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.ring.vbo)
+        shader.vertex_attribute('a_position', self.ring.position_size, self.ring.type, GL_FALSE,
+                                self.ring.stride, self.ring.position_offset)
+        shader.vertex_attribute('a_u', self.ring.u_size, self.ring.type, GL_FALSE,
+                                self.ring.stride, self.ring.u_offset)
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.ring.vertex_count)
+
+        shader.deactivate_attributes()
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        self.world.activate_shader(None)
+        glDisable(GL_BLEND)
 
     def _draw(self, options):
         self._draw_sphere()
