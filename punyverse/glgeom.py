@@ -9,7 +9,7 @@ from six.moves import range
 
 TWOPI = pi * 2
 
-__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'Sphere', 'belt',
+__all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'belt',
            'glSection', 'glRestore', 'progress_bar']
 
 
@@ -179,6 +179,13 @@ def circle(r, seg, coords):
 
 
 class Disk(object):
+    type = GL_FLOAT
+    stride = 3 * 4
+    position_offset = 0
+    position_size = 2
+    u_offset = position_size * 4
+    u_size = 1
+
     def __init__(self, rinner, router, segs):
         res = segs * 5
         delta = 2 * pi / res
@@ -274,45 +281,6 @@ class TangentSphere(object):
                 index += 14
             reverse ^= True
         self.vbo = array_to_gl_buffer(buffer)
-
-
-class Sphere(object):
-    def __init__(self, r, lats, longs):
-        tau = pi * 2
-        phi_div = tau / longs
-        theta_div = pi / lats
-
-        self.vertex_count = (lats + 1) * (longs + 1) * 2
-        buffer = self.vertex_count * 8 * [0]
-        index = 0
-        for i in range(longs + 1):
-            phi1, phi2 = i * phi_div, (i + 1) * phi_div
-            for j in range(lats + 1):
-                theta = j * theta_div
-                sine = sin(theta)
-                dz = cos(theta)
-                t = 1 - theta / pi
-                dx1 = sine * cos(phi2)
-                dy1 = sine * sin(phi2)
-                dx2 = sine * cos(phi1)
-                dy2 = sine * sin(phi1)
-                buffer[index:index + 16] = [r * dx1, r * dy1, r * dz, dx1, dy1, dz, phi2 / tau, t,
-                                            r * dx2, r * dy2, r * dz, dx2, dy2, dz, phi1 / tau, t]
-                index += 16
-
-        self.vbo = array_to_gl_buffer(buffer)
-
-    def draw(self):
-        with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):
-            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glEnableClientState(GL_NORMAL_ARRAY)
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-            glVertexPointer(3, GL_FLOAT, 32, 0)
-            glNormalPointer(GL_FLOAT, 32, 3 * 4)
-            glTexCoordPointer(3, GL_FLOAT, 32, 6 * 4)
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.vertex_count)
-            glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
 class OrbitVBO(object):
