@@ -4,6 +4,8 @@ import os
 import sys
 
 from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
+from setuptools.extension import Library
 
 has_pyx = os.path.exists(os.path.join(os.path.dirname(__file__), 'punyverse', '_glgeom.pyx'))
 
@@ -30,6 +32,62 @@ else:
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
     long_description = f.read()
 
+
+if os.name == 'nt':
+    class SimpleExecutable(Library, object):
+        executable_names = set()
+
+        def __init__(self, name, *args, **kwargs):
+            super(SimpleExecutable, self).__init__(name, *args, **kwargs)
+            self.executable_names.add(name)
+            if '.' in name:
+                self.executable_names.add(name.split('.')[-1])
+
+
+    def link_shared_object(
+            self, objects, output_libname, output_dir=None, libraries=None,
+            library_dirs=None, runtime_library_dirs=None, export_symbols=None,
+            debug=0, extra_preargs=None, extra_postargs=None, build_temp=None,
+            target_lang=None):
+        self.link(
+            self.EXECUTABLE, objects, output_libname,
+            output_dir, libraries, library_dirs, runtime_library_dirs,
+            export_symbols, debug, extra_preargs, extra_postargs,
+            build_temp, target_lang
+        )
+
+
+    class build_ext_exe(build_ext, object):
+        def get_ext_filename(self, fullname):
+            ext = self.ext_map[fullname]
+            if isinstance(ext, SimpleExecutable):
+                return fullname.replace('.', os.sep) + '.exe'
+            return super(build_ext_exe, self).get_ext_filename(fullname)
+
+        def get_export_symbols(self, ext):
+            if isinstance(ext, SimpleExecutable):
+                return ext.export_symbols
+            return super(build_ext_exe, self).get_export_symbols(ext)
+
+        def build_extension(self, ext):
+            if isinstance(ext, SimpleExecutable):
+                old = self.shlib_compiler.link_shared_object
+                self.shlib_compiler.link_shared_object = link_shared_object.__get__(self.shlib_compiler)
+                super(build_ext_exe, self).build_extension(ext)
+                self.shlib_compiler.link_shared_object = old
+            else:
+                super(build_ext_exe, self).build_extension(ext)
+
+    extra_libs = [
+        SimpleExecutable('punyverse.launcher', sources=['punyverse/launcher.c'], libraries=['shell32']),
+        SimpleExecutable('punyverse.launcherw', sources=['punyverse/launcher.c'],
+                         libraries=['shell32'], define_macros=[('GUI', 1)]),
+    ]
+    build_ext = build_ext_exe
+else:
+    extra_libs = []
+
+
 setup(
     name='punyverse',
     version='0.5',
@@ -52,11 +110,13 @@ setup(
     ext_modules=cythonize([
         Extension('punyverse._glgeom', sources=[pyx_path('punyverse/_glgeom.pyx')], libraries=gl_libs),
         Extension('punyverse._model', sources=[pyx_path('punyverse/_model.pyx')], libraries=gl_libs),
-    ]),
+    ]) + extra_libs,
+    cmdclass={'build_ext': build_ext},
 
     entry_points={
         'console_scripts': [
             'punyverse = punyverse.main:main',
+            'punyverse_make_launcher = punyverse.launcher:main',
             'punyverse_small_images = punyverse.small_images:main',
         ],
         'gui_scripts': [

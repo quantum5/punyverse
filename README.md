@@ -8,6 +8,9 @@ Python simulator of a puny universe. (How many words can I stick into one?)
 
 To install, run `pip install punyverse`.
 
+If you are on Windows, run `punyverse_make_launcher`. This should create special launchers that runs `punyverse` on
+your dedicated graphics card, should it exist.
+
 Then, run `punyverse` to launch the simulator, or `punyversew` to launch without the console.
 
 ### A Note on Textures
