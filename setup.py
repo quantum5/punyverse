@@ -81,11 +81,15 @@ if os.name == 'nt':
             if isinstance(ext, SimpleExecutable):
                 old = self.shlib_compiler.link_shared_object
                 self.shlib_compiler.link_shared_object = link_shared_object.__get__(self.shlib_compiler)
-                self.shlib_compiler.manifest_get_embed_info = \
-                    make_manifest_get_embed_info(self.shlib_compiler.manifest_get_embed_info)
+                patched = False
+                if hasattr(self.shlib_compiler, 'manifest_get_embed_info'):
+                    self.shlib_compiler.manifest_get_embed_info = \
+                        make_manifest_get_embed_info(self.shlib_compiler.manifest_get_embed_info)
+                    patched = True
                 super(build_ext_exe, self).build_extension(ext)
                 self.shlib_compiler.link_shared_object = old
-                del self.shlib_compiler.manifest_get_embed_info
+                if patched:
+                    del self.shlib_compiler.manifest_get_embed_info
             else:
                 super(build_ext_exe, self).build_extension(ext)
 
