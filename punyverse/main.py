@@ -11,6 +11,7 @@ def main():
     parser = argparse.ArgumentParser(prog='punyverse', description='''
             Python simulator of a puny universe.
         ''')
+    parser.add_argument('-D', '--debug', help='Enable pyglet OpenGL debugging', action='store_true')
     parser.add_argument('-d', '--high-depth', help='Use a larger depth buffer',
                         const=32, default=24, dest='depth', nargs='?', type=int)
     parser.add_argument('-m', '--multisample', help='Use multisampled image, optional samples',
@@ -21,7 +22,7 @@ def main():
                         action='store_true')
     args = parser.parse_args()
 
-    pyglet.options['debug_gl'] = DEBUG
+    pyglet.options['debug_gl'] = args.debug
 
     template = pyglet.gl.Config(depth_size=args.depth, double_buffer=True,
                                 sample_buffers=args.multisample > 1,
