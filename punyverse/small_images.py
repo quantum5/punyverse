@@ -1,83 +1,57 @@
-from __future__ import print_function
+from __future__ import print_function, division
 
-import sys
 import os
 
-from pyglet.gl import GLint, glGetIntegerv, GL_MAX_TEXTURE_SIZE
-from ctypes import byref
+from PIL import Image
 
-buf = GLint()
-glGetIntegerv(GL_MAX_TEXTURE_SIZE, byref(buf))
-max_texture = buf.value
+from punyverse.texture import max_texture_size
 
-del byref, GLint, glGetIntegerv, GL_MAX_TEXTURE_SIZE, buf
+max_texture = max_texture_size()
+
 
 def resize(width, height, target):
-    factor = (target + .0) / max(width, height)
+    factor = target / max(width, height)
     return int(width * factor), int(height * factor)
 
+
 def fits(width, height):
-    return width < max_texture and height < max_texture
+    return width <= max_texture and height <= max_texture
+
 
 def make_name(image, suffix):
     name, ext = os.path.splitext(image)
     return '%s_%s%s' % (name, suffix, ext)
 
-try:
-    import pgmagick
-    
-    def get_image(image):
-        return pgmagick.Image(image)
-    
-    def get_size(image):
-        size = image.size()
-        return size.width(), size.height()
-    
-    def scale(image, width, height):
-        image.filterType(pgmagick.FilterTypes.LanczosFilter)
-        image.scale(pgmagick.Geometry(width, height))
-        return image
-    
-    def save(image, file):
-        image.write(file)
-except ImportError:
-    from PIL import Image
-
-    def get_image(image):
-        return Image.open(image)
-
-    def get_size(image):
-        return image.size
-
-    def scale(image, width, height):
-        original_width, original_height = image.size
-        if width * 3 < original_width and height * 3 < original_height:
-            image = image.resize((width * 2, height * 2))
-        return image.resize((width, height), Image.ANTIALIAS)
-
-    def save(image, file):
-        image.save(file)
 
 def shrink(file):
-    image = get_image(file)
-    width, height = get_size(image)
+    image = Image.open(file)
+    width, height = image.size
+
     if fits(width, height):
         print('no need')
         return
-    width, height = resize(width, height, 2048)
-    if fits(width, height):
-        size = 'medium'
+
+    for attempt, new_size in [(4096, 'large'), (2048, 'medium')]:
+        width, height = resize(width, height, attempt)
+        if fits(width, height):
+            size = new_size
+            break
     else:
-        width, height = resize(width, height, 1024) # 1024 is minimum
+        width, height = resize(width, height, 1024)  # 1024 is minimum
         size = 'small'
+
     print('size %s, %dx%d...' % (size, width, height), end=' ')
     name = make_name(file, size)
     if not os.path.exists(name):
-        image = scale(image, width, height)
+
+        original_width, original_height = image.size
+        if width * 3 < original_width and height * 3 < original_height:
+            image = image.resize((width * 2, height * 2))
+        image.resize((width, height), Image.ANTIALIAS).save(name)
         print('saved to:', os.path.basename(name))
-        save(image, name)
     else:
-        print('alrady there')
+        print('already there')
+
 
 textures = [
     'mercury.jpg',
@@ -99,6 +73,7 @@ textures = [
     'moons/mimas.jpg',
 ]
 
+
 def main():
     punyverse = os.path.dirname(__file__)
     try:
@@ -114,6 +89,7 @@ def main():
             shrink(file)
         else:
             print('exists not')
+
 
 if __name__ == '__main__':
     main()

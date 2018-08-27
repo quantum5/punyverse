@@ -1,3 +1,5 @@
+from __future__ import division
+
 from math import sin, cos, radians, hypot, tan
 
 from punyverse.glgeom import Matrix4f
