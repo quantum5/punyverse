@@ -22,12 +22,6 @@ def main():
     args = parser.parse_args()
 
     pyglet.options['debug_gl'] = DEBUG
-    pyglet.options['shadow_window'] = False
-
-    from punyverse.loader import LoaderWindow, LoaderConsole
-    from punyverse.ui import Punyverse
-    loader = LoaderWindow(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
-                          caption='Punyverse is loading...', visible=False)
 
     template = pyglet.gl.Config(depth_size=args.depth, double_buffer=True,
                                 sample_buffers=args.multisample > 1,
@@ -46,14 +40,24 @@ def main():
                        caption='Punyverse', resizable=True, vsync=args.vsync, visible=False)
 
     from pyglet.gl import gl_info
+
+    from punyverse.loader import LoaderWindow, LoaderConsole
+    from punyverse.ui import Punyverse
+
     if pyglet.compat_platform in ('win32', 'cygwin') and gl_info.get_vendor() == 'Intel':
+        # pyglet has some code that tries to create without ARB on Intel.
+        # Of course, all that achieves is the message that you can't create OpenGL 3 contexts.
+        # So we force create an ARB context.
         from pyglet.gl.win32 import Win32ARBContext
         context = Win32ARBContext(config, None)
-        loader.close()
+
+        # We use the console loader since using the GUI loader makes all sorts of wonderful things happen on Intel:
+        # Access violations, mouse events going nowhere, you name it.
         loader = LoaderConsole()
         punyverse = Punyverse(context=context, **create_args)
     else:
-        loader.set_visible(True)
+        loader = LoaderWindow(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
+                              caption='Punyverse is loading...')
         punyverse = Punyverse(config=config, **create_args)
 
     loader.set_main_context(punyverse.context)
