@@ -1,9 +1,13 @@
 #version 130
 
-in vec2 v_uv;
+in vec3 v_direction;
 out vec4 o_fragColor;
-uniform sampler2D u_skysphere;
+uniform bool u_lines;
+uniform samplerCube u_skysphere;
+uniform samplerCube u_constellation;
 
 void main() {
-    o_fragColor = vec4(texture(u_skysphere, vec2(1 - v_uv.s, v_uv.t)).rgb, 1);
+    o_fragColor = texture(u_skysphere, v_direction);
+    if (u_lines)
+        o_fragColor += texture(u_constellation, v_direction);
 }
