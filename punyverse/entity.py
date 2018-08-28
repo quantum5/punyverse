@@ -8,7 +8,7 @@ from six.moves import range
 from punyverse.glgeom import compile, glRestore, belt, Disk, OrbitVBO, Matrix4f, SimpleSphere, TangentSphere, Cube
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
-from punyverse.texture import get_best_texture, load_clouds, get_cube_map
+from punyverse.texture import get_best_texture, load_clouds, get_cube_map, load_texture_1d
 from punyverse.utils import cached_property
 
 G = 6.67384e-11  # Gravitation Constant
@@ -343,7 +343,7 @@ class SphericalBody(Body):
             roll = world.evaluate(info['ring'].get('roll', roll))
             self.ring_rotation = pitch, yaw, roll
 
-            self.ring_texture = get_best_texture(info['ring'].get('texture', None), clamp=True)
+            self.ring_texture = load_texture_1d(info['ring'].get('texture'), clamp=True)
             self.ring = Disk(distance, distance + size, 30)
 
     def _draw_planet(self):
@@ -482,7 +482,7 @@ class SphericalBody(Body):
         shader.uniform_float('u_ambient', 0.1)
 
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.ring_texture)
+        glBindTexture(GL_TEXTURE_1D, self.ring_texture)
         shader.uniform_texture('u_texture', 0)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.ring.vbo)
