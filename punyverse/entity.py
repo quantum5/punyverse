@@ -486,6 +486,7 @@ class SphericalBody(Body):
 
     def _draw_rings(self):
         glEnable(GL_BLEND)
+        glDisable(GL_CULL_FACE)
         shader = self.world.activate_shader('ring')
         shader.uniform_mat4('u_modelMatrix', self.model_matrix)
         shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
@@ -510,6 +511,7 @@ class SphericalBody(Body):
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.world.activate_shader(None)
         glDisable(GL_BLEND)
+        glEnable(GL_CULL_FACE)
 
     def _draw(self, options):
         self._draw_sphere()
