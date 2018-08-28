@@ -260,8 +260,9 @@ def load_clouds(file):
     return id
 
 
-def get_cube_map(files):
+def get_cube_map(files, callback=None):
     assert len(files) == 6
+    callback = callback or (lambda index, file: None)
 
     buffer = GLuint()
     glGenTextures(1, byref(buffer))
@@ -270,16 +271,17 @@ def get_cube_map(files):
     glBindTexture(GL_TEXTURE_CUBE_MAP, id)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0)
-    for file, part in zip(files, [
+    for index, (file, part) in enumerate(zip(files, [
         GL_TEXTURE_CUBE_MAP_POSITIVE_X,
         GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
         GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
         GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
         GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
         GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-    ]):
+    ])):
         try:
             path, file = get_file_path(file)
+            callback(index, file)
             path, width, height, depth, mode, texture = load_image(file, path)
         except Exception:
             glDeleteTextures(1, byref(buffer))

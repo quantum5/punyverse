@@ -121,14 +121,14 @@ class Belt(Entity):
 class Sky(Entity):
     background = True
 
-    def __init__(self, world, info):
+    def __init__(self, world, info, callback=None):
         pitch = world.evaluate(info.get('pitch', 0))
         yaw = world.evaluate(info.get('yaw', 0))
         roll = world.evaluate(info.get('roll', 0))
 
         super(Sky, self).__init__(world, 'Sky', (0, 0, 0), [pitch, yaw, roll])
 
-        self.texture = get_best_texture(info['texture'], loader=get_cube_map)
+        self.texture = get_best_texture(info['texture'], loader=get_cube_map, callback=callback)
         self.constellation = get_cube_map(info['constellation'])
         self.cube = Cube()
 
