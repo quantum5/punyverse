@@ -8,8 +8,67 @@ import pyglet
 from pyglet.gl import *
 from six.moves import zip_longest
 
-from punyverse.glgeom import glContext, progress_bar
+from punyverse.glgeom import glRestore
 from punyverse.world import World
+
+
+class glContext(object):
+    def __init__(self, context):
+        self.new_context = context
+
+    def __enter__(self):
+        self.old_context = get_current_context()
+        self.new_context.set_current()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.old_context.set_current()
+
+
+class glSection(object):
+    def __init__(self, type):
+        self.type = type
+
+    def __enter__(self):
+        glBegin(self.type)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        glEnd()
+
+
+def progress_bar(x, y, width, height, filled):
+    with glRestore(GL_ENABLE_BIT):
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        x1 = x
+        x2 = x + width
+        y1 = y
+        y2 = y - height
+        y3 = 0.65 * y1 + 0.35 * y2
+        y4 = 0.25 * y1 + 0.75 * y2
+
+        glColor3f(0.6, 0.6, 0.6)
+        with glSection(GL_LINE_LOOP):
+            glVertex2f(x1, y1)
+            glVertex2f(x1, y2)
+            glVertex2f(x2, y2)
+            glVertex2f(x2, y1)
+
+        x1 += 1
+        y1 -= 1
+        x2 = x + width * filled - 1
+
+        with glSection(GL_TRIANGLE_STRIP):
+            glColor3f(0.81, 1, 0.82)
+            glVertex2f(x1, y1)
+            glVertex2f(x2, y1)
+            glColor3f(0, 0.83, 0.16)
+            glVertex2f(x1, y3)
+            glVertex2f(x2, y3)
+            glVertex2f(x1, y4)
+            glVertex2f(x2, y4)
+            glColor3f(0.37, 0.92, 0.43)
+            glVertex2f(x1, y2)
+            glVertex2f(x2, y2)
 
 
 def get_context_info(context):
