@@ -134,8 +134,6 @@ class Punyverse(pyglet.window.Window):
         glEnable(GL_LIGHT0)
         glEnable(GL_LIGHT1)
 
-        glEnable(GL_POLYGON_OFFSET_FILL)
-
         fv4 = GLfloat * 4
 
         glLightfv(GL_LIGHT0, GL_POSITION, fv4(.5, .5, 1, 0))
