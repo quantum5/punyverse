@@ -23,6 +23,7 @@ class World(object):
         'clouds': ('clouds.vertex.glsl', 'clouds.fragment.glsl'),
         'star': ('star.vertex.glsl', 'star.fragment.glsl'),
         'ring': ('ring.vertex.glsl', 'ring.fragment.glsl'),
+        'atmosphere': ('atmosphere.vertex.glsl', 'atmosphere.fragment.glsl'),
     }
 
     def __init__(self, file, callback):

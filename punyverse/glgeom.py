@@ -199,16 +199,6 @@ class Disk(object):
         buffer[6*res:6*res+6] = buffer[:6]
         self.vbo = array_to_gl_buffer(buffer)
 
-    def draw(self):
-        with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):
-            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-            glVertexPointer(3, GL_FLOAT, 12, 0)
-            glTexCoordPointer(1, GL_FLOAT, 12, 8)
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.vertex_count)
-            glBindBuffer(GL_ARRAY_BUFFER, 0)
-
 
 class SimpleSphere(object):
     type = GL_FLOAT
@@ -229,6 +219,8 @@ class SimpleSphere(object):
         reverse = False
         for i in range(longs + 1):
             phi1, phi2 = i * phi_div, (i + 1) * phi_div
+            if reverse:
+                phi1, phi2 = phi2, phi1
             for j in range(lats + 1):
                 theta = j * theta_div
                 if reverse:
@@ -265,6 +257,8 @@ class TangentSphere(object):
         reverse = False
         for i in range(longs + 1):
             phi1, phi2 = i * phi_div, (i + 1) * phi_div
+            if reverse:
+                phi1, phi2 = phi2, phi1
             for j in range(lats + 1):
                 theta = j * theta_div
                 if reverse:

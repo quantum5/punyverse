@@ -330,7 +330,7 @@ class SphericalBody(Body):
                 self.clouds = self._get_sphere(division, tangent=False)
 
             if atm_texture is not None:
-                self.atm_texture = get_best_texture(atm_texture, clamp=True)
+                self.atm_texture = load_texture_1d(atm_texture, clamp=True)
                 self.atmosphere = Disk(self.radius, self.radius + atm_size, 30)
 
         if 'ring' in info:
@@ -432,18 +432,31 @@ class SphericalBody(Body):
             raise ValueError('Invalid type: %s' % self.type)
 
     def _draw_atmosphere(self):
-        with glRestore(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_TEXTURE_BIT):
-            mv = self.mv_matrix.matrix
-            matrix = Matrix4f([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, mv[12], mv[13], mv[14], 1])
-            glLoadMatrixf(matrix)
+        glEnable(GL_BLEND)
+        glDisable(GL_CULL_FACE)
+        shader = self.world.activate_shader('atmosphere')
 
-            glDisable(GL_LIGHTING)
-            glEnable(GL_TEXTURE_2D)
-            glEnable(GL_BLEND)
-            glDisable(GL_CULL_FACE)
+        mv = self.mv_matrix.matrix
+        matrix = Matrix4f([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, mv[12], mv[13], mv[14], 1])
+        shader.uniform_mat4('u_mvpMatrix', self.world.projection_matrix() * matrix)
 
-            glBindTexture(GL_TEXTURE_2D, self.atm_texture)
-            self.atmosphere.draw()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_1D, self.atm_texture)
+        shader.uniform_texture('u_texture', 0)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.atmosphere.vbo)
+        shader.vertex_attribute('a_position', self.atmosphere.position_size, self.atmosphere.type, GL_FALSE,
+                                self.atmosphere.stride, self.atmosphere.position_offset)
+        shader.vertex_attribute('a_u', self.atmosphere.u_size, self.atmosphere.type, GL_FALSE,
+                                self.atmosphere.stride, self.atmosphere.u_offset)
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.atmosphere.vertex_count)
+
+        shader.deactivate_attributes()
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        self.world.activate_shader(None)
+        glDisable(GL_BLEND)
+        glEnable(GL_CULL_FACE)
 
     def _draw_clouds(self):
         glEnable(GL_BLEND)
