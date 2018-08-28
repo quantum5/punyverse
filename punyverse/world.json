@@ -312,6 +312,7 @@
     "yaw": -97
   },
   "asteroids": ["asteroids/01.obj", "asteroids/02.obj", "asteroids/03.obj"],
+  "font": "font.png",
   "start": {
     "z": "AU - 400",
     "yaw": 180

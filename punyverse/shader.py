@@ -103,6 +103,9 @@ class Program(object):
     def uniform_bool(self, name, value):
         glUniform1i(self.uniforms[name], bool(value))
 
+    def uniform_vec2(self, name, a, b):
+        glUniform2f(self.uniforms[name], a, b)
+
     def uniform_vec3(self, name, a, b, c):
         glUniform3f(self.uniforms[name], a, b, c)
 

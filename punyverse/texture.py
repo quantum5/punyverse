@@ -42,7 +42,8 @@ except ImportError:
             result[y1 * row:y1 * row + row] = source[y2 * row:y2 * row + row]
         return six.binary_type(result)
 
-__all__ = ['load_texture', 'load_clouds', 'load_image', 'get_best_texture', 'max_texture_size', 'get_cube_map']
+__all__ = ['load_texture', 'load_alpha_mask', 'load_image', 'get_best_texture', 'max_texture_size',
+           'get_cube_map', 'load_texture_1d']
 
 id = 0
 cache = {}
@@ -259,11 +260,8 @@ def load_texture_1d(file, clamp=False):
     return id
 
 
-def load_clouds(file):
+def load_alpha_mask(file, clamp=False):
     path, file = get_file_path(file)
-    if path in cache:
-        return cache[path]
-
     path, width, height, depth, mode, texture = load_image(file, path)
 
     if depth != 1:
@@ -284,10 +282,13 @@ def load_clouds(file):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
 
+    if clamp:
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+
     if gl_info.have_extension('GL_EXT_texture_filter_anisotropic'):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glGetInteger(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT))
 
-    cache[path] = id
     return id
 
 

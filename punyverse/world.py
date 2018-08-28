@@ -24,6 +24,7 @@ class World(object):
         'star': ('star.vertex.glsl', 'star.fragment.glsl'),
         'ring': ('ring.vertex.glsl', 'ring.fragment.glsl'),
         'atmosphere': ('atmosphere.vertex.glsl', 'atmosphere.fragment.glsl'),
+        'text': ('text.vertex.glsl', 'text.fragment.glsl'),
     }
 
     def __init__(self, file, callback):
@@ -132,6 +133,8 @@ class World(object):
             for i, file in enumerate(asteroids):
                 self.callback('Loading asteroids...', 'Loading %s...' % file, i / len(asteroids))
                 self.asteroids.load(file)
+
+        self.font_tex = load_alpha_mask(root['font'], clamp=True)
 
     def _body(self, name, info, parent=None):
         if 'texture' in info:
