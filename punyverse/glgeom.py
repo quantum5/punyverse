@@ -1,3 +1,5 @@
+from __future__ import division
+
 from array import array
 from ctypes import c_int, c_float, byref, cast, POINTER, c_uint, c_short, c_ushort
 from math import *
@@ -10,7 +12,8 @@ from six.moves import range
 TWOPI = pi * 2
 
 __all__ = ['compile', 'ortho', 'frustrum', 'crosshair', 'circle', 'belt',
-           'glSection', 'glRestore', 'progress_bar']
+           'glSection', 'glRestore', 'glContext', 'progress_bar',
+           'FontEngine', 'Matrix4f', 'Disk', 'OrbitVBO', 'SimpleSphere', 'TangentSphere', 'Cube']
 
 
 class glContext(object):
@@ -318,6 +321,53 @@ class OrbitVBO(object):
 
     def __del__(self):
         self.close()
+
+
+class FontEngine(object):
+    type = GL_SHORT
+    stride = 4 * 2
+    position_offset = 0
+    position_size = 2
+    tex_offset = position_size * 2
+    tex_size = 2
+
+    def __init__(self, max_length=256):
+        self.storage = array('h', max_length * 24 * [0])
+        vbo = GLuint()
+        glGenBuffers(1, byref(vbo))
+        self.vbo = vbo.value
+        self.vertex_count = None
+
+    def draw(self, string):
+        index = 0
+        row = 0
+        col = 0
+        for c in string:
+            if c == '\n':
+                row += 1
+                col = 0
+                continue
+            o = ord(c)
+            if 32 <= o < 128:
+                self.storage[24*index:24*index+24] = array('h', [
+                    row, col, o - 32, 1,
+                    row + 1, col, o - 32, 0,
+                    row + 1, col + 1, o - 31, 0,
+                    row, col, o - 32, 1,
+                    row + 1, col + 1, o - 31, 0,
+                    row, col + 1, o - 31, 1,
+                ])
+                index += 1
+                col += 1
+
+        self.vertex_count = index * 6
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        glBufferData(GL_ARRAY_BUFFER, self.storage.itemsize * len(self.storage),
+                     array_to_ctypes(self.storage), GL_STREAM_DRAW)
+
+    def end(self):
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
 def belt(radius, cross, object, count):

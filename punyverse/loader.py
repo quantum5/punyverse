@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import os
 import sys
 import time
 
@@ -26,21 +27,29 @@ def get_context_info(context):
 
 
 class LoaderWindow(pyglet.window.Window):
+    MONOSPACE = ('Consolas', 'Droid Sans Mono', 'Courier', 'Courier New', 'Dejavu Sans Mono')
+
     def __init__(self, *args, **kwargs):
         super(LoaderWindow, self).__init__(*args, **kwargs)
 
+        # work around pyglet bug: decoding font names as utf-8 instead of mbcs when using EnumFontsA.
+        stderr = sys.stderr
+        sys.stderr = open(os.devnull, 'w')
+        pyglet.font.have_font(self.MONOSPACE[0])
+        sys.stderr = stderr
+
         self.loading_phase = pyglet.text.Label(
-            font_name='Consolas', font_size=20, x=10, y=self.height - 50,
+            font_name=self.MONOSPACE, font_size=20, x=10, y=self.height - 50,
             color=(255, 255, 255, 255), width=self.width - 20, align='center',
             multiline=True, text='Punyverse is starting...'
         )
         self.loading_label = pyglet.text.Label(
-            font_name='Consolas', font_size=16, x=10, y=self.height - 120,
+            font_name=self.MONOSPACE, font_size=16, x=10, y=self.height - 120,
             color=(255, 255, 255, 255), width=self.width - 20, align='center',
             multiline=True
         )
         self.info_label = pyglet.text.Label(
-            font_name='Consolas', font_size=13, x=10, y=self.height - 220,
+            font_name=self.MONOSPACE, font_size=13, x=10, y=self.height - 220,
             color=(255, 255, 255, 255), width=self.width - 20,
             multiline=True
         )

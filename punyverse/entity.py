@@ -5,10 +5,10 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, glRestore, belt, Disk, OrbitVBO, Matrix4f, SimpleSphere, TangentSphere, Cube
+from punyverse.glgeom import *
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
-from punyverse.texture import get_best_texture, load_clouds, get_cube_map, load_texture_1d
+from punyverse.texture import get_best_texture, load_alpha_mask, get_cube_map, load_texture_1d
 from punyverse.utils import cached_property
 
 G = 6.67384e-11  # Gravitation Constant
@@ -325,7 +325,7 @@ class SphericalBody(Body):
             atm_texture = atmosphere_data.get('diffuse_texture', None)
             cloud_texture = atmosphere_data.get('cloud_texture', None)
             if cloud_texture is not None:
-                self.cloud_transparency = get_best_texture(cloud_texture, loader=load_clouds)
+                self.cloud_transparency = get_best_texture(cloud_texture, loader=load_alpha_mask)
                 self.cloud_radius = self.radius + 2
                 self.clouds = self._get_sphere(division, tangent=False)
 

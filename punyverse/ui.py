@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import division
 import os
 import time
 from math import hypot
@@ -54,8 +55,6 @@ class Punyverse(pyglet.window.Window):
         self.key_handler = {}
         self.mouse_press_handler = {}
 
-        self.label = pyglet.text.Label('', font_name='Consolas', font_size=12, x=10, y=self.height - 20,
-                                       color=(255,) * 4, multiline=True, width=600)
         self.exclusive = False
         self.modifiers = 0
 
@@ -127,6 +126,8 @@ class Punyverse(pyglet.window.Window):
         glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_SMOOTH)
 
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
         glMatrixMode(GL_MODELVIEW)
 
         glEnable(GL_LIGHTING)
@@ -143,6 +144,8 @@ class Punyverse(pyglet.window.Window):
         glLightfv(GL_LIGHT1, GL_POSITION, fv4(1, 0, .5, 0))
         glLightfv(GL_LIGHT1, GL_DIFFUSE, fv4(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
+
+        self.info_engine = FontEngine()
 
         pyglet.clock.schedule(self.update)
         self.on_resize(self.width, self.height)  # On resize handler does nothing unless it's loaded
@@ -213,9 +216,8 @@ class Punyverse(pyglet.window.Window):
         if not width or not height:
             # Sometimes this happen for no reason?
             return
-        self.label.y = height - 20
-        glViewport(0, 0, width, height)
 
+        glViewport(0, 0, width, height)
         glMatrixMode(GL_PROJECTION)
         self.world.resize(width, height)
         glLoadMatrixf(self.world.projection_matrix())
@@ -262,7 +264,13 @@ class Punyverse(pyglet.window.Window):
         width, height = self.get_size()
 
         if self.info:
-            ortho(width, height)
+            projection = Matrix4f([
+                2 / width, 0, 0, 0,
+                0, -2 / height, 0, 0,
+                0, 0, -1, 0,
+                -1, 1, 0, 1,
+            ])
+
             if self.info_precise:
                 info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n'
                         'Direction(pitch=%.2f, yaw=%.2f, roll=%.2f)\nTick: %d' %
@@ -271,8 +279,30 @@ class Punyverse(pyglet.window.Window):
             else:
                 info = ('%d FPS @ (x=%.2f, y=%.2f, z=%.2f) @ %s, %s/s\n' %
                         (pyglet.clock.get_fps(), c.x, c.y, c.z, self.world.cam.speed, self.get_time_per_second()))
-            self.label.text = info
-            self.label.draw()
+
+            glEnable(GL_BLEND)
+            shader = self.world.activate_shader('text')
+            shader.uniform_mat4('u_projMatrix', projection)
+            self.info_engine.draw(info)
+
+            glActiveTexture(GL_TEXTURE0)
+            glBindTexture(GL_TEXTURE_2D, self.world.font_tex)
+            shader.uniform_texture('u_alpha', 0)
+            shader.uniform_vec3('u_color', 1, 1, 1)
+            shader.uniform_vec2('u_start', 10, 10)
+
+            shader.vertex_attribute('a_rc', self.info_engine.position_size, self.info_engine.type, GL_FALSE,
+                                    self.info_engine.stride, self.info_engine.position_offset)
+            shader.vertex_attribute('a_tex', self.info_engine.tex_size, self.info_engine.type, GL_FALSE,
+                                    self.info_engine.stride, self.info_engine.tex_offset)
+
+            glDrawArrays(GL_TRIANGLES, 0, self.info_engine.vertex_count)
+
+            self.info_engine.end()
+            self.world.activate_shader(None)
+            glDisable(GL_BLEND)
+
+            ortho(width, height)
             with glRestore(GL_CURRENT_BIT | GL_LINE_BIT):
                 glLineWidth(2)
                 cx, cy = width / 2, height / 2
