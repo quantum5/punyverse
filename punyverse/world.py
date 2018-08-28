@@ -25,6 +25,7 @@ class World(object):
         'ring': ('ring.vertex.glsl', 'ring.fragment.glsl'),
         'atmosphere': ('atmosphere.vertex.glsl', 'atmosphere.fragment.glsl'),
         'text': ('text.vertex.glsl', 'text.fragment.glsl'),
+        'line': ('line.vertex.glsl', 'line.fragment.glsl'),
     }
 
     def __init__(self, file, callback):
