@@ -186,6 +186,27 @@ def get_file_path(file):
     return path, file
 
 
+def create_texture():
+    buffer = GLuint()
+    glGenTextures(1, byref(buffer))
+    id = buffer.value
+    return id
+
+
+def delete_texture(id):
+    buffer = GLuint(id)
+    glDeleteTextures(1, byref(buffer))
+
+
+def get_internal_mode(mode):
+    return {
+        GL_RGB: GL_RGB8,
+        GL_BGR: GL_RGB8,
+        GL_RGBA: GL_RGBA8,
+        GL_BGRA: GL_RGBA8,
+    }[mode]
+
+
 def load_texture(file, clamp=False):
     path, file = get_file_path(file)
     if path in cache:
@@ -193,10 +214,7 @@ def load_texture(file, clamp=False):
 
     path, width, height, depth, mode, texture = load_image(file, path)
 
-    buffer = GLuint()
-    glGenTextures(1, byref(buffer))
-    id = buffer.value
-
+    id = create_texture()
     glBindTexture(GL_TEXTURE_2D, id)
 
     if gl_info.have_version(3) or gl_info.have_extension('GL_ARB_framebuffer_object'):
@@ -219,13 +237,26 @@ def load_texture(file, clamp=False):
     return id
 
 
-def get_internal_mode(mode):
-    return {
-        GL_RGB: GL_RGB8,
-        GL_BGR: GL_RGB8,
-        GL_RGBA: GL_RGBA8,
-        GL_BGRA: GL_RGBA8,
-    }[mode]
+def load_texture_1d(file, clamp=False):
+    path, file = get_file_path(file)
+    path, width, height, depth, mode, texture = load_image(file, path)
+
+    id = create_texture()
+    glBindTexture(GL_TEXTURE_1D, id)
+
+    if gl_info.have_version(3) or gl_info.have_extension('GL_ARB_framebuffer_object'):
+        glTexImage1D(GL_TEXTURE_1D, 0, get_internal_mode(mode), width, 0, mode, GL_UNSIGNED_BYTE, texture)
+        glGenerateMipmap(GL_TEXTURE_1D)
+    else:
+        gluBuild1DMipmaps(GL_TEXTURE_1D, depth, width, mode, GL_UNSIGNED_BYTE, texture)
+
+    if clamp:
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+
+    if gl_info.have_extension('GL_EXT_texture_filter_anisotropic'):
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glGetInteger(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT))
+
+    return id
 
 
 def load_clouds(file):
@@ -264,9 +295,7 @@ def get_cube_map(files, callback=None):
     assert len(files) == 6
     callback = callback or (lambda index, file: None)
 
-    buffer = GLuint()
-    glGenTextures(1, byref(buffer))
-    id = buffer.value
+    id = create_texture()
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, id)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0)
@@ -284,7 +313,7 @@ def get_cube_map(files, callback=None):
             callback(index, file)
             path, width, height, depth, mode, texture = load_image(file, path)
         except Exception:
-            glDeleteTextures(1, byref(buffer))
+            delete_texture(id)
             raise
         glTexImage2D(part, 0, get_internal_mode(mode), width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
 
