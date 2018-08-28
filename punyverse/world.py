@@ -122,8 +122,9 @@ class World(object):
                 self.tracker.append(Belt(name, self, info))
 
         if 'sky' in root:
-            self.callback('Loading sky...', 'Loading sky.', 0)
-            self.tracker.append(Sky(self, root['sky']))
+            def callback(index, file):
+                self.callback('Loading sky...', 'Loading %s.' % file, index / 6)
+            self.tracker.append(Sky(self, root['sky'], callback))
 
         if 'asteroids' in root:
             asteroids = root['asteroids']
