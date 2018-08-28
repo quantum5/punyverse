@@ -38,6 +38,7 @@ class Punyverse(pyglet.window.Window):
         self.info_precise = False
         self.atmosphere = True
         self.cloud = True
+        self.constellations = False
 
         self.ticks = [
             1, 2, 5, 10, 20, 40, 60,  # Second range
@@ -104,6 +105,7 @@ class Punyverse(pyglet.window.Window):
             key.P: attribute_toggler(self, 'info_precise'),
             key.C: attribute_toggler(self, 'cloud'),
             key.X: attribute_toggler(self, 'atmosphere'),
+            key.L: attribute_toggler(self, 'constellations'),
             key.ENTER: attribute_toggler(self, 'running'),
             key.INSERT: increment_tick,
             key.DELETE: decrement_tick,

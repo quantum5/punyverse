@@ -283,6 +283,22 @@ class TangentSphere(object):
         self.vbo = array_to_gl_buffer(buffer)
 
 
+class Cube(object):
+    type = GL_SHORT
+    stride = 3 * 2
+    direction_offset = 0
+    direction_size = 3
+    vertex_count = 36
+
+    def __init__(self):
+        self.vbo = array_to_gl_buffer([
+            -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1,
+            -1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, -1, -1, 1, -1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1,
+            -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, 1, -1, 1
+        ], 'h')
+
+
 class OrbitVBO(object):
     def __init__(self, orbit):
         buffer = 360 * 3 * [0]

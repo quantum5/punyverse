@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import os.path
 import struct
-from ctypes import c_int, byref, c_uint
+from ctypes import c_int, byref
 from io import BytesIO
 
 import six
@@ -42,7 +42,7 @@ except ImportError:
             result[y1 * row:y1 * row + row] = source[y2 * row:y2 * row + row]
         return six.binary_type(result)
 
-__all__ = ['load_texture', 'load_clouds', 'load_image', 'get_best_texture', 'max_texture_size']
+__all__ = ['load_texture', 'load_clouds', 'load_image', 'get_best_texture', 'max_texture_size', 'get_cube_map']
 
 id = 0
 cache = {}
@@ -177,31 +177,30 @@ def load_image(file, path):
     return path, width, height, len(raw.format), mode, flip_vertical(texture, width, height)
 
 
-def load_texture(file, clamp=False):
+def get_file_path(file):
     if os.path.isabs(file):
         path = file
         file = os.path.basename(path)
     else:
         path = os.path.join(os.path.dirname(__file__), 'assets', 'textures', file)
+    return path, file
 
+
+def load_texture(file, clamp=False):
+    path, file = get_file_path(file)
     if path in cache:
         return cache[path]
 
     path, width, height, depth, mode, texture = load_image(file, path)
 
-    buffer = c_uint()
+    buffer = GLuint()
     glGenTextures(1, byref(buffer))
     id = buffer.value
 
     glBindTexture(GL_TEXTURE_2D, id)
 
     if gl_info.have_version(3) or gl_info.have_extension('GL_ARB_framebuffer_object'):
-        glTexImage2D(GL_TEXTURE_2D, 0, {
-            GL_RGB: GL_RGB8,
-            GL_BGR: GL_RGB8,
-            GL_RGBA: GL_RGBA8,
-            GL_BGRA: GL_RGBA8,
-        }[mode], width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
+        glTexImage2D(GL_TEXTURE_2D, 0, get_internal_mode(mode), width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
         glGenerateMipmap(GL_TEXTURE_2D)
     else:
         gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
@@ -220,13 +219,17 @@ def load_texture(file, clamp=False):
     return id
 
 
-def load_clouds(file):
-    if os.path.isabs(file):
-        path = file
-        file = os.path.basename(path)
-    else:
-        path = os.path.join(os.path.dirname(__file__), 'assets', 'textures', file)
+def get_internal_mode(mode):
+    return {
+        GL_RGB: GL_RGB8,
+        GL_BGR: GL_RGB8,
+        GL_RGBA: GL_RGBA8,
+        GL_BGRA: GL_RGBA8,
+    }[mode]
 
+
+def load_clouds(file):
+    path, file = get_file_path(file)
     if path in cache:
         return cache[path]
 
@@ -235,7 +238,7 @@ def load_clouds(file):
     if depth != 1:
         texture = texture[::depth]
 
-    buffer = c_uint()
+    buffer = GLuint()
     glGenTextures(1, byref(buffer))
     id = buffer.value
 
@@ -254,6 +257,35 @@ def load_clouds(file):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glGetInteger(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT))
 
     cache[path] = id
+    return id
+
+
+def get_cube_map(files):
+    assert len(files) == 6
+
+    buffer = GLuint()
+    glGenTextures(1, byref(buffer))
+    id = buffer.value
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, id)
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0)
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0)
+    for file, part in zip(files, [
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+    ]):
+        try:
+            path, file = get_file_path(file)
+            path, width, height, depth, mode, texture = load_image(file, path)
+        except Exception:
+            glDeleteTextures(1, byref(buffer))
+            raise
+        glTexImage2D(part, 0, get_internal_mode(mode), width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
+
     return id
 
 

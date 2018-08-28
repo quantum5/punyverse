@@ -5,10 +5,10 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range
 
-from punyverse.glgeom import compile, glRestore, belt, Disk, OrbitVBO, Matrix4f, SimpleSphere, TangentSphere
+from punyverse.glgeom import compile, glRestore, belt, Disk, OrbitVBO, Matrix4f, SimpleSphere, TangentSphere, Cube
 from punyverse.model import load_model, WavefrontVBO
 from punyverse.orbit import KeplerOrbit
-from punyverse.texture import get_best_texture, load_clouds
+from punyverse.texture import get_best_texture, load_clouds, get_cube_map
 from punyverse.utils import cached_property
 
 G = 6.67384e-11  # Gravitation Constant
@@ -126,11 +126,11 @@ class Sky(Entity):
         yaw = world.evaluate(info.get('yaw', 0))
         roll = world.evaluate(info.get('roll', 0))
 
-        super(Sky, self).__init__(world, 'Sky', (0, 0, 0), (pitch, yaw, roll))
+        super(Sky, self).__init__(world, 'Sky', (0, 0, 0), [pitch, yaw, roll])
 
-        self.texture = get_best_texture(info['texture'])
-        division = info.get('division', 30)
-        self.sphere = SimpleSphere(division, division)
+        self.texture = get_best_texture(info['texture'], loader=get_cube_map)
+        self.constellation = get_cube_map(info['constellation'])
+        self.cube = Cube()
 
     def draw(self, options):
         cam = self.world.cam
@@ -140,16 +140,20 @@ class Sky(Entity):
                             Matrix4f.from_angles(rotation=self.rotation))
 
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.texture)
+        glBindTexture(GL_TEXTURE_CUBE_MAP, self.texture)
         shader.uniform_texture('u_skysphere', 0)
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
-        shader.vertex_attribute('a_direction', self.sphere.direction_size, self.sphere.type, GL_FALSE,
-                                self.sphere.stride, self.sphere.direction_offset)
-        shader.vertex_attribute('a_uv', self.sphere.uv_size, self.sphere.type, GL_FALSE,
-                                self.sphere.stride, self.sphere.uv_offset)
+        glActiveTexture(GL_TEXTURE1)
+        glBindTexture(GL_TEXTURE_CUBE_MAP, self.constellation)
+        shader.uniform_texture('u_constellation', 1)
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
+        shader.uniform_bool('u_lines', options.constellations)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.cube.vbo)
+        shader.vertex_attribute('a_direction', self.cube.direction_size, self.cube.type, GL_FALSE,
+                                self.cube.stride, self.cube.direction_offset)
+
+        glDrawArrays(GL_TRIANGLES, 0, self.cube.vertex_count)
 
         shader.deactivate_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)

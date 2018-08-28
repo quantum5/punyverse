@@ -11,7 +11,12 @@ moon.jpg
 mars.jpg
 jupiter.jpg
 saturn.jpg
-sky.jpg
+sky_px.jpg
+sky_py.jpg
+sky_pz.jpg
+sky_nx.jpg
+sky_ny.jpg
+sky_nz.jpg
 moons/io.jpg
 moons/europa.jpg
 moons/ganymede.jpg

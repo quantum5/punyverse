@@ -299,12 +299,17 @@
     }
   },
   "sky": {
-    "texture": ["sky.jpg", "sky_large.jpg", "sky_medium.jpg", "sky_small.jpg"],
+    "texture": [
+      ["sky_px.jpg", "sky_nx.jpg", "sky_py.jpg", "sky_ny.jpg", "sky_pz.jpg", "sky_nz.jpg"]
+    ],
+    "constellation": [
+      "constellation_px.png", "constellation_nx.png", "constellation_py.png",
+      "constellation_ny.png", "constellation_pz.png", "constellation_nz.png"
+    ],
     "rotation": 0,
     "division": 30,
-    "pitch": -150.19,
-    "yaw": 0,
-    "roll": 0
+    "pitch": -119.3,
+    "yaw": -97
   },
   "asteroids": ["asteroids/01.obj", "asteroids/02.obj", "asteroids/03.obj"],
   "start": {
