@@ -27,7 +27,7 @@ def main():
     template = pyglet.gl.Config(depth_size=args.depth, double_buffer=True,
                                 sample_buffers=args.multisample > 1,
                                 samples=args.multisample,
-                                major_version=3, minor_version=2)
+                                major_version=3, minor_version=3)
 
     platform = pyglet.window.get_platform()
     display = platform.get_default_display()

@@ -102,30 +102,28 @@ class Belt(Entity):
         rotation = info.get('period', 31536000)
         models = info['model']
         self.rotation_angle = 360.0 / rotation if rotation else 0
-        self.render = gl_info.have_version(3, 3)
 
-        if self.render:
-            shader = world.activate_shader('belt')
-            if not isinstance(models, list):
-                models = [models]
+        shader = world.activate_shader('belt')
+        if not isinstance(models, list):
+            models = [models]
 
-            self.belt = BeltVBO(radius, cross, len(models), count)
-            self.objects = [
-                WavefrontVBO(load_model(model), shader, info.get('sx', scale),
-                             info.get('sy', scale), info.get('sz', scale))
-                for model in models
-            ]
+        self.belt = BeltVBO(radius, cross, len(models), count)
+        self.objects = [
+            WavefrontVBO(load_model(model), shader, info.get('sx', scale),
+                         info.get('sy', scale), info.get('sz', scale))
+            for model in models
+        ]
 
-            def callback():
-                glBindBuffer(GL_ARRAY_BUFFER, vbo)
-                shader.vertex_attribute('a_translate', self.belt.location_size, self.belt.type, GL_FALSE,
-                                        self.belt.stride, self.belt.location_offset, divisor=1)
-                shader.vertex_attribute('a_scale', self.belt.scale_size, self.belt.type, GL_FALSE,
-                                        self.belt.stride, self.belt.scale_offset, divisor=1)
-                glBindBuffer(GL_ARRAY_BUFFER, 0)
+        def callback():
+            glBindBuffer(GL_ARRAY_BUFFER, vbo)
+            shader.vertex_attribute('a_translate', self.belt.location_size, self.belt.type, GL_FALSE,
+                                    self.belt.stride, self.belt.location_offset, divisor=1)
+            shader.vertex_attribute('a_scale', self.belt.scale_size, self.belt.type, GL_FALSE,
+                                    self.belt.stride, self.belt.scale_offset, divisor=1)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-            for model, vbo, count in zip(self.objects, self.belt.vbo, self.belt.sizes):
-                model.additional_attributes(callback)
+        for model, vbo, count in zip(self.objects, self.belt.vbo, self.belt.sizes):
+            model.additional_attributes(callback)
 
         super(Belt, self).__init__(world, name, (x, y, z), (inclination, longitude, argument))
 
@@ -135,9 +133,6 @@ class Belt(Entity):
         self.rotation = pitch, self.world.tick * self.rotation_angle % 360, roll
 
     def draw(self, options):
-        if not self.render:
-            return
-
         shader = self.world.activate_shader('belt')
         shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
         shader.uniform_mat4('u_mvMatrix', self.mv_matrix)

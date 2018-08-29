@@ -78,6 +78,8 @@ def get_context_info(context):
             zip_longest(info[::2], info[1::2], fillvalue='')]
 
     with glContext(context):
+        gl_info.remove_active_context()
+        gl_info.set_active_context()
         return '\n'.join([
             'Graphics Vendor:   ' + gl_info.get_vendor(),
             'Graphics Version:  ' + gl_info.get_version(),
