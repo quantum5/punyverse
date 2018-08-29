@@ -9,7 +9,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range, zip
 
-from punyverse.glgeom import list_to_gl_buffer
+from punyverse.glgeom import list_to_gl_buffer, VAO
 from punyverse.texture import load_texture
 
 
@@ -197,36 +197,41 @@ def load_model(path):
 
 
 class ModelVBO(object):
-    __slots__ = ('has_normal', 'has_texture', 'data_buf', 'index_buf', 'offset_type', 'vertex_count')
+    __slots__ = ('has_normal', 'has_texture', 'data_buf', 'index_buf', 'offset_type', 'vertex_count', 'vao')
 
-    def draw(self, shader, instances=None):
+    def __init__(self):
+        self.vao = VAO()
+
+    def build_vao(self, shader):
         stride = (3 + self.has_normal * 3 + self.has_texture * 2) * 4
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.data_buf)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.index_buf)
+        with self.vao:
+            glBindBuffer(GL_ARRAY_BUFFER, self.data_buf)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.index_buf)
 
-        shader.vertex_attribute('a_position', 3, GL_FLOAT, GL_FALSE, stride, 0)
-        if self.has_normal:
-            shader.vertex_attribute('a_normal', 3, GL_FLOAT, GL_FALSE, stride, 3 * 4)
-        else:
-            shader.vertex_attribute_vec3('a_normal', 0, 0, 0)
-        if self.has_texture:
-            shader.vertex_attribute('a_uv', 2, GL_FLOAT, GL_FALSE, stride, (6 if self.has_normal else 3) * 4)
-        else:
-            shader.vertex_attribute_vec2('a_uv', 0, 0)
+            shader.vertex_attribute('a_position', 3, GL_FLOAT, GL_FALSE, stride, 0)
+            if self.has_normal:
+                shader.vertex_attribute('a_normal', 3, GL_FLOAT, GL_FALSE, stride, 3 * 4)
+            if self.has_texture:
+                shader.vertex_attribute('a_uv', 2, GL_FLOAT, GL_FALSE, stride, (6 if self.has_normal else 3) * 4)
 
-        if instances:
-            glDrawElementsInstanced(GL_TRIANGLES, self.vertex_count, self.offset_type, 0, instances)
-        else:
-            glDrawElements(GL_TRIANGLES, self.vertex_count, self.offset_type, 0)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-        shader.deactivate_attributes('a_position', 'a_normal', 'a_uv')
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+    def draw(self, shader, instances=None):
+        with self.vao:
+            if not self.has_normal:
+                shader.vertex_attribute_vec3('a_normal', 0, 0, 0)
+
+            if not self.has_texture:
+                shader.vertex_attribute_vec2('a_uv', 0, 0)
+            if instances:
+                glDrawElementsInstanced(GL_TRIANGLES, self.vertex_count, self.offset_type, 0, instances)
+            else:
+                glDrawElements(GL_TRIANGLES, self.vertex_count, self.offset_type, 0)
 
 
 class WavefrontVBO(object):
-    def __init__(self, model, sx=1, sy=1, sz=1):
+    def __init__(self, model, shader, sx=1, sy=1, sz=1):
         self._tex_cache = {}
         self.vbos = []
         self.scale = (sx, sy, sz)
@@ -240,7 +245,14 @@ class WavefrontVBO(object):
         normals = model.normals
 
         for group in self.merge_groups(model):
-            self.vbos.append((group.material, self.process_group(group, vertices, normals, textures)))
+            processed = self.process_group(group, vertices, normals, textures)
+            self.vbos.append((group.material, processed))
+            processed.build_vao(shader)
+
+    def additional_attributes(self, callback):
+        for _, group in self.vbos:
+            with group.vao:
+                callback()
 
     def draw(self, shader, instances=None):
         for mat, vbo in self.vbos:

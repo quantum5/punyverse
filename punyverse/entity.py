@@ -80,7 +80,8 @@ class AsteroidManager(object):
     __nonzero__ = __bool__
 
     def load(self, file):
-        self.asteroids.append(WavefrontVBO(load_model(file), 5, 5, 5))
+        shader = self.world.activate_shader('model')
+        self.asteroids.append(WavefrontVBO(load_model(file), shader, 5, 5, 5))
 
     def new(self, location, direction):
         return Asteroid(self.world, random.choice(self.asteroids), location, direction)
@@ -104,12 +105,27 @@ class Belt(Entity):
         self.render = gl_info.have_version(3, 3)
 
         if self.render:
+            shader = world.activate_shader('belt')
             if not isinstance(models, list):
                 models = [models]
 
-            self.objects = [WavefrontVBO(load_model(model), info.get('sx', scale), info.get('sy', scale),
-                                         info.get('sz', scale)) for model in models]
-            self.belt = BeltVBO(radius, cross, len(self.objects), count)
+            self.belt = BeltVBO(radius, cross, len(models), count)
+            self.objects = [
+                WavefrontVBO(load_model(model), shader, info.get('sx', scale),
+                             info.get('sy', scale), info.get('sz', scale))
+                for model in models
+            ]
+
+            def callback():
+                glBindBuffer(GL_ARRAY_BUFFER, vbo)
+                shader.vertex_attribute('a_translate', self.belt.location_size, self.belt.type, GL_FALSE,
+                                        self.belt.stride, self.belt.location_offset, divisor=1)
+                shader.vertex_attribute('a_scale', self.belt.scale_size, self.belt.type, GL_FALSE,
+                                        self.belt.stride, self.belt.scale_offset, divisor=1)
+                glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+            for model, vbo, count in zip(self.objects, self.belt.vbo, self.belt.sizes):
+                model.additional_attributes(callback)
 
         super(Belt, self).__init__(world, name, (x, y, z), (inclination, longitude, argument))
 
@@ -128,14 +144,7 @@ class Belt(Entity):
         shader.uniform_mat4('u_modelMatrix', self.model_matrix)
 
         for object, vbo, count in zip(self.objects, self.belt.vbo, self.belt.sizes):
-            glBindBuffer(GL_ARRAY_BUFFER, vbo)
-            shader.vertex_attribute('a_translate', self.belt.location_size, self.belt.type, GL_FALSE,
-                                    self.belt.stride, self.belt.location_offset, divisor=1)
-            shader.vertex_attribute('a_scale', self.belt.scale_size, self.belt.type, GL_FALSE,
-                                    self.belt.stride, self.belt.scale_offset, divisor=1)
-            glBindBuffer(GL_ARRAY_BUFFER, 0)
             object.draw(shader, instances=count)
-        shader.deactivate_all_attributes()
 
 
 class Sky(Entity):
@@ -159,7 +168,6 @@ class Sky(Entity):
             shader.vertex_attribute('a_direction', self.cube.direction_size, self.cube.type, GL_FALSE,
                                     self.cube.stride, self.cube.direction_offset)
             glBindBuffer(GL_ARRAY_BUFFER, 0)
-        shader.reset_all_attributes()
 
     def draw(self, options):
         cam = self.world.cam
@@ -276,7 +284,6 @@ class Body(Entity):
             glBindBuffer(GL_ARRAY_BUFFER, self.orbit_vbo.vbo)
             shader.vertex_attribute('a_position', self.orbit_vbo.position_size, self.orbit_vbo.type, GL_FALSE,
                                     self.orbit_vbo.stride, self.orbit_vbo.position_offset)
-        shader.reset_all_attributes()
 
         self.orbit_cache = cache
         return self.orbit_vbo, self.orbit_vao
@@ -370,7 +377,6 @@ class SphericalBody(Body):
                 glBindBuffer(GL_ARRAY_BUFFER, 0)
         else:
             raise ValueError('Invalid type: %s' % self.type)
-        shader.reset_all_attributes()
 
         self.atmosphere = None
         self.clouds = None
@@ -403,7 +409,6 @@ class SphericalBody(Body):
                     shader.vertex_attribute('a_uv', self.clouds.uv_size, self.clouds.type, GL_FALSE,
                                             self.clouds.stride, self.clouds.uv_offset)
                     glBindBuffer(GL_ARRAY_BUFFER, 0)
-                shader.reset_all_attributes()
 
             if atm_texture is not None:
                 self.atm_texture = load_texture_1d(atm_texture, clamp=True)
@@ -417,7 +422,6 @@ class SphericalBody(Body):
                     shader.vertex_attribute('a_u', self.atmosphere.u_size, self.atmosphere.type, GL_FALSE,
                                             self.atmosphere.stride, self.atmosphere.u_offset)
                     glBindBuffer(GL_ARRAY_BUFFER, 0)
-                shader.reset_all_attributes()
 
         if 'ring' in info:
             distance = world.evaluate(info['ring'].get('distance', self.radius * 1.2))
@@ -441,7 +445,6 @@ class SphericalBody(Body):
                 shader.vertex_attribute('a_u', self.ring.u_size, self.ring.type, GL_FALSE,
                                         self.ring.stride, self.ring.u_offset)
                 glBindBuffer(GL_ARRAY_BUFFER, 0)
-            shader.reset_all_attributes()
 
     def _draw_planet(self):
         shader = self.world.activate_shader('planet')
@@ -584,8 +587,9 @@ class ModelBody(Body):
         super(ModelBody, self).__init__(name, world, info, parent)
 
         scale = info.get('scale', 1)
-        self.vbo = WavefrontVBO(load_model(info['model']), info.get('sx', scale), info.get('sy', scale),
-                                info.get('sz', scale))
+        shader = world.activate_shader('model')
+        self.vbo = WavefrontVBO(load_model(info['model']), shader, info.get('sx', scale),
+                                info.get('sy', scale), info.get('sz', scale))
 
     def _draw(self, options):
         shader = self.world.activate_shader('model')

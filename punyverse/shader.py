@@ -78,8 +78,6 @@ class Program(object):
         self.program = program
         self.attributes = self._variable_locations(GL_ACTIVE_ATTRIBUTES, glGetActiveAttrib, glGetAttribLocation)
         self.uniforms = self._variable_locations(GL_ACTIVE_UNIFORMS, glGetActiveUniform, glGetUniformLocation)
-        self.active_attributes = set()
-        self.divisor_attributes = set()
 
     def vertex_attribute(self, name, size, type, normalized, stride, offset, divisor=None):
         location = self.attributes[name]
@@ -87,30 +85,6 @@ class Program(object):
         glEnableVertexAttribArray(location)
         if divisor:
             glVertexAttribDivisor(location, divisor)
-            self.divisor_attributes.add(location)
-        self.active_attributes.add(location)
-
-    def deactivate_all_attributes(self):
-        for location in self.active_attributes:
-            glDisableVertexAttribArray(location)
-        for location in self.divisor_attributes:
-            glVertexAttribDivisor(location, 0)
-        self.reset_all_attributes()
-
-    def deactivate_attributes(self, *attributes):
-        for attr in attributes:
-            location = self.attributes[attr]
-            if location in self.active_attributes:
-                glDisableVertexAttribArray(location)
-            if location in self.divisor_attributes:
-                glVertexAttribDivisor(location, 0)
-            self.active_attributes.discard(location)
-            self.divisor_attributes.discard(location)
-
-    def reset_all_attributes(self):
-        # Call this when you bound to a VAO.
-        self.active_attributes.clear()
-        self.divisor_attributes.clear()
 
     def vertex_attribute_vec2(self, name, a, b):
         glVertexAttrib2f(self.attributes[name], a, b)
