@@ -128,21 +128,6 @@ class Punyverse(pyglet.window.Window):
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        glMatrixMode(GL_MODELVIEW)
-
-        glEnable(GL_LIGHTING)
-        glEnable(GL_LIGHT0)
-        glEnable(GL_LIGHT1)
-
-        fv4 = GLfloat * 4
-
-        glLightfv(GL_LIGHT0, GL_POSITION, fv4(.5, .5, 1, 0))
-        glLightfv(GL_LIGHT0, GL_SPECULAR, fv4(.5, .5, 1, 1))
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, fv4(1, 1, 1, 1))
-        glLightfv(GL_LIGHT1, GL_POSITION, fv4(1, 0, .5, 0))
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, fv4(.5, .5, .5, 1))
-        glLightfv(GL_LIGHT1, GL_SPECULAR, fv4(1, 1, 1, 1))
-
         self.info_engine = FontEngine()
         self.circle = Circle(10, 20)
 
@@ -215,12 +200,8 @@ class Punyverse(pyglet.window.Window):
         if not width or not height:
             # Sometimes this happen for no reason?
             return
-
         glViewport(0, 0, width, height)
-        glMatrixMode(GL_PROJECTION)
         self.world.resize(width, height)
-        glLoadMatrixf(self.world.projection_matrix())
-        glMatrixMode(GL_MODELVIEW)
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         self.world.cam.speed += scroll_y * 50 + scroll_x * 500
@@ -241,12 +222,9 @@ class Punyverse(pyglet.window.Window):
 
     def on_draw(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glLoadMatrixf(self.world.view_matrix())
-
         c = self.world.cam
         x, y, z = c.x, c.y, c.z
 
-        glEnable(GL_LIGHTING)
         world = self.world
         get_distance = entity_distance(x, y, z)
         if x != world.x or y != world.y or z != world.z:
@@ -257,12 +235,8 @@ class Punyverse(pyglet.window.Window):
         for entity in world.tracker:
             entity.draw(self)
 
-        glColor4f(1, 1, 1, 1)
-        glDisable(GL_TEXTURE_2D)
-
-        width, height = self.get_size()
-
         if self.info:
+            width, height = self.get_size()
             projection = Matrix4f([
                 2 / width, 0, 0, 0,
                 0, -2 / height, 0, 0,

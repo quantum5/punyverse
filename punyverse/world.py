@@ -26,6 +26,8 @@ class World(object):
         'atmosphere': ('atmosphere.vertex.glsl', 'atmosphere.fragment.glsl'),
         'text': ('text.vertex.glsl', 'text.fragment.glsl'),
         'line': ('line.vertex.glsl', 'line.fragment.glsl'),
+        'model': ('model.vertex.glsl', 'model.fragment.glsl'),
+        'belt': ('belt.vertex.glsl', 'model.fragment.glsl'),
     }
 
     def __init__(self, file, callback):
@@ -51,12 +53,13 @@ class World(object):
         for entity in self.tracker:
             entity.update()
 
-        shader = self.activate_shader('planet')
-        shader.uniform_vec3('u_sun.ambient', 0.1, 0.1, 0.1)
-        shader.uniform_vec3('u_sun.diffuse', 1, 1, 1)
-        shader.uniform_vec3('u_sun.specular', 0.5, 0.5, 0.5)
-        shader.uniform_vec3('u_sun.position', 0, 0, 0)
-        shader.uniform_float('u_sun.intensity', 1)
+        for name in ('planet', 'model', 'belt'):
+            shader = self.activate_shader(name)
+            shader.uniform_vec3('u_sun.ambient', 0.1, 0.1, 0.1)
+            shader.uniform_vec3('u_sun.diffuse', 1, 1, 1)
+            shader.uniform_vec3('u_sun.specular', 0.5, 0.5, 0.5)
+            shader.uniform_vec3('u_sun.position', 0, 0, 0)
+            shader.uniform_float('u_sun.intensity', 1)
 
         shader = self.activate_shader('clouds')
         shader.uniform_vec3('u_sun', 0, 0, 0)
