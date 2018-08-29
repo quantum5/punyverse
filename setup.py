@@ -110,6 +110,7 @@ setup(
     package_data={
         'punyverse': [
             'world.json',
+            'shaders/*.glsl',
             'assets/textures.txt',
             'assets/textures/*.jpg',
             'assets/textures/*.png',

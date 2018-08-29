@@ -3,5 +3,6 @@ include LICENSE
 include README.md
 include punyverse/world.json
 graft punyverse/assets
+include punyverse/shaders/*.glsl
 include punyverse/*.c
 exclude punyverse/*.pyx
