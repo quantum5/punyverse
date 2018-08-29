@@ -1,4 +1,4 @@
-#version 130
+#version 330 core
 
 in vec2 a_rc;
 in vec2 a_tex;
