@@ -247,16 +247,26 @@ class Body(Entity):
         return self.orbit_vbo
 
     def _draw_orbits(self, distance):
-        with glRestore(GL_ENABLE_BIT | GL_LINE_BIT | GL_CURRENT_BIT):
-            glLoadMatrixf(self.parent.orbit_matrix)
+        shader = self.world.activate_shader('line')
+        solid = distance < self.parent.orbit_opaque
+        alpha = 1 if solid else (1 - (distance - self.parent.orbit_opaque) / self.parent.orbit_blend)
+        shader.uniform_vec4('u_color', 1, 1, 1, alpha)
+        shader.uniform_mat4('u_mvpMatrix', self.world.projection_matrix() * self.parent.orbit_matrix)
 
-            glDisable(GL_LIGHTING)
-            solid = distance < self.parent.orbit_opaque
-            glColor4f(1, 1, 1, 1 if solid else (1 - (distance - self.parent.orbit_opaque) / self.parent.orbit_blend))
-            if not solid:
-                glEnable(GL_BLEND)
-            glLineWidth(1)
-            self.get_orbit().draw()
+        if not solid:
+            glEnable(GL_BLEND)
+
+        orbit = self.get_orbit()
+        glBindBuffer(GL_ARRAY_BUFFER, orbit.vbo)
+        shader.vertex_attribute('a_position', orbit.position_size, orbit.type, GL_FALSE,
+                                orbit.stride, orbit.position_offset)
+        glDrawArrays(GL_LINE_LOOP, 0, orbit.vertex_count)
+        shader.deactivate_attributes()
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+        if not solid:
+            glDisable(GL_BLEND)
+        self.world.activate_shader(None)
 
     def draw(self, options):
         self._draw(options)

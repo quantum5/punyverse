@@ -251,6 +251,12 @@ class Cube(object):
 
 
 class OrbitVBO(object):
+    type = GL_FLOAT
+    stride = 3 * 4
+    position_offset = 0
+    position_size = 3
+    vertex_count = 360
+
     def __init__(self, orbit):
         buffer = 360 * 3 * [0]
         for theta in range(360):
@@ -258,14 +264,6 @@ class OrbitVBO(object):
             buffer[3*theta:3*theta+3] = [x, y, z]
 
         self.vbo = array_to_gl_buffer(buffer)
-
-    def draw(self):
-        with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):
-            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glVertexPointer(3, GL_FLOAT, 12, 0)
-            glDrawArrays(GL_LINE_LOOP, 0, 360)
-            glBindBuffer(GL_ARRAY_BUFFER, 0)
 
     def close(self):
         if self.vbo is not None:
