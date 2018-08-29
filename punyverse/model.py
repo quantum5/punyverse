@@ -247,7 +247,6 @@ class WavefrontVBO(object):
             tex_id = self._tex_cache[mat.texture] if mat and mat.texture else 0
 
             if tex_id:
-                glActiveTexture(GL_TEXTURE0)
                 glBindTexture(GL_TEXTURE_2D, tex_id)
                 shader.uniform_bool('u_material.hasDiffuse', True)
                 shader.uniform_texture('u_material.diffuseMap', 0)

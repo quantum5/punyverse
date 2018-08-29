@@ -59,7 +59,7 @@ class Asteroid(Entity):
     def update(self):
         super(Asteroid, self).update()
         rx, ry, rz = self.rotation
-        # Increment all axis to 'spin' 
+        # Increment all axis to 'spin'
         self.rotation = rx + 1, ry + 1, rz + 1
 
     def draw(self, options):
@@ -68,7 +68,6 @@ class Asteroid(Entity):
         shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
         shader.uniform_mat4('u_modelMatrix', self.model_matrix)
         self.model.draw(shader)
-        self.world.activate_shader(None)
 
 
 class AsteroidManager(object):
@@ -131,7 +130,6 @@ class Belt(Entity):
             glBindBuffer(GL_ARRAY_BUFFER, 0)
             object.draw(shader, instances=count)
         shader.deactivate_all_attributes()
-        self.world.activate_shader(None)
 
 
 class Sky(Entity):
@@ -155,7 +153,6 @@ class Sky(Entity):
                             Matrix4f.from_angles(rotation=(cam.pitch, cam.yaw, cam.roll)) *
                             Matrix4f.from_angles(rotation=self.rotation))
 
-        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_CUBE_MAP, self.texture)
         shader.uniform_texture('u_skysphere', 0)
 
@@ -173,7 +170,7 @@ class Sky(Entity):
 
         shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        self.world.activate_shader(None)
+        glActiveTexture(GL_TEXTURE0)
 
 
 class Body(Entity):
@@ -282,7 +279,6 @@ class Body(Entity):
 
         if not solid:
             glDisable(GL_BLEND)
-        self.world.activate_shader(None)
 
     def draw(self, options):
         self._draw(options)
@@ -379,7 +375,6 @@ class SphericalBody(Body):
         shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
         shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
 
-        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         shader.uniform_texture('u_planet.diffuseMap', 0)
 
@@ -425,7 +420,6 @@ class SphericalBody(Body):
 
         shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        self.world.activate_shader(None)
         glActiveTexture(GL_TEXTURE0)
 
     def _draw_star(self):
@@ -433,7 +427,6 @@ class SphericalBody(Body):
         shader.uniform_float('u_radius', self.radius)
         shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
 
-        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         shader.uniform_texture('u_emission', 0)
 
@@ -447,7 +440,6 @@ class SphericalBody(Body):
 
         shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        self.world.activate_shader(None)
 
     def _draw_sphere(self):
         if self.type == 'planet':
@@ -466,7 +458,6 @@ class SphericalBody(Body):
         matrix = Matrix4f([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, mv[12], mv[13], mv[14], 1])
         shader.uniform_mat4('u_mvpMatrix', self.world.projection_matrix() * matrix)
 
-        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_1D, self.atm_texture)
         shader.uniform_texture('u_texture', 0)
 
@@ -480,7 +471,6 @@ class SphericalBody(Body):
 
         shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        self.world.activate_shader(None)
         glDisable(GL_BLEND)
         glEnable(GL_CULL_FACE)
 
@@ -491,7 +481,6 @@ class SphericalBody(Body):
         shader.uniform_mat4('u_modelMatrix', self.model_matrix)
         shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
 
-        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.cloud_transparency)
         shader.uniform_texture('u_transparency', 0)
         shader.uniform_vec3('u_diffuse', 1, 1, 1)
@@ -507,7 +496,6 @@ class SphericalBody(Body):
 
         shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        self.world.activate_shader(None)
         glDisable(GL_BLEND)
 
     def _draw_rings(self):
@@ -521,7 +509,6 @@ class SphericalBody(Body):
         shader.uniform_float('u_planetRadius', self.radius)
         shader.uniform_float('u_ambient', 0.1)
 
-        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_1D, self.ring_texture)
         shader.uniform_texture('u_texture', 0)
 
@@ -535,7 +522,6 @@ class SphericalBody(Body):
 
         shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        self.world.activate_shader(None)
         glDisable(GL_BLEND)
         glEnable(GL_CULL_FACE)
 
@@ -572,4 +558,3 @@ class ModelBody(Body):
         shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
         shader.uniform_mat4('u_modelMatrix', self.model_matrix)
         self.vbo.draw(shader)
-        self.world.activate_shader(None)
