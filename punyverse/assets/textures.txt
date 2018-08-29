@@ -1,7 +1,9 @@
 # This file contains all the textures that is bigger than the minimum OpenGL texture size
 # and hence may need to be resized depending on the machine
 
+sun.jpg
 mercury.jpg
+venus.jpg
 earth.jpg
 earth_normal.jpg
 earth_emission.jpg
@@ -11,6 +13,8 @@ moon.jpg
 mars.jpg
 jupiter.jpg
 saturn.jpg
+uranus.jpg
+neptune.jpg
 sky_px.jpg
 sky_py.jpg
 sky_pz.jpg

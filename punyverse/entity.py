@@ -388,8 +388,9 @@ class SphericalBody(Body):
 
         if 'atmosphere' in info:
             atmosphere_data = info['atmosphere']
-            atm_size = world.evaluate(atmosphere_data.get('diffuse_size', None))
-            atm_texture = atmosphere_data.get('diffuse_texture', None)
+            atm_size = world.evaluate(atmosphere_data.get('glow_size', None))
+            atm_texture = atmosphere_data.get('glow_texture', None)
+            atm_color = atmosphere_data.get('glow_color', None)
             cloud_texture = atmosphere_data.get('cloud_texture', None)
             if cloud_texture is not None:
                 self.cloud_transparency = get_best_texture(cloud_texture, loader=load_alpha_mask)
@@ -405,8 +406,9 @@ class SphericalBody(Body):
                                             self.clouds.stride, self.clouds.uv_offset)
                     glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-            if atm_texture is not None:
+            if atm_texture is not None and atm_color is not None:
                 self.atm_texture = load_texture_1d(atm_texture, clamp=True)
+                self.atm_color = atm_color
                 self.atmosphere = Disk(self.radius, self.radius + atm_size, 30)
                 self.atmosphere_vao = VAO()
                 shader = self.world.activate_shader('atmosphere')
@@ -513,7 +515,8 @@ class SphericalBody(Body):
         shader.uniform_mat4('u_mvpMatrix', self.world.projection_matrix() * matrix)
 
         glBindTexture(GL_TEXTURE_1D, self.atm_texture)
-        shader.uniform_texture('u_texture', 0)
+        shader.uniform_texture('u_transparency', 0)
+        shader.uniform_vec3('u_color', *self.atm_color)
 
         with self.atmosphere_vao:
             glDrawArrays(GL_TRIANGLE_STRIP, 0, self.atmosphere.vertex_count)

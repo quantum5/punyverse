@@ -7,7 +7,7 @@
     "distance": "virtual distance to look better, in km",
     "sma": "semi-major axis used with mass of parent to calculate orbit, in km",
     "mass": "mass in kg",
-    "texture": "a group of texture to use, tried in that order. a list means a colour",
+    "texture": "a group of texture to use, tried in that order",
     "model": "used to load a wavefront object instead of a textured sphere"
   },
   "au": 10000,
@@ -24,8 +24,9 @@
       "light_source": true,
       "type": "star",
       "atmosphere": {
-        "diffuse_texture": "sun_diffuse.png",
-        "diffuse_size": 300
+        "glow_color": [0.92, 0.92, 0.82],
+        "glow_texture": "glow.png",
+        "glow_size": 300
       }
     },
     "mercury": {
@@ -61,8 +62,9 @@
       "emission_map": ["earth_emission.jpg", "earth_emission_medium.jpg", "earth_emission_small.jpg"],
       "atmosphere": {
         "cloud_texture": ["cloudmap.jpg", "cloudmap_small.jpg"],
-        "diffuse_texture": "atmosphere_earth.png",
-        "diffuse_size": 30
+        "glow_color": [0.11, 0.32, 0.43],
+        "glow_texture": "glow.png",
+        "glow_size": 30
       },
       "orbit_distance": "AU",
       "satellites": {
