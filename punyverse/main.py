@@ -27,7 +27,7 @@ def main():
     template = pyglet.gl.Config(depth_size=args.depth, double_buffer=True,
                                 sample_buffers=args.multisample > 1,
                                 samples=args.multisample,
-                                major_version=3, minor_version=0)
+                                major_version=3, minor_version=2)
 
     platform = pyglet.window.get_platform()
     display = platform.get_default_display()
@@ -57,9 +57,11 @@ def main():
         loader = LoaderConsole()
         punyverse = Punyverse(context=context, **create_args)
     else:
+        context = config.create_context(None)
         loader = LoaderWindow(width=INITIAL_WIN_WIDTH, height=INITIAL_WIN_HEIGHT,
                               caption='Punyverse is loading...')
-        punyverse = Punyverse(config=config, **create_args)
+        punyverse = Punyverse(context=context, **create_args)
+        loader.context.set_current()
 
     loader.set_main_context(punyverse.context)
     world = loader.load()
