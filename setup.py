@@ -124,7 +124,6 @@ setup(
     },
     ext_modules=cythonize([
         Extension('punyverse._glgeom', sources=[pyx_path('punyverse/_glgeom.pyx')], libraries=gl_libs),
-        Extension('punyverse._model', sources=[pyx_path('punyverse/_model.pyx')], libraries=gl_libs),
     ]) + extra_libs,
     cmdclass={'build_ext': build_ext},
 
