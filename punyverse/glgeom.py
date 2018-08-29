@@ -98,7 +98,7 @@ class Circle(object):
     position_offset = 0
     position_size = 2
 
-    def __init__(self, r, segs):
+    def __init__(self, r, segs, shader):
         self.vertex_count = segs
         buffer = segs * 2 * [0]
         delta = 2 * pi / segs
@@ -106,6 +106,13 @@ class Circle(object):
             theta = delta * i
             buffer[2*i:2*i+2] = [cos(theta) * r, sin(theta) * r]
         self.vbo = list_to_gl_buffer(buffer)
+
+        self.vao = VAO()
+        with self.vao:
+            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+            shader.vertex_attribute('a_position', self.position_size, self.type, GL_FALSE,
+                                    self.stride, self.position_offset)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
 class Disk(object):
@@ -256,12 +263,21 @@ class FontEngine(object):
     tex_offset = position_size * 2
     tex_size = 2
 
-    def __init__(self, max_length=256):
+    def __init__(self, shader, max_length=256):
         self.storage = array('h', max_length * 24 * [0])
         vbo = GLuint()
         glGenBuffers(1, byref(vbo))
         self.vbo = vbo.value
         self.vertex_count = None
+
+        self.vao = VAO()
+        with self.vao:
+            glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+            shader.vertex_attribute('a_rc', self.position_size, self.type, GL_FALSE,
+                                    self.stride, self.position_offset)
+            shader.vertex_attribute('a_tex', self.tex_size, self.type, GL_FALSE,
+                                    self.stride, self.tex_offset)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
 
     def draw(self, string):
         index = 0
@@ -290,8 +306,6 @@ class FontEngine(object):
         glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
         glBufferData(GL_ARRAY_BUFFER, self.storage.itemsize * len(self.storage),
                      array_to_ctypes(self.storage), GL_STREAM_DRAW)
-
-    def end(self):
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
