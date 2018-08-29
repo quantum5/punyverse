@@ -258,7 +258,6 @@ class Punyverse(pyglet.window.Window):
             shader.uniform_mat4('u_projMatrix', projection)
             self.info_engine.draw(info)
 
-            glActiveTexture(GL_TEXTURE0)
             glBindTexture(GL_TEXTURE_2D, self.world.font_tex)
             shader.uniform_texture('u_alpha', 0)
             shader.uniform_vec3('u_color', 1, 1, 1)
@@ -270,8 +269,8 @@ class Punyverse(pyglet.window.Window):
                                     self.info_engine.stride, self.info_engine.tex_offset)
 
             glDrawArrays(GL_TRIANGLES, 0, self.info_engine.vertex_count)
-
             self.info_engine.end()
+
             glDisable(GL_BLEND)
 
             glLineWidth(2)
@@ -280,11 +279,8 @@ class Punyverse(pyglet.window.Window):
             shader.uniform_vec4('u_color', 0, 1, 0, 1)
             shader.uniform_mat4('u_mvpMatrix', mvp)
             glBindBuffer(GL_ARRAY_BUFFER, self.circle.vbo)
-
             shader.vertex_attribute('a_position', self.circle.position_size, self.circle.type, GL_FALSE,
                                     self.circle.stride, self.circle.position_offset)
             glDrawArrays(GL_LINE_LOOP, 0, self.circle.vertex_count)
-
             glBindBuffer(GL_ARRAY_BUFFER, 0)
             glLineWidth(1)
-            self.world.activate_shader(None)
