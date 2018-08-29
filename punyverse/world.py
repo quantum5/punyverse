@@ -40,11 +40,11 @@ class World(object):
         self.asteroids = AsteroidManager(self)
         self.cam = Camera()
 
+        self._program = None
         self.callback = callback
+        self.programs = self._load_programs()
         self._parse(file)
 
-        self._program = None
-        self.programs = self._load_programs()
         del self.callback  # So it can't be used after loading finishes
 
         self._time_accumulate = 0

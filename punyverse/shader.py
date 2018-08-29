@@ -95,8 +95,7 @@ class Program(object):
             glDisableVertexAttribArray(location)
         for location in self.divisor_attributes:
             glVertexAttribDivisor(location, 0)
-        self.active_attributes.clear()
-        self.divisor_attributes.clear()
+        self.reset_all_attributes()
 
     def deactivate_attributes(self, *attributes):
         for attr in attributes:
@@ -107,6 +106,11 @@ class Program(object):
                 glVertexAttribDivisor(location, 0)
             self.active_attributes.discard(location)
             self.divisor_attributes.discard(location)
+
+    def reset_all_attributes(self):
+        # Call this when you bound to a VAO.
+        self.active_attributes.clear()
+        self.divisor_attributes.clear()
 
     def vertex_attribute_vec2(self, name, a, b):
         glVertexAttrib2f(self.attributes[name], a, b)
