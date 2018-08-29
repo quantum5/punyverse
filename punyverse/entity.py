@@ -100,13 +100,16 @@ class Belt(Entity):
         argument = info.get('argument', 0)
         rotation = info.get('period', 31536000)
         models = info['model']
-        if not isinstance(models, list):
-            models = [models]
-
-        self.objects = [WavefrontVBO(load_model(model), info.get('sx', scale), info.get('sy', scale),
-                                     info.get('sz', scale)) for model in models]
-        self.belt = BeltVBO(radius, cross, len(self.objects), count)
         self.rotation_angle = 360.0 / rotation if rotation else 0
+        self.render = gl_info.have_version(3, 3)
+
+        if self.render:
+            if not isinstance(models, list):
+                models = [models]
+
+            self.objects = [WavefrontVBO(load_model(model), info.get('sx', scale), info.get('sy', scale),
+                                         info.get('sz', scale)) for model in models]
+            self.belt = BeltVBO(radius, cross, len(self.objects), count)
 
         super(Belt, self).__init__(world, name, (x, y, z), (inclination, longitude, argument))
 
@@ -116,6 +119,9 @@ class Belt(Entity):
         self.rotation = pitch, self.world.tick * self.rotation_angle % 360, roll
 
     def draw(self, options):
+        if not self.render:
+            return
+
         shader = self.world.activate_shader('belt')
         shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
         shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
