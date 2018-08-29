@@ -151,6 +151,15 @@ class Sky(Entity):
         self.texture = get_best_texture(info['texture'], loader=get_cube_map, callback=callback)
         self.constellation = get_cube_map(info['constellation'])
         self.cube = Cube()
+        self.vao = VAO()
+
+        shader = self.world.activate_shader('sky')
+        with self.vao:
+            glBindBuffer(GL_ARRAY_BUFFER, self.cube.vbo)
+            shader.vertex_attribute('a_direction', self.cube.direction_size, self.cube.type, GL_FALSE,
+                                    self.cube.stride, self.cube.direction_offset)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+        shader.reset_all_attributes()
 
     def draw(self, options):
         cam = self.world.cam
@@ -168,14 +177,9 @@ class Sky(Entity):
 
         shader.uniform_bool('u_lines', options.constellations)
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.cube.vbo)
-        shader.vertex_attribute('a_direction', self.cube.direction_size, self.cube.type, GL_FALSE,
-                                self.cube.stride, self.cube.direction_offset)
+        with self.vao:
+            glDrawArrays(GL_TRIANGLES, 0, self.cube.vertex_count)
 
-        glDrawArrays(GL_TRIANGLES, 0, self.cube.vertex_count)
-
-        shader.deactivate_all_attributes()
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
         glActiveTexture(GL_TEXTURE0)
 
 
@@ -226,6 +230,7 @@ class Body(Entity):
 
         # Orbit calculation
         self.orbit_vbo = None
+        self.orbit_vao = None
         self.orbit_cache = None
 
     @cached_property
@@ -249,21 +254,32 @@ class Body(Entity):
         for satellite in self.satellites:
             satellite.update()
 
-    def get_orbit(self):
+    def get_orbit(self, shader):
         if not self.orbit:
             return
 
         # Cache key is the three orbital plane parameters and eccentricity
         cache = (self.orbit.eccentricity, self.orbit.longitude, self.orbit.inclination, self.orbit.argument)
         if self.orbit_cache == cache:
-            return self.orbit_vbo
+            return self.orbit_vbo, self.orbit_vao
 
         if self.orbit_vbo is not None:
             self.orbit_vbo.close()
 
+        if self.orbit_vao is not None:
+            self.orbit_vao.close()
+
         self.orbit_vbo = OrbitVBO(self.orbit)
+        self.orbit_vao = VAO()
+
+        with self.orbit_vao:
+            glBindBuffer(GL_ARRAY_BUFFER, self.orbit_vbo.vbo)
+            shader.vertex_attribute('a_position', self.orbit_vbo.position_size, self.orbit_vbo.type, GL_FALSE,
+                                    self.orbit_vbo.stride, self.orbit_vbo.position_offset)
+        shader.reset_all_attributes()
+
         self.orbit_cache = cache
-        return self.orbit_vbo
+        return self.orbit_vbo, self.orbit_vao
 
     def _draw_orbits(self, distance):
         shader = self.world.activate_shader('line')
@@ -275,13 +291,9 @@ class Body(Entity):
         if not solid:
             glEnable(GL_BLEND)
 
-        orbit = self.get_orbit()
-        glBindBuffer(GL_ARRAY_BUFFER, orbit.vbo)
-        shader.vertex_attribute('a_position', orbit.position_size, orbit.type, GL_FALSE,
-                                orbit.stride, orbit.position_offset)
-        glDrawArrays(GL_LINE_LOOP, 0, orbit.vertex_count)
-        shader.deactivate_all_attributes()
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        vbo, vao = self.get_orbit(shader)
+        with vao:
+            glDrawArrays(GL_LINE_LOOP, 0, vbo.vertex_count)
 
         if not solid:
             glDisable(GL_BLEND)
@@ -332,7 +344,33 @@ class SphericalBody(Body):
         self.normal_texture = None
         self.specular_texture = None
         self.emission_texture = None
+
         self.sphere = self._get_sphere(division, tangent=self.type == 'planet')
+        self.vao = VAO()
+
+        if self.type == 'planet':
+            shader = self.world.activate_shader('planet')
+            with self.vao:
+                glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
+                shader.vertex_attribute('a_normal', self.sphere.direction_size, self.sphere.type, GL_FALSE,
+                                        self.sphere.stride, self.sphere.direction_offset)
+                shader.vertex_attribute('a_tangent', self.sphere.tangent_size, self.sphere.type, GL_FALSE,
+                                        self.sphere.stride, self.sphere.tangent_offset)
+                shader.vertex_attribute('a_uv', self.sphere.uv_size, self.sphere.type, GL_FALSE,
+                                        self.sphere.stride, self.sphere.uv_offset)
+                glBindBuffer(GL_ARRAY_BUFFER, 0)
+        elif self.type == 'star':
+            shader = self.world.activate_shader('star')
+            with self.vao:
+                glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
+                shader.vertex_attribute('a_normal', self.sphere.direction_size, self.sphere.type, GL_FALSE,
+                                        self.sphere.stride, self.sphere.direction_offset)
+                shader.vertex_attribute('a_uv', self.sphere.uv_size, self.sphere.type, GL_FALSE,
+                                        self.sphere.stride, self.sphere.uv_offset)
+                glBindBuffer(GL_ARRAY_BUFFER, 0)
+        else:
+            raise ValueError('Invalid type: %s' % self.type)
+        shader.reset_all_attributes()
 
         self.atmosphere = None
         self.clouds = None
@@ -356,10 +394,30 @@ class SphericalBody(Body):
                 self.cloud_transparency = get_best_texture(cloud_texture, loader=load_alpha_mask)
                 self.cloud_radius = self.radius + 2
                 self.clouds = self._get_sphere(division, tangent=False)
+                self.cloud_vao = VAO()
+                shader = self.world.activate_shader('clouds')
+                with self.cloud_vao:
+                    glBindBuffer(GL_ARRAY_BUFFER, self.clouds.vbo)
+                    shader.vertex_attribute('a_normal', self.clouds.direction_size, self.clouds.type, GL_FALSE,
+                                            self.clouds.stride, self.clouds.direction_offset)
+                    shader.vertex_attribute('a_uv', self.clouds.uv_size, self.clouds.type, GL_FALSE,
+                                            self.clouds.stride, self.clouds.uv_offset)
+                    glBindBuffer(GL_ARRAY_BUFFER, 0)
+                shader.reset_all_attributes()
 
             if atm_texture is not None:
                 self.atm_texture = load_texture_1d(atm_texture, clamp=True)
                 self.atmosphere = Disk(self.radius, self.radius + atm_size, 30)
+                self.atmosphere_vao = VAO()
+                shader = self.world.activate_shader('atmosphere')
+                with self.atmosphere_vao:
+                    glBindBuffer(GL_ARRAY_BUFFER, self.atmosphere.vbo)
+                    shader.vertex_attribute('a_position', self.atmosphere.position_size, self.atmosphere.type, GL_FALSE,
+                                            self.atmosphere.stride, self.atmosphere.position_offset)
+                    shader.vertex_attribute('a_u', self.atmosphere.u_size, self.atmosphere.type, GL_FALSE,
+                                            self.atmosphere.stride, self.atmosphere.u_offset)
+                    glBindBuffer(GL_ARRAY_BUFFER, 0)
+                shader.reset_all_attributes()
 
         if 'ring' in info:
             distance = world.evaluate(info['ring'].get('distance', self.radius * 1.2))
@@ -373,6 +431,17 @@ class SphericalBody(Body):
 
             self.ring_texture = load_texture_1d(info['ring'].get('texture'), clamp=True)
             self.ring = Disk(distance, distance + size, 30)
+
+            self.ring_vao = VAO()
+            shader = self.world.activate_shader('ring')
+            with self.ring_vao:
+                glBindBuffer(GL_ARRAY_BUFFER, self.ring.vbo)
+                shader.vertex_attribute('a_position', self.ring.position_size, self.ring.type, GL_FALSE,
+                                        self.ring.stride, self.ring.position_offset)
+                shader.vertex_attribute('a_u', self.ring.u_size, self.ring.type, GL_FALSE,
+                                        self.ring.stride, self.ring.u_offset)
+                glBindBuffer(GL_ARRAY_BUFFER, 0)
+            shader.reset_all_attributes()
 
     def _draw_planet(self):
         shader = self.world.activate_shader('planet')
@@ -414,18 +483,9 @@ class SphericalBody(Body):
 
         shader.uniform_vec3('u_planet.diffuse', 1, 1, 1)
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
-        shader.vertex_attribute('a_normal', self.sphere.direction_size, self.sphere.type, GL_FALSE,
-                                self.sphere.stride, self.sphere.direction_offset)
-        shader.vertex_attribute('a_tangent', self.sphere.tangent_size, self.sphere.type, GL_FALSE,
-                                self.sphere.stride, self.sphere.tangent_offset)
-        shader.vertex_attribute('a_uv', self.sphere.uv_size, self.sphere.type, GL_FALSE,
-                                self.sphere.stride, self.sphere.uv_offset)
+        with self.vao:
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
-
-        shader.deactivate_all_attributes()
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
         glActiveTexture(GL_TEXTURE0)
 
     def _draw_star(self):
@@ -436,24 +496,14 @@ class SphericalBody(Body):
         glBindTexture(GL_TEXTURE_2D, self.texture)
         shader.uniform_texture('u_emission', 0)
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.sphere.vbo)
-        shader.vertex_attribute('a_normal', self.sphere.direction_size, self.sphere.type, GL_FALSE,
-                                self.sphere.stride, self.sphere.direction_offset)
-        shader.vertex_attribute('a_uv', self.sphere.uv_size, self.sphere.type, GL_FALSE,
-                                self.sphere.stride, self.sphere.uv_offset)
-
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
-
-        shader.deactivate_all_attributes()
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        with self.vao:
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
 
     def _draw_sphere(self):
         if self.type == 'planet':
             self._draw_planet()
         elif self.type == 'star':
             self._draw_star()
-        else:
-            raise ValueError('Invalid type: %s' % self.type)
 
     def _draw_atmosphere(self):
         glEnable(GL_BLEND)
@@ -467,16 +517,9 @@ class SphericalBody(Body):
         glBindTexture(GL_TEXTURE_1D, self.atm_texture)
         shader.uniform_texture('u_texture', 0)
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.atmosphere.vbo)
-        shader.vertex_attribute('a_position', self.atmosphere.position_size, self.atmosphere.type, GL_FALSE,
-                                self.atmosphere.stride, self.atmosphere.position_offset)
-        shader.vertex_attribute('a_u', self.atmosphere.u_size, self.atmosphere.type, GL_FALSE,
-                                self.atmosphere.stride, self.atmosphere.u_offset)
+        with self.atmosphere_vao:
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.atmosphere.vertex_count)
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.atmosphere.vertex_count)
-
-        shader.deactivate_all_attributes()
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
         glDisable(GL_BLEND)
         glEnable(GL_CULL_FACE)
 
@@ -492,16 +535,9 @@ class SphericalBody(Body):
         shader.uniform_vec3('u_diffuse', 1, 1, 1)
         shader.uniform_vec3('u_ambient', 0.1, 0.1, 0.1)
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.clouds.vbo)
-        shader.vertex_attribute('a_normal', self.clouds.direction_size, self.clouds.type, GL_FALSE,
-                                self.clouds.stride, self.clouds.direction_offset)
-        shader.vertex_attribute('a_uv', self.clouds.uv_size, self.clouds.type, GL_FALSE,
-                                self.clouds.stride, self.clouds.uv_offset)
+        with self.cloud_vao:
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.clouds.vertex_count)
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.clouds.vertex_count)
-
-        shader.deactivate_all_attributes()
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
         glDisable(GL_BLEND)
 
     def _draw_rings(self):
@@ -518,16 +554,9 @@ class SphericalBody(Body):
         glBindTexture(GL_TEXTURE_1D, self.ring_texture)
         shader.uniform_texture('u_texture', 0)
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.ring.vbo)
-        shader.vertex_attribute('a_position', self.ring.position_size, self.ring.type, GL_FALSE,
-                                self.ring.stride, self.ring.position_offset)
-        shader.vertex_attribute('a_u', self.ring.u_size, self.ring.type, GL_FALSE,
-                                self.ring.stride, self.ring.u_offset)
+        with self.ring_vao:
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, self.ring.vertex_count)
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, self.ring.vertex_count)
-
-        shader.deactivate_all_attributes()
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
         glDisable(GL_BLEND)
         glEnable(GL_CULL_FACE)
 

@@ -11,7 +11,8 @@ from six.moves import range
 
 TWOPI = pi * 2
 
-__all__ = ['FontEngine', 'Matrix4f', 'Disk', 'OrbitVBO', 'SimpleSphere', 'TangentSphere', 'Cube', 'Circle', 'BeltVBO']
+__all__ = ['FontEngine', 'Matrix4f', 'Disk', 'OrbitVBO', 'SimpleSphere',
+           'TangentSphere', 'Cube', 'Circle', 'BeltVBO', 'VAO']
 
 
 def array_to_ctypes(arr):
@@ -319,3 +320,16 @@ class BeltVBO(object):
         for a in arrays:
             self.vbo.append(array_to_gl_buffer(a))
             self.sizes.append(len(a) // 4)
+
+
+class VAO(object):
+    def __init__(self):
+        buffer = GLuint()
+        glGenVertexArrays(1, byref(buffer))
+        self.vao = buffer
+
+    def __enter__(self):
+        glBindVertexArray(self.vao)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        glBindVertexArray(0)
