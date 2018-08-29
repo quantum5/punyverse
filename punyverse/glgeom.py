@@ -11,30 +11,7 @@ from six.moves import range
 
 TWOPI = pi * 2
 
-__all__ = ['compile', 'belt', 'glRestore', 'FontEngine', 'Matrix4f', 'Disk', 'OrbitVBO',
-           'SimpleSphere', 'TangentSphere', 'Cube', 'Circle']
-
-
-class glRestore(object):
-    def __init__(self, flags):
-        self.flags = flags
-
-    def __enter__(self):
-        glPushAttrib(self.flags)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        glPopAttrib()
-
-
-class glRestoreClient(object):
-    def __init__(self, flags):
-        self.flags = flags
-
-    def __enter__(self):
-        glPushClientAttrib(self.flags)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        glPopClientAttrib()
+__all__ = ['FontEngine', 'Matrix4f', 'Disk', 'OrbitVBO', 'SimpleSphere', 'TangentSphere', 'Cube', 'Circle', 'BeltVBO']
 
 
 def array_to_ctypes(arr):
@@ -47,14 +24,17 @@ def array_to_ctypes(arr):
     }[arr.typecode]))
 
 
-def array_to_gl_buffer(buffer, array_type='f'):
+def array_to_gl_buffer(buffer):
     vbo = c_uint()
     glGenBuffers(1, byref(vbo))
     glBindBuffer(GL_ARRAY_BUFFER, vbo.value)
-    buffer = array(array_type, buffer)
     glBufferData(GL_ARRAY_BUFFER, buffer.itemsize * len(buffer), array_to_ctypes(buffer), GL_STATIC_DRAW)
     glBindBuffer(GL_ARRAY_BUFFER, 0)
     return vbo.value
+
+
+def list_to_gl_buffer(buffer, array_type='f'):
+    return array_to_gl_buffer(array(array_type, buffer))
 
 
 class Matrix4f(object):
@@ -111,14 +91,6 @@ class Matrix4f(object):
         return type(self)(sum(a[i] * b[j] for i, j in zip(r, c)) for c in cols for r in rows)
 
 
-def compile(pointer, *args, **kwargs):
-    display = glGenLists(1)
-    glNewList(display, GL_COMPILE)
-    pointer(*args, **kwargs)
-    glEndList()
-    return display
-
-
 class Circle(object):
     type = GL_FLOAT
     stride = 2 * 4
@@ -132,7 +104,7 @@ class Circle(object):
         for i in range(segs):
             theta = delta * i
             buffer[2*i:2*i+2] = [cos(theta) * r, sin(theta) * r]
-        self.vbo = array_to_gl_buffer(buffer)
+        self.vbo = list_to_gl_buffer(buffer)
 
 
 class Disk(object):
@@ -154,7 +126,7 @@ class Disk(object):
             x, y = cos(theta), sin(theta)
             buffer[6*i:6*i+6] = [rinner * x, rinner * y, 0, router * x, router * y, 1]
         buffer[6*res:6*res+6] = buffer[:6]
-        self.vbo = array_to_gl_buffer(buffer)
+        self.vbo = list_to_gl_buffer(buffer)
 
 
 class SimpleSphere(object):
@@ -190,7 +162,7 @@ class SimpleSphere(object):
                 index += 10
             reverse ^= True
 
-        self.vbo = array_to_gl_buffer(buffer)
+        self.vbo = list_to_gl_buffer(buffer)
 
 
 class TangentSphere(object):
@@ -231,7 +203,7 @@ class TangentSphere(object):
                 ]
                 index += 14
             reverse ^= True
-        self.vbo = array_to_gl_buffer(buffer)
+        self.vbo = list_to_gl_buffer(buffer)
 
 
 class Cube(object):
@@ -242,7 +214,7 @@ class Cube(object):
     vertex_count = 36
 
     def __init__(self):
-        self.vbo = array_to_gl_buffer([
+        self.vbo = list_to_gl_buffer([
             -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1,
             -1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, -1, -1, 1, -1, 1, 1, 1,
             1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1,
@@ -263,7 +235,7 @@ class OrbitVBO(object):
             x, z, y = orbit.orbit(theta)
             buffer[3*theta:3*theta+3] = [x, y, z]
 
-        self.vbo = array_to_gl_buffer(buffer)
+        self.vbo = list_to_gl_buffer(buffer)
 
     def close(self):
         if self.vbo is not None:
@@ -322,17 +294,28 @@ class FontEngine(object):
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
-def belt(radius, cross, object, count):
-    for i in range(count):
-        theta = TWOPI * random()
-        r = gauss(radius, cross)
-        x, y, z = cos(theta) * r, gauss(0, cross), sin(theta) * r
+class BeltVBO(object):
+    type = GL_FLOAT
+    stride = 4 * 4
+    location_offset = 0
+    location_size = 3
+    scale_offset = location_size * 4
+    scale_size = 1
 
-        glPushMatrix()
-        glTranslatef(x, y, z)
-        scale = gauss(1, 0.5)
-        if scale < 0:
-            scale = 1
-        glScalef(scale, scale, scale)
-        choice(object).draw()
-        glPopMatrix()
+    def __init__(self, radius, cross, objects, count):
+        arrays = [array('f') for i in range(objects)]
+
+        for i in range(count):
+            theta = TWOPI * random()
+            r = gauss(radius, cross)
+            x, y, z = cos(theta) * r, gauss(0, cross), sin(theta) * r
+            scale = gauss(1, 0.5)
+            if scale < 0:
+                scale = 1
+            choice(arrays).extend((x, y, z, scale))
+
+        self.vbo = []
+        self.sizes = []
+        for a in arrays:
+            self.vbo.append(array_to_gl_buffer(a))
+            self.sizes.append(len(a) // 4)

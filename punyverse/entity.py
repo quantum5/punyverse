@@ -63,8 +63,12 @@ class Asteroid(Entity):
         self.rotation = rx + 1, ry + 1, rz + 1
 
     def draw(self, options):
-        glLoadMatrixf(self.mv_matrix)
-        self.model.draw()
+        shader = self.world.activate_shader('model')
+        shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
+        shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
+        shader.uniform_mat4('u_modelMatrix', self.model_matrix)
+        self.model.draw(shader)
+        self.world.activate_shader(None)
 
 
 class AsteroidManager(object):
@@ -100,10 +104,9 @@ class Belt(Entity):
         if not isinstance(models, list):
             models = [models]
 
-        objects = [WavefrontVBO(load_model(model), info.get('sx', scale), info.get('sy', scale),
-                                info.get('sz', scale)) for model in models]
-
-        self.belt_id = compile(belt, radius, cross, objects, count)
+        self.objects = [WavefrontVBO(load_model(model), info.get('sx', scale), info.get('sy', scale),
+                                     info.get('sz', scale)) for model in models]
+        self.belt = BeltVBO(radius, cross, len(self.objects), count)
         self.rotation_angle = 360.0 / rotation if rotation else 0
 
         super(Belt, self).__init__(world, name, (x, y, z), (inclination, longitude, argument))
@@ -114,8 +117,21 @@ class Belt(Entity):
         self.rotation = pitch, self.world.tick * self.rotation_angle % 360, roll
 
     def draw(self, options):
-        glLoadMatrixf(self.mv_matrix)
-        glCallList(self.belt_id)
+        shader = self.world.activate_shader('belt')
+        shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
+        shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
+        shader.uniform_mat4('u_modelMatrix', self.model_matrix)
+
+        for object, vbo, count in zip(self.objects, self.belt.vbo, self.belt.sizes):
+            glBindBuffer(GL_ARRAY_BUFFER, vbo)
+            shader.vertex_attribute('a_translate', self.belt.location_size, self.belt.type, GL_FALSE,
+                                    self.belt.stride, self.belt.location_offset, divisor=1)
+            shader.vertex_attribute('a_scale', self.belt.scale_size, self.belt.type, GL_FALSE,
+                                    self.belt.stride, self.belt.scale_offset, divisor=1)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+            object.draw(shader, instances=count)
+        shader.deactivate_all_attributes()
+        self.world.activate_shader(None)
 
 
 class Sky(Entity):
@@ -155,7 +171,7 @@ class Sky(Entity):
 
         glDrawArrays(GL_TRIANGLES, 0, self.cube.vertex_count)
 
-        shader.deactivate_attributes()
+        shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.world.activate_shader(None)
 
@@ -261,7 +277,7 @@ class Body(Entity):
         shader.vertex_attribute('a_position', orbit.position_size, orbit.type, GL_FALSE,
                                 orbit.stride, orbit.position_offset)
         glDrawArrays(GL_LINE_LOOP, 0, orbit.vertex_count)
-        shader.deactivate_attributes()
+        shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
         if not solid:
@@ -407,7 +423,7 @@ class SphericalBody(Body):
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
 
-        shader.deactivate_attributes()
+        shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.world.activate_shader(None)
         glActiveTexture(GL_TEXTURE0)
@@ -429,7 +445,7 @@ class SphericalBody(Body):
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, self.sphere.vertex_count)
 
-        shader.deactivate_attributes()
+        shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.world.activate_shader(None)
 
@@ -462,7 +478,7 @@ class SphericalBody(Body):
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, self.atmosphere.vertex_count)
 
-        shader.deactivate_attributes()
+        shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.world.activate_shader(None)
         glDisable(GL_BLEND)
@@ -489,7 +505,7 @@ class SphericalBody(Body):
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, self.clouds.vertex_count)
 
-        shader.deactivate_attributes()
+        shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.world.activate_shader(None)
         glDisable(GL_BLEND)
@@ -517,7 +533,7 @@ class SphericalBody(Body):
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, self.ring.vertex_count)
 
-        shader.deactivate_attributes()
+        shader.deactivate_all_attributes()
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.world.activate_shader(None)
         glDisable(GL_BLEND)
@@ -551,5 +567,9 @@ class ModelBody(Body):
                                 info.get('sz', scale))
 
     def _draw(self, options):
-        glLoadMatrixf(self.mv_matrix)
-        self.vbo.draw()
+        shader = self.world.activate_shader('model')
+        shader.uniform_mat4('u_mvpMatrix', self.mvp_matrix)
+        shader.uniform_mat4('u_mvMatrix', self.mv_matrix)
+        shader.uniform_mat4('u_modelMatrix', self.model_matrix)
+        self.vbo.draw(shader)
+        self.world.activate_shader(None)

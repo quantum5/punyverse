@@ -9,7 +9,7 @@ from pyglet.gl import *
 # noinspection PyUnresolvedReferences
 from six.moves import range, zip
 
-from punyverse.glgeom import array_to_gl_buffer, glRestoreClient, glRestore
+from punyverse.glgeom import list_to_gl_buffer
 from punyverse.texture import load_texture
 
 
@@ -199,25 +199,30 @@ def load_model(path):
 class ModelVBO(object):
     __slots__ = ('has_normal', 'has_texture', 'data_buf', 'index_buf', 'offset_type', 'vertex_count')
 
-    def draw(self):
-        with glRestoreClient(GL_CLIENT_VERTEX_ARRAY_BIT):
-            stride = (3 + self.has_normal * 3 + self.has_texture * 2) * 4
+    def draw(self, shader, instances=None):
+        stride = (3 + self.has_normal * 3 + self.has_texture * 2) * 4
 
-            glBindBuffer(GL_ARRAY_BUFFER, self.data_buf)
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.index_buf)
+        glBindBuffer(GL_ARRAY_BUFFER, self.data_buf)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.index_buf)
 
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glVertexPointer(3, GL_FLOAT, stride, 0)
-            if self.has_normal:
-                glEnableClientState(GL_NORMAL_ARRAY)
-                glNormalPointer(GL_FLOAT, stride, 3 * 4)
-            if self.has_texture:
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-                glTexCoordPointer(3, GL_FLOAT, stride, (6 if self.has_normal else 3) * 4)
+        shader.vertex_attribute('a_position', 3, GL_FLOAT, GL_FALSE, stride, 0)
+        if self.has_normal:
+            shader.vertex_attribute('a_normal', 3, GL_FLOAT, GL_FALSE, stride, 3 * 4)
+        else:
+            shader.vertex_attribute_vec3('a_normal', 0, 0, 0)
+        if self.has_texture:
+            shader.vertex_attribute('a_uv', 2, GL_FLOAT, GL_FALSE, stride, (6 if self.has_normal else 3) * 4)
+        else:
+            shader.vertex_attribute_vec2('a_uv', 0, 0)
 
+        if instances:
+            glDrawElementsInstanced(GL_TRIANGLES, self.vertex_count, self.offset_type, 0, instances)
+        else:
             glDrawElements(GL_TRIANGLES, self.vertex_count, self.offset_type, 0)
-            glBindBuffer(GL_ARRAY_BUFFER, 0)
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+
+        shader.deactivate_attributes('a_position', 'a_normal', 'a_uv')
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
 
 class WavefrontVBO(object):
@@ -237,31 +242,39 @@ class WavefrontVBO(object):
         for group in self.merge_groups(model):
             self.vbos.append((group.material, self.process_group(group, vertices, normals, textures)))
 
-    def draw(self, fv4=GLfloat * 4):
-        with glRestore(GL_TEXTURE_BIT | GL_ENABLE_BIT):
-            for mat, vbo in self.vbos:
-                tex_id = self._tex_cache[mat.texture] if mat and mat.texture else 0
+    def draw(self, shader, instances=None):
+        for mat, vbo in self.vbos:
+            tex_id = self._tex_cache[mat.texture] if mat and mat.texture else 0
 
-                if tex_id:
-                    glEnable(GL_TEXTURE_2D)
-                    glBindTexture(GL_TEXTURE_2D, tex_id)
-                else:
-                    glBindTexture(GL_TEXTURE_2D, 0)
-                    glDisable(GL_TEXTURE_2D)
+            if tex_id:
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, tex_id)
+                shader.uniform_bool('u_material.hasDiffuse', True)
+                shader.uniform_texture('u_material.diffuseMap', 0)
+            else:
+                shader.uniform_bool('u_material.hasDiffuse', False)
 
-                if mat:
-                    if mat.Ka:
-                        kx, ky, kz = mat.Ka
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, fv4(kx, ky, kz, 1))
-                    if mat.Kd:
-                        kx, ky, kz = mat.Kd
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, fv4(kx, ky, kz, 1))
-                    if mat.Ks:
-                        kx, ky, kz = mat.Ks
-                        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, fv4(kx, ky, kz, 1))
-                    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, mat.shininess)
+            if mat and mat.Ka:
+                shader.uniform_vec3('u_material.ambient', *mat.Ka)
+            else:
+                shader.uniform_vec3('u_material.ambient', 0.2, 0.2, 0.2)
 
-                vbo.draw()
+            if mat and mat.Kd:
+                shader.uniform_vec3('u_material.diffuse', *mat.Kd)
+            else:
+                shader.uniform_vec3('u_material.diffuse', 0.8, 0.8, 0.8)
+
+            if mat and mat.Ks:
+                shader.uniform_vec3('u_material.specular', *mat.Ks)
+            else:
+                shader.uniform_vec3('u_material.specular', 0, 0, 0)
+
+            if mat:
+                shader.uniform_float('u_material.shininess', mat.shininess)
+            else:
+                shader.uniform_float('u_material.shininess', 0)
+
+            vbo.draw(shader, instances=instances)
 
     def merge_groups(self, model):
         by_mat = defaultdict(list)
@@ -313,8 +326,8 @@ class WavefrontVBO(object):
         result.has_normal = has_normal
         result.has_texture = has_texture
         result.offset_type = GL_UNSIGNED_SHORT if len(offsets) < 65536 else GL_UNSIGNED_INT
-        result.data_buf = array_to_gl_buffer(buffer, 'f')
-        result.index_buf = array_to_gl_buffer(indices, {
+        result.data_buf = list_to_gl_buffer(buffer, 'f')
+        result.index_buf = list_to_gl_buffer(indices, {
             GL_UNSIGNED_SHORT: 'H',
             GL_UNSIGNED_INT: 'I',
         }[result.offset_type])
