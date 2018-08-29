@@ -105,7 +105,7 @@ else:
 
 setup(
     name='punyverse',
-    version='0.5',
+    version='1.0',
     packages=['punyverse'],
     package_data={
         'punyverse': [
