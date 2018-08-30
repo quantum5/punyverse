@@ -131,10 +131,6 @@ def check_size(width, height):
     if width > max_texture or height > max_texture:
         print('too large')
         raise ValueError('Texture too large')
-    elif not gl_info.have_version(2) and not gl_info.have_extension('GL_ARB_texture_non_power_of_two'):
-        if not is_power2(width) or not is_power2(height):
-            print('not power of two')
-            raise ValueError('Texture not power of two')
 
 
 def load_image(file, path):
@@ -217,12 +213,8 @@ def load_texture(file, clamp=False):
 
     id = create_texture()
     glBindTexture(GL_TEXTURE_2D, id)
-
-    if gl_info.have_version(3) or gl_info.have_extension('GL_ARB_framebuffer_object'):
-        glTexImage2D(GL_TEXTURE_2D, 0, get_internal_mode(mode), width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
-        glGenerateMipmap(GL_TEXTURE_2D)
-    else:
-        gluBuild2DMipmaps(GL_TEXTURE_2D, depth, width, height, mode, GL_UNSIGNED_BYTE, texture)
+    glTexImage2D(GL_TEXTURE_2D, 0, get_internal_mode(mode), width, height, 0, mode, GL_UNSIGNED_BYTE, texture)
+    glGenerateMipmap(GL_TEXTURE_2D)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
@@ -245,11 +237,8 @@ def load_texture_1d(file, clamp=False):
     id = create_texture()
     glBindTexture(GL_TEXTURE_1D, id)
 
-    if gl_info.have_version(3) or gl_info.have_extension('GL_ARB_framebuffer_object'):
-        glTexImage1D(GL_TEXTURE_1D, 0, get_internal_mode(mode), width, 0, mode, GL_UNSIGNED_BYTE, texture)
-        glGenerateMipmap(GL_TEXTURE_1D)
-    else:
-        gluBuild1DMipmaps(GL_TEXTURE_1D, depth, width, mode, GL_UNSIGNED_BYTE, texture)
+    glTexImage1D(GL_TEXTURE_1D, 0, get_internal_mode(mode), width, 0, mode, GL_UNSIGNED_BYTE, texture)
+    glGenerateMipmap(GL_TEXTURE_1D)
 
     if clamp:
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
@@ -272,12 +261,8 @@ def load_alpha_mask(file, clamp=False):
     id = buffer.value
 
     glBindTexture(GL_TEXTURE_2D, id)
-
-    if gl_info.have_version(3) or gl_info.have_extension('GL_ARB_framebuffer_object'):
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture)
-        glGenerateMipmap(GL_TEXTURE_2D)
-    else:
-        gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_RED, GL_UNSIGNED_BYTE, texture)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture)
+    glGenerateMipmap(GL_TEXTURE_2D)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
