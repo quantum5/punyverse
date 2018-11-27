@@ -34,7 +34,7 @@ void main() {
     float diffuseIntensity = max(dot(v_normal, incident), 0.0);
     float shininess = pow(max(dot(normalize(v_camDirection), reflected), 0), u_material.shininess);
 
-    vec3 diffuse = u_material.hasDiffuse ? texture2D(u_material.diffuseMap, v_uv).rgb : vec3(1);
+    vec3 diffuse = u_material.hasDiffuse ? texture(u_material.diffuseMap, v_uv).rgb : vec3(1);
     vec3 ambient = u_material.ambient * u_sun.ambient * diffuse;
     vec3 specular = u_material.specular * u_sun.specular * max(shininess, 0) * diffuseIntensity;
     diffuse *= u_material.diffuse * u_sun.diffuse * diffuseIntensity;

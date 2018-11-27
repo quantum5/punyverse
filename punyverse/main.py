@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 import pyglet
 
@@ -8,6 +9,8 @@ DEBUG = False
 
 
 def main():
+    macos = sys.platform == 'darwin'
+
     parser = argparse.ArgumentParser(prog='punyverse', description='''
             Python simulator of a puny universe.
         ''')
@@ -22,12 +25,15 @@ def main():
                         action='store_true')
     args = parser.parse_args()
 
+    versioning = dict(major_version=3, minor_version=3)
     pyglet.options['debug_gl'] = args.debug
+    if macos:
+        pyglet.options['shadow_window'] = False
+        versioning = dict(major_version=4, minor_version=1, forward_compatible=True)
 
     template = pyglet.gl.Config(depth_size=args.depth, double_buffer=True,
                                 sample_buffers=args.multisample > 1,
-                                samples=args.multisample,
-                                major_version=3, minor_version=3)
+                                samples=args.multisample, **versioning)
 
     platform = pyglet.window.get_platform()
     display = platform.get_default_display()

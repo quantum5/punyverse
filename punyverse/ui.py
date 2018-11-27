@@ -199,6 +199,8 @@ class Punyverse(pyglet.window.Window):
         if not width or not height:
             # Sometimes this happen for no reason?
             return
+        if hasattr(self, 'get_viewport_size'):
+            width, height = self.get_viewport_size()
         glViewport(0, 0, width, height)
         self.world.resize(width, height)
 

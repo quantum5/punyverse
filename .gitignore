@@ -62,3 +62,7 @@ library.zip
 
 # Our special launcher
 !/punyverse/launcher.c
+
+# macOS
+.DS_Store
+._.DS_Store

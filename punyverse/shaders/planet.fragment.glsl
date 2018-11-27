@@ -35,10 +35,10 @@ uniform Sun u_sun;
 uniform Surface u_planet;
 
 void main() {
-    vec3 normal = u_planet.hasNormal ? normalize(v_TBN * texture2D(u_planet.normalMap, v_uv).rgb * 2 - 1) : v_normal;
-    vec3 diffuse = texture2D(u_planet.diffuseMap, v_uv).rgb;
-    vec3 specular = u_planet.hasSpecular ? texture2D(u_planet.specularMap, v_uv).rgb : vec3(1);
-    vec3 emission = u_planet.hasEmission ? texture2D(u_planet.emissionMap, v_uv).rgb : vec3(1);
+    vec3 normal = u_planet.hasNormal ? normalize(v_TBN * texture(u_planet.normalMap, v_uv).rgb * 2 - 1) : v_normal;
+    vec3 diffuse = texture(u_planet.diffuseMap, v_uv).rgb;
+    vec3 specular = u_planet.hasSpecular ? texture(u_planet.specularMap, v_uv).rgb : vec3(1);
+    vec3 emission = u_planet.hasEmission ? texture(u_planet.emissionMap, v_uv).rgb : vec3(1);
 
     vec3 incident = normalize(u_sun.position - v_position);
     vec3 reflected = normalize(reflect(-incident, normal));

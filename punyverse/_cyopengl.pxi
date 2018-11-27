@@ -2,7 +2,14 @@ IF UNAME_SYSNAME == "Windows":
     cdef extern from "windows.h":
         pass
 
-cdef extern from "GL/gl.h":
+IF UNAME_SYSNAME == "Darwin":
+    cdef extern from "OpenGL/gl.h":
+        pass
+ELSE:
+    cdef extern from "GL/gl.h":
+        pass
+
+cdef extern from *:
     ctypedef unsigned int   GLenum
     ctypedef unsigned char  GLboolean
     ctypedef unsigned int   GLbitfield

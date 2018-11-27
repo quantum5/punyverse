@@ -26,8 +26,15 @@ else:
 
 if os.name == 'nt':
     gl_libs = ['opengl32']
+elif sys.platform == 'darwin':
+    gl_libs = []
 else:
     gl_libs = ['GL']
+
+if sys.platform == 'darwin':
+    extra_compile_args = extra_link_args = ['-framework', 'OpenGL']
+else:
+    extra_compile_args = extra_link_args = []
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as f:
     long_description = f.read()
@@ -124,7 +131,8 @@ setup(
         ],
     },
     ext_modules=cythonize([
-        Extension('punyverse._glgeom', sources=[pyx_path('punyverse/_glgeom.pyx')], libraries=gl_libs),
+        Extension('punyverse._glgeom', sources=[pyx_path('punyverse/_glgeom.pyx')], libraries=gl_libs,
+                  extra_compile_args=extra_compile_args, extra_link_args=extra_link_args),
     ]) + extra_libs,
     cmdclass={'build_ext': build_ext},
 
