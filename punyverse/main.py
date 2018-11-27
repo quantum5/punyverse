@@ -14,6 +14,7 @@ def main():
     parser = argparse.ArgumentParser(prog='punyverse', description='''
             Python simulator of a puny universe.
         ''')
+    parser.set_defaults(sky=not macos)
     parser.add_argument('-D', '--debug', help='Enable pyglet OpenGL debugging', action='store_true')
     parser.add_argument('-d', '--high-depth', help='Use a larger depth buffer',
                         const=32, default=24, dest='depth', nargs='?', type=int)
@@ -23,6 +24,10 @@ def main():
                         action='store_false', dest='vsync')
     parser.add_argument('-n', '--normal', help='Enables the use of normal maps',
                         action='store_true')
+    parser.add_argument('-s', '--sky', help='Enables the sky', dest='sky',
+                        action='store_true')
+    parser.add_argument('-S', '--no-sky', help='Disables the sky', dest='sky',
+                        action='store_false')
     args = parser.parse_args()
 
     versioning = dict(major_version=3, minor_version=3)
@@ -70,7 +75,7 @@ def main():
         loader.context.set_current()
 
     loader.set_main_context(punyverse.context)
-    world = loader.load()
+    world = loader.load(sky=args.sky)
     punyverse.context.set_current()
     punyverse.initialize(world)
     loader.close()

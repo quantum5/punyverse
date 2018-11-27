@@ -30,7 +30,7 @@ class World(object):
         'belt': ('belt.vertex.glsl', 'model.fragment.glsl'),
     }
 
-    def __init__(self, file, callback):
+    def __init__(self, file, callback, sky=True):
         self.tracker = []
         self.x = None
         self.y = None
@@ -39,6 +39,8 @@ class World(object):
         self.tick = 0
         self.asteroids = AsteroidManager(self)
         self.cam = Camera()
+
+        self._sky = sky
 
         self._program = None
         self.callback = callback
@@ -127,7 +129,7 @@ class World(object):
                               'Loading %s.' % name, i / belt_count)
                 self.tracker.append(Belt(name, self, info))
 
-        if 'sky' in root:
+        if 'sky' in root and self._sky:
             def callback(index, file):
                 self.callback('Loading sky...', 'Loading %s.' % file, index / 6)
             self.tracker.append(Sky(self, root['sky'], callback))

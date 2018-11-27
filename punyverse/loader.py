@@ -134,10 +134,10 @@ class LoaderWindow(pyglet.window.Window):
             self.flip()
             self.dispatch_events()
 
-    def load(self):
+    def load(self, **kwargs):
         start = time.clock()
         with glContext(self._main_context):
-            world = World('world.json', self._load_callback)
+            world = World('world.json', self._load_callback, **kwargs)
         print('Loaded in %s seconds.' % (time.clock() - start))
         return world
 
@@ -167,10 +167,10 @@ class LoaderConsole(object):
     def _load_callback(self, phase, message, progress):
         print(message, file=self._output)
 
-    def load(self):
+    def load(self, **kwargs):
         start = time.clock()
         with glContext(self._main_context):
-            world = World('world.json', self._load_callback)
+            world = World('world.json', self._load_callback, **kwargs)
         print('Loaded in %s seconds.' % (time.clock() - start), file=self._output)
         return world
 
