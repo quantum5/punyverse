@@ -5,4 +5,5 @@ include punyverse/world.json
 graft punyverse/assets
 include punyverse/shaders/*.glsl
 include punyverse/*.c
+include punyverse/*.h
 exclude punyverse/*.pyx
