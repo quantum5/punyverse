@@ -147,7 +147,7 @@ setup(
         ]
 
     },
-    install_requires=['pyglet', 'Pillow', 'six'],
+    install_requires=['pyglet<1.4', 'Pillow', 'six'],
 
     author='quantum',
     author_email='quantum2048@gmail.com',
